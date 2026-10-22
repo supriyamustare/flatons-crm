@@ -1,54 +1,41 @@
-/* Flatons design tokens — full system is built out in Sprint 1 with Tailwind. */
-:root {
-  --green-950: #0c2418;
-  --green-900: #123524;
-  --green-700: #1f5a3c;
-  --gold-400: #d4a843;
-  --gold-200: #ecd9a0;
-  --cream: #f3efe3;
-  --error: #f08a7e;
-  color-scheme: dark;
-  font-family: "Iowan Old Style", "Palatino Linotype", Palatino, Georgia, serif;
-  background: var(--green-950);
-  color: var(--cream);
+@import "tailwindcss";
+
+/* Flatons design tokens. Tailwind v4 reads these from CSS (no tailwind.config.ts needed):
+   bg-forest-900, text-gold-500, bg-paper, etc. */
+@theme {
+  --color-forest-950: #0b2117;
+  --color-forest-900: #123524;
+  --color-forest-800: #1a4630;
+  --color-forest-700: #235a3e;
+  --color-forest-100: #dfe9e2;
+  --color-forest-50: #eef4f0;
+
+  --color-gold-600: #a97f1f;
+  --color-gold-500: #c9a13b;
+  --color-gold-300: #e3c879;
+  --color-gold-100: #f6ecd0;
+
+  --color-paper: #f5f7f4;
+  --color-ink: #17221c;
+  --color-muted: #5b6b62;
+  --color-line: #d9e1db;
+
+  --color-danger: #b42318;
+  --color-danger-soft: #fdecea;
+
+  --font-sans: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  --font-display: "Iowan Old Style", "Palatino Linotype", Palatino, Georgia, serif;
 }
 
-* { box-sizing: border-box; }
-
-body {
-  margin: 0;
-  min-height: 100vh;
-  display: grid;
-  place-items: center;
-  padding: env(safe-area-inset-top, 0) 1.5rem env(safe-area-inset-bottom, 0);
-  background: radial-gradient(120% 80% at 50% 0%, var(--green-900), var(--green-950));
+@layer base {
+  html {
+    color-scheme: light;
+    -webkit-tap-highlight-color: transparent;
+  }
+  body {
+    @apply bg-paper text-ink font-sans antialiased;
+  }
+  :focus-visible {
+    @apply outline-2 outline-offset-2 outline-gold-500;
+  }
 }
-
-.shell { max-width: 30rem; width: 100%; }
-
-.mark {
-  width: 3.25rem;
-  height: 3.25rem;
-  display: grid;
-  place-items: center;
-  border: 1.5px solid var(--gold-400);
-  color: var(--gold-400);
-  font-size: 1.75rem;
-  margin-bottom: 1.75rem;
-}
-
-h1 {
-  margin: 0;
-  font-size: clamp(2.25rem, 7vw, 3rem);
-  font-weight: 500;
-  letter-spacing: -0.01em;
-  color: var(--gold-200);
-}
-
-.lede { margin: 0.75rem 0 2.5rem; line-height: 1.6; opacity: 0.85; }
-
-.status { border-top: 1px solid var(--green-700); padding-top: 1.25rem; font-family: system-ui, sans-serif; font-size: 0.95rem; }
-.status ul { list-style: none; margin: 0; padding: 0; display: grid; gap: 0.6rem; }
-.status li { display: flex; justify-content: space-between; }
-.ok { color: var(--gold-400); }
-.bad { color: var(--error); }
