@@ -3,7 +3,7 @@
 Lead management, inventory, bookings and post-sales document engine for Flatons.
 
 - **Backend:** Python 3.12, FastAPI, SQLAlchemy (async) + Alembic, PostgreSQL 16, Celery + Redis
-- **Frontend:** React 19, TypeScript, Vite (Tailwind added in Sprint 1)
+- **Frontend:** React 19, TypeScript, Vite, Tailwind CSS v4, React Router, TanStack Query
 - **Server:** Ubuntu on Google Cloud, Nginx, Gunicorn, systemd
 
 ## Repository layout
@@ -82,7 +82,18 @@ poetry run ruff check . && poetry run ruff format --check .
 
 cd ../frontend
 npm run typecheck
+npm test
 ```
+
+## Frontend notes
+
+- Design tokens (forest green, gold, paper, ink) live in `frontend/src/index.css` under `@theme`.
+  Tailwind v4 reads them from CSS, so there is no `tailwind.config.ts`; use them as `bg-forest-900`,
+  `text-gold-500`, etc.
+- All API calls go through `src/lib/api.ts`. It sends cookies, renews an expired session once
+  automatically, and turns API errors into readable messages (`errorMessage()`).
+- Navigation items and which roles see them are defined in `src/lib/nav.ts`. Pages restricted to
+  certain roles are wrapped in `<RequireRole>` in `src/App.tsx`. The API enforces the same rules.
 
 ## Environment variables
 
