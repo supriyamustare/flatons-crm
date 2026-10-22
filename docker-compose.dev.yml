@@ -1,0 +1,19 @@
+# Local development only: PostgreSQL 16 + Redis on your laptop.
+# Start:  docker compose -f docker-compose.dev.yml up -d
+services:
+  db:
+    image: postgres:16
+    environment:
+      POSTGRES_USER: crmuser
+      POSTGRES_PASSWORD: devpassword
+      POSTGRES_DB: flatons_crm
+    ports:
+      - "127.0.0.1:5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+  redis:
+    image: redis:7
+    ports:
+      - "127.0.0.1:6379:6379"
+volumes:
+  pgdata:

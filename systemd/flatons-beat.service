@@ -1,0 +1,19 @@
+[Unit]
+Description=Flatons CRM Celery beat scheduler
+After=network.target redis-server.service
+Wants=redis-server.service
+
+[Service]
+User=crm
+Group=crm
+WorkingDirectory=/home/crm/flatons-crm/backend
+ExecStart=/home/crm/flatons-crm/backend/.venv/bin/celery -A app.tasks.celery_app:celery_app beat \
+    --loglevel=INFO --schedule=/var/crm/celerybeat-schedule
+Restart=always
+RestartSec=5
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=full
+
+[Install]
+WantedBy=multi-user.target

@@ -1,0 +1,7 @@
+# Keep Linux line endings in the repo so scripts run on the server,
+# even when files are edited on Windows.
+* text=auto eol=lf
+*.png binary
+*.jpg binary
+*.ico binary
+*.pdf binary

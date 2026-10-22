@@ -1,0 +1,24 @@
+[Unit]
+Description=Flatons CRM API (Gunicorn + Uvicorn workers)
+After=network.target postgresql.service redis-server.service
+Wants=postgresql.service redis-server.service
+
+[Service]
+User=crm
+Group=crm
+WorkingDirectory=/home/crm/flatons-crm/backend
+ExecStart=/home/crm/flatons-crm/backend/.venv/bin/gunicorn app.main:app \
+    --worker-class uvicorn_worker.UvicornWorker \
+    --workers 2 \
+    --bind 127.0.0.1:8000 \
+    --timeout 60 \
+    --access-logfile - \
+    --error-logfile -
+Restart=always
+RestartSec=5
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=full
+
+[Install]
+WantedBy=multi-user.target
