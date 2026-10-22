@@ -17,6 +17,11 @@ class Settings(BaseSettings):
     algorithm: str = "HS256"
     access_token_expire_minutes: int = 60
     refresh_token_expire_days: int = 7
+    # Cookies are sent only over HTTPS when true. Defaults to true in production;
+    # set COOKIE_SECURE=false until the server has an HTTPS certificate.
+    cookie_secure: bool | None = None
+    # bcrypt cost factor (12+ in production; tests use 4 for speed)
+    bcrypt_rounds: int = 12
 
     redis_url: str = "redis://localhost:6379/0"
     celery_broker_url: str = ""
@@ -38,6 +43,10 @@ class Settings(BaseSettings):
         return [o.strip() for o in self.allowed_origins.split(",") if o.strip()]
 
     @property
+    def secure_cookies(self) -> bool:
+        return self.is_production if self.cookie_secure is None else self.cookie_secure
+
+    @property
     def broker_url(self) -> str:
         return self.celery_broker_url or self.redis_url
 
@@ -47,6 +56,10 @@ class Settings(BaseSettings):
             raise ValueError("SECRET_KEY must be at least 32 characters long")
         if self.is_production and "CHANGE_ME" in (self.secret_key + self.database_url):
             raise ValueError("Placeholder values from .env.example are not allowed in production")
+        if self.is_production and self.bcrypt_rounds < 12:
+            raise ValueError("BCRYPT_ROUNDS must be at least 12 in production")
+        if not 4 <= self.bcrypt_rounds <= 16:
+            raise ValueError("BCRYPT_ROUNDS must be between 4 and 16")
         return self
 
 

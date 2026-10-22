@@ -43,7 +43,37 @@ npm install
 npm run dev
 ```
 
+## Database migrations
+
+Schema changes go through Alembic and are never applied by hand in production.
+
+```bash
+cd backend
+poetry run alembic revision --autogenerate -m "describe the change"   # then review the file
+poetry run alembic upgrade head
+```
+
+`scripts/deploy.sh` runs `alembic upgrade head` automatically on every deploy.
+
+## First admin user
+
+Users are created by an admin in the app, so the very first admin is created from the command line:
+
+```bash
+cd backend
+poetry run python -m app.cli create-admin --email you@company.com --name "Your Name"
+```
+
+On the server, run it as the `crm` user:
+
+```bash
+sudo -iu crm bash -c 'cd ~/flatons-crm/backend && .venv/bin/python -m app.cli create-admin --email you@company.com --name "Your Name"'
+```
+
 ## Tests and linting
+
+Integration tests need the local PostgreSQL from `docker-compose.dev.yml`. They create and rebuild
+a separate `flatons_crm_test` database, so your development data is never touched.
 
 ```bash
 cd backend
