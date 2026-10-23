@@ -1,4 +1,4 @@
-import { Building2, Contact, LayoutDashboard, UserRound, Users, type LucideIcon } from "lucide-react";
+import { Building2, Contact, LayoutDashboard, UserRound, Users, type LucideIcon, CalendarCheck } from "lucide-react";
 import type { Role } from "./types";
 
 export interface NavItem {
@@ -15,6 +15,7 @@ export interface NavItem {
 export const NAV_ITEMS: NavItem[] = [
   { to: "/", label: "Dashboard", icon: LayoutDashboard, mobile: true },
   { to: "/leads", label: "Leads", icon: Contact, mobile: true },
+  { to: "/follow-ups", label: "Follow-ups", icon: CalendarCheck, roles: ["admin", "manager", "executive"], mobile: true },
   { to: "/projects", label: "Projects", icon: Building2, roles: ["admin"] },
   { to: "/users", label: "Users", icon: Users, roles: ["admin"], mobile: true },
   { to: "/account", label: "My account", icon: UserRound, mobile: true },

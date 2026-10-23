@@ -12,7 +12,9 @@ from app.models.lead import (
     LeadStatus,
     Purpose,
 )
+from app.models.notification import Notification
 from app.models.project import Project
+from app.models.task import FollowUpTask, TaskStatus, TaskType
 from app.models.user import Role, User
 
 __all__ = [
@@ -20,13 +22,17 @@ __all__ = [
     "Base",
     "BuyingTimeline",
     "Configuration",
+    "FollowUpTask",
     "Lead",
     "LeadActivity",
     "LeadCodeCounter",
     "LeadSource",
     "LeadStatus",
+    "Notification",
     "Project",
     "Purpose",
     "Role",
+    "TaskStatus",
+    "TaskType",
     "User",
 ]

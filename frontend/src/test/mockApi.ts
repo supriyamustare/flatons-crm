@@ -20,7 +20,7 @@ export function httpError(status: number, detail: unknown) {
 type Handler = unknown | Error | ((body: unknown) => unknown);
 
 /** Route GET/POST calls by URL. Values may be data, an Error to throw, or a function of the body. */
-export function mockApi(me: User | null, routes: { get?: Record<string, Handler>; post?: Record<string, Handler> } = {}) {
+export function mockApi(me: User | null, routes: { get?: Record<string, Handler>; post?: Record<string, Handler>; patch?: Record<string, Handler> } = {}) {
   const respond = async (table: Record<string, Handler> | undefined, url: string, body?: unknown) => {
     const handler = table?.[url];
     if (handler === undefined) throw new Error(`Unexpected request to ${url}`);
@@ -32,11 +32,16 @@ export function mockApi(me: User | null, routes: { get?: Record<string, Handler>
       if (!me) throw httpError(401, "Not authenticated");
       return { data: me };
     }
+    // The notification bell polls this on every page; default to "nothing new".
+    if (url === "/notifications" && !routes.get?.[url]) return { data: { items: [], unread_count: 0 } };
     return respond(routes.get, url);
   });
   const post = vi.spyOn(api, "post").mockImplementation(async (url: string, body?: unknown) => {
     if (url === "/auth/refresh" && !routes.post?.[url]) throw httpError(401, "Not authenticated");
     return respond(routes.post, url, body);
   });
-  return { post };
+  const patch = vi.spyOn(api, "patch").mockImplementation(async (url: string, body?: unknown) =>
+    respond(routes.patch, url, body),
+  );
+  return { post, patch };
 }

@@ -3,6 +3,7 @@ import { LogOut } from "lucide-react";
 import { useAuth, useCurrentUser } from "../hooks/useAuth";
 import { navFor } from "../lib/nav";
 import { ROLE_LABELS } from "../lib/types";
+import { NotificationBell } from "./NotificationBell";
 import { cx } from "./ui";
 import { Wordmark } from "./Wordmark";
 
@@ -15,8 +16,9 @@ export function AppLayout() {
     <div className="min-h-dvh md:flex">
       {/* Desktop sidebar */}
       <aside className="sticky top-0 hidden h-dvh w-64 shrink-0 flex-col bg-forest-900 text-forest-100 md:flex">
-        <div className="px-6 pt-7 pb-8">
+        <div className="flex items-center justify-between pt-6 pr-3 pb-7 pl-6">
           <Wordmark />
+          <NotificationBell align="left" />
         </div>
         <nav aria-label="Main" className="flex-1 space-y-1 px-3">
           {items.map(({ to, label, icon: Icon }) => (
@@ -58,7 +60,9 @@ export function AppLayout() {
           <div className="flex h-14 items-center">
             <Wordmark />
           </div>
-          <button
+          <div className="flex items-center gap-1">
+            <NotificationBell />
+            <button
             type="button"
             onClick={() => void logout()}
             className="flex min-h-11 items-center gap-1.5 rounded-lg px-2 text-sm text-forest-100/80"
@@ -66,6 +70,7 @@ export function AppLayout() {
             <LogOut className="size-4" aria-hidden />
             Sign out
           </button>
+          </div>
         </header>
 
         <main className="mx-auto w-full max-w-6xl flex-1 px-4 pt-6 pb-28 md:px-10 md:pt-10 md:pb-10">

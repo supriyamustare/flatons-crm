@@ -95,6 +95,19 @@ npm test
 - Search and filters are sent in the body of `POST /api/leads/search`, so phone numbers and
   names never appear in URLs or server logs.
 
+## Follow-ups and notifications (Sprint 3)
+
+- Follow-ups belong to a lead and a person. Views: Today (everything due today, including
+  anything already late), Overdue (past due and not done), Upcoming (after today) and Completed.
+  "Overdue" is worked out from the due time, so it is always current.
+- Completing needs a short note, which goes on the lead's timeline. Rescheduling closes the old
+  follow-up and creates a new one linked to it, so the history of postponements is kept.
+- Executives work their own follow-ups. Managers and admins see everyone's and can assign
+  follow-ups to others. Documents staff don't use follow-ups.
+- In-app notifications: lead assigned to you, follow-up given to you by someone else, and a daily
+  digest at 08:00 India time (Celery beat job `followups.daily_digest`). The bell checks for new
+  notifications every minute. Email delivery comes in Sprint 15.
+
 ## Frontend notes
 
 - Design tokens (forest green, gold, paper, ink) live in `frontend/src/index.css` under `@theme`.

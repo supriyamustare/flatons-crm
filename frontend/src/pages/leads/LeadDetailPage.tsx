@@ -1,12 +1,17 @@
 import { useState } from "react";
 import type { ReactNode } from "react";
 import { Link, useLocation, useNavigate, useParams } from "react-router";
-import { ArrowLeft, ArrowRightLeft, Pencil, Phone, StickyNote, Trash2, UserRoundCog } from "lucide-react";
+import { ArrowLeft, ArrowRightLeft, CalendarPlus, Pencil, Phone, StickyNote, Trash2, UserRoundCog } from "lucide-react";
 import { DuplicateBanner, StatusBadge } from "../../components/leads/LeadBits";
 import { AssignDialog, DeleteDialog, NoteDialog, StatusDialog } from "../../components/leads/LeadDialogs";
+import { CompleteTaskDialog, NewTaskDialog, RescheduleDialog } from "../../components/tasks/TaskDialogs";
+import { TaskItem } from "../../components/tasks/TaskItem";
 import { Button, ErrorState, Spinner } from "../../components/ui";
 import { useCurrentUser } from "../../hooks/useAuth";
 import { useLead } from "../../hooks/useLeads";
+import { useLeadTasks } from "../../hooks/useTasks";
+import { TASK_TYPE_LABELS, formatDue } from "../../lib/tasks";
+import type { Task, TaskType } from "../../lib/tasks";
 import { errorMessage, formatDateTime } from "../../lib/api";
 import {
   CONFIG_LABELS, FIELD_LABELS, PURPOSE_LABELS, SOURCE_LABELS, STATUS_LABELS, TIMELINE_LABELS,
@@ -49,9 +54,61 @@ function describe(a: Activity): ReactNode {
     }
     case "note":
       return <>Added a note</>;
+    case "task_created":
+      return <>Planned a <b>{TASK_TYPE_LABELS[d.task_type as TaskType].toLowerCase()}</b> for {formatDue(String(d.due_at))}{d.assigned_to ? <> ({String(d.assigned_to)})</> : null}</>;
+    case "task_completed":
+      return <>Completed a {TASK_TYPE_LABELS[d.task_type as TaskType].toLowerCase()}{d.was_overdue ? " (late)" : ""}</>;
+    case "task_rescheduled":
+      return <>Moved a {TASK_TYPE_LABELS[d.task_type as TaskType].toLowerCase()} from {formatDue(String(d.from))} to <b>{formatDue(String(d.to))}</b></>;
     default:
       return a.type;
   }
+}
+
+/** Open follow-ups first, then a short history. */
+function LeadFollowUps({ leadId, canAdd, onAdd }: { leadId: number; canAdd: boolean; onAdd: () => void }) {
+  const me = useCurrentUser();
+  const isManager = me.role === "admin" || me.role === "manager";
+  const tasks = useLeadTasks(leadId);
+  const [acting, setActing] = useState<{ kind: "done" | "move"; task: Task } | null>(null);
+  const open = tasks.data?.filter((t) => t.status === "pending") ?? [];
+  const recentDone = tasks.data?.filter((t) => t.status === "completed").slice(0, 3) ?? [];
+
+  return (
+    <section className="rounded-xl border border-line bg-white p-5">
+      <div className="mb-3 flex items-center justify-between">
+        <h2 className="font-semibold">Follow-ups</h2>
+        {canAdd && <Button variant="ghost" onClick={onAdd}><CalendarPlus className="size-4" aria-hidden />Add</Button>}
+      </div>
+      {tasks.isPending && <div className="h-16 animate-pulse rounded-lg bg-paper" />}
+      {tasks.isError && <p className="text-sm text-danger">{errorMessage(tasks.error, "Couldn’t load follow-ups.")}</p>}
+      {tasks.isSuccess && open.length === 0 && (
+        <p className="text-sm text-muted">No follow-up planned.{canAdd ? " Add one so this lead doesn’t go cold." : ""}</p>
+      )}
+      {open.length > 0 && (
+        <ul className="space-y-2">
+          {open.map((t) => (
+            <TaskItem key={t.id} task={t} showLead={false} showAssignee
+              canAct={isManager || t.assigned_to?.id === me.id}
+              onComplete={() => setActing({ kind: "done", task: t })}
+              onReschedule={() => setActing({ kind: "move", task: t })} />
+          ))}
+        </ul>
+      )}
+      {recentDone.length > 0 && (
+        <details className="mt-3 text-sm">
+          <summary className="cursor-pointer text-muted">Recently completed ({recentDone.length})</summary>
+          <ul className="mt-2 space-y-2">
+            {recentDone.map((t) => (
+              <TaskItem key={t.id} task={t} showLead={false} canAct={false} onComplete={() => {}} onReschedule={() => {}} />
+            ))}
+          </ul>
+        </details>
+      )}
+      {acting?.kind === "done" && <CompleteTaskDialog task={acting.task} onClose={() => setActing(null)} />}
+      {acting?.kind === "move" && <RescheduleDialog task={acting.task} onClose={() => setActing(null)} />}
+    </section>
+  );
 }
 
 function Timeline({ activities }: { activities: Activity[] }) {
@@ -71,7 +128,7 @@ function Timeline({ activities }: { activities: Activity[] }) {
   );
 }
 
-type DialogKind = "status" | "note" | "assign" | "delete";
+type DialogKind = "status" | "note" | "task" | "assign" | "delete";
 
 function LeadView({ lead }: { lead: LeadDetail }) {
   const me = useCurrentUser();
@@ -104,6 +161,7 @@ function LeadView({ lead }: { lead: LeadDetail }) {
         {lead.can_edit && (
           <>
             <Button variant="secondary" onClick={() => setDialog("status")}><ArrowRightLeft className="size-4" aria-hidden />Change status</Button>
+            <Button variant="secondary" onClick={() => setDialog("task")}><CalendarPlus className="size-4" aria-hidden />Follow-up</Button>
             <Button variant="secondary" onClick={() => setDialog("note")}><StickyNote className="size-4" aria-hidden />Add note</Button>
             <Link to={`/leads/${lead.id}/edit`} className="inline-flex min-h-11 items-center gap-2 rounded-lg bg-white px-4 text-sm font-medium ring-1 ring-line hover:bg-forest-50">
               <Pencil className="size-4" aria-hidden /> Edit
@@ -149,14 +207,20 @@ function LeadView({ lead }: { lead: LeadDetail }) {
           </section>
         </div>
 
-        <section className="rounded-xl border border-line bg-white p-5">
-          <h2 className="mb-4 font-semibold">Activity</h2>
-          <Timeline activities={lead.activities} />
-        </section>
+        <div className="space-y-6">
+          <LeadFollowUps leadId={lead.id} canAdd={lead.can_edit} onAdd={() => setDialog("task")} />
+          <section className="rounded-xl border border-line bg-white p-5">
+            <h2 className="mb-4 font-semibold">Activity</h2>
+            <Timeline activities={lead.activities} />
+          </section>
+        </div>
       </div>
 
       {dialog === "status" && <StatusDialog lead={lead} onClose={() => setDialog(null)} />}
       {dialog === "note" && <NoteDialog lead={lead} onClose={() => setDialog(null)} />}
+      {dialog === "task" && (
+        <NewTaskDialog lead={{ id: lead.id, name: lead.name, assigned_to_id: lead.assigned_to?.id }} onClose={() => setDialog(null)} />
+      )}
       {dialog === "assign" && <AssignDialog lead={lead} onClose={() => setDialog(null)} />}
       {dialog === "delete" && <DeleteDialog lead={lead} onClose={() => setDialog(null)} onDeleted={() => navigate("/leads")} />}
     </>
