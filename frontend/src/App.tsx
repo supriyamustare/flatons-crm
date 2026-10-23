@@ -1,44 +1,67 @@
-import { useEffect, useState } from "react";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { BrowserRouter, Route, Routes } from "react-router";
+import axios from "axios";
+import { AppLayout } from "./components/AppLayout";
+import { RequireAuth, RequireRole } from "./components/RouteGuards";
+import { AuthProvider } from "./hooks/useAuth";
+import { AccountPage } from "./pages/AccountPage";
+import { DashboardPage } from "./pages/DashboardPage";
+import { LoginPage } from "./pages/LoginPage";
+import { LeadDetailPage } from "./pages/leads/LeadDetailPage";
+import { EditLeadPage, NewLeadPage } from "./pages/leads/LeadFormPage";
+import { LeadsPage } from "./pages/leads/LeadsPage";
+import { NotFoundPage } from "./pages/NotFoundPage";
+import { ProjectsPage } from "./pages/ProjectsPage";
+import { UsersPage } from "./pages/users/UsersPage";
 
-type Health = { status: string; database: string; redis: string };
-type State = { kind: "loading" } | { kind: "ready"; data: Health } | { kind: "unreachable" };
+export function createQueryClient() {
+  return new QueryClient({
+    defaultOptions: {
+      queries: {
+        refetchOnWindowFocus: false,
+        // Retry network blips once, but never auth/permission/not-found errors.
+        retry: (count, err) =>
+          count < 1 && !(axios.isAxiosError(err) && [401, 403, 404].includes(err.response?.status ?? 0)),
+      },
+    },
+  });
+}
 
-const LABELS: Record<string, string> = { database: "Database", redis: "Task queue" };
+export function AppRoutes() {
+  return (
+    <Routes>
+      <Route path="/login" element={<LoginPage />} />
+      <Route element={<RequireAuth />}>
+        <Route element={<AppLayout />}>
+          <Route index element={<DashboardPage />} />
+          <Route path="account" element={<AccountPage />} />
+          <Route path="leads" element={<LeadsPage />} />
+          <Route path="leads/:id" element={<LeadDetailPage />} />
+          <Route element={<RequireRole roles={["admin", "manager", "executive"]} />}>
+            <Route path="leads/new" element={<NewLeadPage />} />
+            <Route path="leads/:id/edit" element={<EditLeadPage />} />
+          </Route>
+          <Route element={<RequireRole roles={["admin"]} />}>
+            <Route path="users" element={<UsersPage />} />
+            <Route path="projects" element={<ProjectsPage />} />
+          </Route>
+          <Route path="*" element={<NotFoundPage />} />
+        </Route>
+      </Route>
+    </Routes>
+  );
+}
+
+const queryClient = createQueryClient();
 
 export default function App() {
-  const [state, setState] = useState<State>({ kind: "loading" });
-
-  useEffect(() => {
-    fetch("/api/health")
-      .then((r) => r.json() as Promise<Health>)
-      .then((data) => setState({ kind: "ready", data }))
-      .catch(() => setState({ kind: "unreachable" }));
-  }, []);
-
   return (
-    <main className="shell">
-      <div className="mark" aria-hidden="true">F</div>
-      <h1>Flatons CRM</h1>
-      <p className="lede">The server is set up. The sales workspace arrives in the first sprint.</p>
-
-      <section className="status" aria-live="polite">
-        {state.kind === "loading" && <p>Checking the server…</p>}
-        {state.kind === "unreachable" && (
-          <p className="bad">The API isn’t responding. Check that flatons-api is running.</p>
-        )}
-        {state.kind === "ready" && (
-          <ul>
-            {(["database", "redis"] as const).map((key) => (
-              <li key={key}>
-                <span>{LABELS[key]}</span>
-                <span className={state.data[key] === "ok" ? "ok" : "bad"}>
-                  {state.data[key] === "ok" ? "Connected" : "Not reachable"}
-                </span>
-              </li>
-            ))}
-          </ul>
-        )}
-      </section>
-    </main>
+    <QueryClientProvider client={queryClient}>
+      <AuthProvider>
+        <BrowserRouter>
+          <AppRoutes />
+        </BrowserRouter>
+      </AuthProvider>
+    </QueryClientProvider>
   );
 }

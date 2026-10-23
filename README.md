@@ -3,7 +3,7 @@
 Lead management, inventory, bookings and post-sales document engine for Flatons.
 
 - **Backend:** Python 3.12, FastAPI, SQLAlchemy (async) + Alembic, PostgreSQL 16, Celery + Redis
-- **Frontend:** React 19, TypeScript, Vite (Tailwind added in Sprint 1)
+- **Frontend:** React 19, TypeScript, Vite, Tailwind CSS v4, React Router, TanStack Query
 - **Server:** Ubuntu on Google Cloud, Nginx, Gunicorn, systemd
 
 ## Repository layout
@@ -43,7 +43,37 @@ npm install
 npm run dev
 ```
 
+## Database migrations
+
+Schema changes go through Alembic and are never applied by hand in production.
+
+```bash
+cd backend
+poetry run alembic revision --autogenerate -m "describe the change"   # then review the file
+poetry run alembic upgrade head
+```
+
+`scripts/deploy.sh` runs `alembic upgrade head` automatically on every deploy.
+
+## First admin user
+
+Users are created by an admin in the app, so the very first admin is created from the command line:
+
+```bash
+cd backend
+poetry run python -m app.cli create-admin --email you@company.com --name "Your Name"
+```
+
+On the server, run it as the `crm` user:
+
+```bash
+sudo -iu crm bash -c 'cd ~/flatons-crm/backend && .venv/bin/python -m app.cli create-admin --email you@company.com --name "Your Name"'
+```
+
 ## Tests and linting
+
+Integration tests need the local PostgreSQL from `docker-compose.dev.yml`. They create and rebuild
+a separate `flatons_crm_test` database, so your development data is never touched.
 
 ```bash
 cd backend
@@ -52,7 +82,28 @@ poetry run ruff check . && poetry run ruff format --check .
 
 cd ../frontend
 npm run typecheck
+npm test
 ```
+
+## Leads (Sprint 2)
+
+- Lead IDs look like `LEAD-20261022-0001`, numbered per day in India time.
+- Executives see and work only the leads assigned to them; leads they create are assigned to them.
+  Managers and admins see everything and can reassign. Documents staff have read-only access.
+- Lost and Junk need a reason. Only managers and admins can set or undo Booked.
+- Duplicate phone numbers or emails trigger a warning, never a block.
+- Search and filters are sent in the body of `POST /api/leads/search`, so phone numbers and
+  names never appear in URLs or server logs.
+
+## Frontend notes
+
+- Design tokens (forest green, gold, paper, ink) live in `frontend/src/index.css` under `@theme`.
+  Tailwind v4 reads them from CSS, so there is no `tailwind.config.ts`; use them as `bg-forest-900`,
+  `text-gold-500`, etc.
+- All API calls go through `src/lib/api.ts`. It sends cookies, renews an expired session once
+  automatically, and turns API errors into readable messages (`errorMessage()`).
+- Navigation items and which roles see them are defined in `src/lib/nav.ts`. Pages restricted to
+  certain roles are wrapped in `<RequireRole>` in `src/App.tsx`. The API enforces the same rules.
 
 ## Environment variables
 
