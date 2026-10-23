@@ -1,15 +1,23 @@
 import { useState } from "react";
 import type { ReactNode } from "react";
 import { Link, useLocation, useNavigate, useParams } from "react-router";
-import { ArrowLeft, ArrowRightLeft, CalendarPlus, Pencil, Phone, StickyNote, Trash2, UserRoundCog } from "lucide-react";
+import { ArrowLeft, ArrowRightLeft, CalendarPlus, MapPin, Pencil, Phone, PhoneCall, StickyNote, Trash2, UserRoundCog } from "lucide-react";
 import { DuplicateBanner, StatusBadge } from "../../components/leads/LeadBits";
 import { AssignDialog, DeleteDialog, NoteDialog, StatusDialog } from "../../components/leads/LeadDialogs";
+import { LogCallDialog } from "../../components/calls/LogCallDialog";
 import { CompleteTaskDialog, NewTaskDialog, RescheduleDialog } from "../../components/tasks/TaskDialogs";
+import { ScheduleVisitDialog, VisitOutcomeDialog } from "../../components/visits/VisitDialogs";
+import { VisitItem } from "../../components/visits/VisitItem";
 import { TaskItem } from "../../components/tasks/TaskItem";
 import { Button, ErrorState, Spinner } from "../../components/ui";
 import { useCurrentUser } from "../../hooks/useAuth";
 import { useLead } from "../../hooks/useLeads";
 import { useLeadTasks } from "../../hooks/useTasks";
+import { useLeadVisits } from "../../hooks/useVisits";
+import { OUTCOME_LABELS, formatDuration } from "../../lib/calls";
+import type { CallOutcome } from "../../lib/calls";
+import { INTEREST_LABELS } from "../../lib/visits";
+import type { InterestLevel, Visit } from "../../lib/visits";
 import { TASK_TYPE_LABELS, formatDue } from "../../lib/tasks";
 import type { Task, TaskType } from "../../lib/tasks";
 import { errorMessage, formatDateTime } from "../../lib/api";
@@ -38,6 +46,7 @@ function describe(a: Activity): ReactNode {
     case "status_change":
       return (
         <>
+          {d.automatic ? <span className="text-muted">Automatically: </span> : null}
           Changed status from <b>{STATUS_LABELS[d.from as LeadStatus]}</b> to <b>{STATUS_LABELS[d.to as LeadStatus]}</b>
           {d.reason ? <>: {String(d.reason)}</> : null}
         </>
@@ -54,6 +63,23 @@ function describe(a: Activity): ReactNode {
     }
     case "note":
       return <>Added a note</>;
+    case "call_logged":
+      return (
+        <>
+          {d.direction === "incoming" ? "Took a call" : "Called"}: <b>{OUTCOME_LABELS[d.outcome as CallOutcome]}</b>
+          {d.duration_sec ? <> ({formatDuration(Number(d.duration_sec))})</> : null}
+        </>
+      );
+    case "visit_scheduled":
+      return <>Scheduled a site visit at {String(d.project)} for <b>{formatDue(String(d.scheduled_at))}</b> ({String(d.host)})</>;
+    case "visit_completed":
+      return <>Site visit done at {String(d.project)}: <b>{INTEREST_LABELS[d.interest_level as InterestLevel].split(":")[0]}</b></>;
+    case "visit_rescheduled":
+      return <>Moved the site visit to <b>{formatDue(String(d.to))}</b></>;
+    case "visit_no_show":
+      return <>Customer didn’t come for the site visit</>;
+    case "visit_cancelled":
+      return <>Cancelled the site visit</>;
     case "task_created":
       return <>Planned a <b>{TASK_TYPE_LABELS[d.task_type as TaskType].toLowerCase()}</b> for {formatDue(String(d.due_at))}{d.assigned_to ? <> ({String(d.assigned_to)})</> : null}</>;
     case "task_completed":
@@ -70,7 +96,7 @@ function LeadFollowUps({ leadId, canAdd, onAdd }: { leadId: number; canAdd: bool
   const me = useCurrentUser();
   const isManager = me.role === "admin" || me.role === "manager";
   const tasks = useLeadTasks(leadId);
-  const [acting, setActing] = useState<{ kind: "done" | "move"; task: Task } | null>(null);
+  const [acting, setActing] = useState<{ kind: "done" | "move" | "call"; task: Task } | null>(null);
   const open = tasks.data?.filter((t) => t.status === "pending") ?? [];
   const recentDone = tasks.data?.filter((t) => t.status === "completed").slice(0, 3) ?? [];
 
@@ -91,7 +117,8 @@ function LeadFollowUps({ leadId, canAdd, onAdd }: { leadId: number; canAdd: bool
             <TaskItem key={t.id} task={t} showLead={false} showAssignee
               canAct={isManager || t.assigned_to?.id === me.id}
               onComplete={() => setActing({ kind: "done", task: t })}
-              onReschedule={() => setActing({ kind: "move", task: t })} />
+              onReschedule={() => setActing({ kind: "move", task: t })}
+              onCall={() => setActing({ kind: "call", task: t })} />
           ))}
         </ul>
       )}
@@ -107,6 +134,32 @@ function LeadFollowUps({ leadId, canAdd, onAdd }: { leadId: number; canAdd: bool
       )}
       {acting?.kind === "done" && <CompleteTaskDialog task={acting.task} onClose={() => setActing(null)} />}
       {acting?.kind === "move" && <RescheduleDialog task={acting.task} onClose={() => setActing(null)} />}
+      {acting?.kind === "call" && <LogCallDialog lead={acting.task.lead} task={acting.task} onClose={() => setActing(null)} />}
+    </section>
+  );
+}
+
+function LeadVisits({ leadId, canAdd, onAdd }: { leadId: number; canAdd: boolean; onAdd: () => void }) {
+  const visits = useLeadVisits(leadId);
+  const [updating, setUpdating] = useState<Visit | null>(null);
+  const list = visits.data ?? [];
+  return (
+    <section className="rounded-xl border border-line bg-white p-5">
+      <div className="mb-3 flex items-center justify-between">
+        <h2 className="font-semibold">Site visits</h2>
+        {canAdd && <Button variant="ghost" onClick={onAdd}><MapPin className="size-4" aria-hidden />Schedule</Button>}
+      </div>
+      {visits.isPending && <div className="h-16 animate-pulse rounded-lg bg-paper" />}
+      {visits.isError && <p className="text-sm text-danger">{errorMessage(visits.error, "Couldn’t load visits.")}</p>}
+      {visits.isSuccess && list.length === 0 && <p className="text-sm text-muted">No site visits yet.</p>}
+      {list.length > 0 && (
+        <ul className="space-y-2">
+          {list.slice(0, 4).map((v) => (
+            <VisitItem key={v.id} visit={v} showLead={false} canAct={canAdd} onUpdate={() => setUpdating(v)} />
+          ))}
+        </ul>
+      )}
+      {updating && <VisitOutcomeDialog visit={updating} onClose={() => setUpdating(null)} />}
     </section>
   );
 }
@@ -128,7 +181,7 @@ function Timeline({ activities }: { activities: Activity[] }) {
   );
 }
 
-type DialogKind = "status" | "note" | "task" | "assign" | "delete";
+type DialogKind = "status" | "note" | "task" | "call" | "visit" | "assign" | "delete";
 
 function LeadView({ lead }: { lead: LeadDetail }) {
   const me = useCurrentUser();
@@ -155,12 +208,15 @@ function LeadView({ lead }: { lead: LeadDetail }) {
       </div>
 
       <div className="mb-6 flex flex-wrap gap-2">
-        <a href={`tel:${lead.mobile}`} className="inline-flex min-h-11 items-center gap-2 rounded-lg bg-forest-900 px-4 text-sm font-medium text-white hover:bg-forest-800">
+        <a href={`tel:${lead.mobile}`} onClick={() => lead.can_edit && setDialog("call")}
+          className="inline-flex min-h-11 items-center gap-2 rounded-lg bg-forest-900 px-4 text-sm font-medium text-white hover:bg-forest-800">
           <Phone className="size-4" aria-hidden /> Call
         </a>
         {lead.can_edit && (
           <>
             <Button variant="secondary" onClick={() => setDialog("status")}><ArrowRightLeft className="size-4" aria-hidden />Change status</Button>
+            <Button variant="secondary" onClick={() => setDialog("call")}><PhoneCall className="size-4" aria-hidden />Log call</Button>
+            <Button variant="secondary" onClick={() => setDialog("visit")}><MapPin className="size-4" aria-hidden />Site visit</Button>
             <Button variant="secondary" onClick={() => setDialog("task")}><CalendarPlus className="size-4" aria-hidden />Follow-up</Button>
             <Button variant="secondary" onClick={() => setDialog("note")}><StickyNote className="size-4" aria-hidden />Add note</Button>
             <Link to={`/leads/${lead.id}/edit`} className="inline-flex min-h-11 items-center gap-2 rounded-lg bg-white px-4 text-sm font-medium ring-1 ring-line hover:bg-forest-50">
@@ -209,6 +265,7 @@ function LeadView({ lead }: { lead: LeadDetail }) {
 
         <div className="space-y-6">
           <LeadFollowUps leadId={lead.id} canAdd={lead.can_edit} onAdd={() => setDialog("task")} />
+          <LeadVisits leadId={lead.id} canAdd={lead.can_edit} onAdd={() => setDialog("visit")} />
           <section className="rounded-xl border border-line bg-white p-5">
             <h2 className="mb-4 font-semibold">Activity</h2>
             <Timeline activities={lead.activities} />
@@ -218,6 +275,11 @@ function LeadView({ lead }: { lead: LeadDetail }) {
 
       {dialog === "status" && <StatusDialog lead={lead} onClose={() => setDialog(null)} />}
       {dialog === "note" && <NoteDialog lead={lead} onClose={() => setDialog(null)} />}
+      {dialog === "call" && <LogCallDialog lead={lead} onClose={() => setDialog(null)} />}
+      {dialog === "visit" && (
+        <ScheduleVisitDialog lead={{ id: lead.id, name: lead.name, project_id: lead.project?.id, assigned_to_id: lead.assigned_to?.id }}
+          onClose={() => setDialog(null)} />
+      )}
       {dialog === "task" && (
         <NewTaskDialog lead={{ id: lead.id, name: lead.name, assigned_to_id: lead.assigned_to?.id }} onClose={() => setDialog(null)} />
       )}

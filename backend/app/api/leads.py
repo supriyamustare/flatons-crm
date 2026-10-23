@@ -22,8 +22,10 @@ from app.schemas.lead import (
     StatusChange,
 )
 from app.schemas.task import TaskOut
+from app.schemas.visit import VisitOut
 from app.services import leads as svc
 from app.services import tasks as task_svc
+from app.services import visits as visit_svc
 from app.services.audit import log_audit
 from app.services.notifications import notify
 
@@ -308,3 +310,12 @@ async def lead_tasks(lead_id: int, user: CurrentUser, db: DbSession) -> list[Tas
     if lead is None:
         raise NOT_FOUND
     return [task_svc.to_out(t) for t in await task_svc.tasks_for_lead(db, lead.id)]
+
+
+@router.get("/{lead_id}/visits", response_model=list[VisitOut])
+async def lead_visits(lead_id: int, user: CurrentUser, db: DbSession) -> list[VisitOut]:
+    """All site visits for a lead (scheduled first), for the lead page."""
+    lead = await svc.get_visible_lead(db, user, lead_id)
+    if lead is None:
+        raise NOT_FOUND
+    return [visit_svc.to_out(v) for v in await visit_svc.visits_for_lead(db, lead.id)]

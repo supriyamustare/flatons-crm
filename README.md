@@ -108,6 +108,21 @@ npm test
   digest at 08:00 India time (Celery beat job `followups.daily_digest`). The bell checks for new
   notifications every minute. Email delivery comes in Sprint 15.
 
+## Calls and site visits (Sprint 4)
+
+- Calls: outcome (connected: Interested, Call back later, Not interested; not connected: No answer,
+  Busy, Switched off/unreachable, Wrong number), direction, optional duration and notes. Setting a
+  next date creates a follow-up. Logged from a follow-up, a call can close that follow-up too.
+  Calls can be logged up to 30 days after they happened, never in the future.
+- Site visits: project, date and time, how the visit came about (separate from the lead source) and
+  who hosts it. Afterwards: completed (feedback, interest, next step, optional follow-up), no-show,
+  rescheduled or cancelled (reason required). Outcomes can be recorded from the visit day on.
+- Lead status moves automatically: scheduling a visit moves an early-stage lead to Visit scheduled;
+  completing one moves it to Visit done (Revisit for later visits). Leads in Negotiation, On hold,
+  Booked, Lost or Junk are never changed automatically. These changes are marked "automatic" in the
+  timeline and audit log.
+- The 8:00 daily digest also counts the day's site visits.
+
 ## Frontend notes
 
 - Design tokens (forest green, gold, paper, ink) live in `frontend/src/index.css` under `@theme`.

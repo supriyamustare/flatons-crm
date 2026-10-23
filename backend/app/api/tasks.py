@@ -11,21 +11,11 @@ from app.schemas.task import TaskComplete, TaskCreate, TaskOut, TaskPage, TaskQu
 from app.services import leads as lead_svc
 from app.services import tasks as svc
 from app.services.audit import log_audit
-from app.services.notifications import notify
 
 router = APIRouter(prefix="/tasks", tags=["follow-ups"])
 
 # Follow-ups are sales work: documents staff don't use them.
 SalesUser = Annotated[User, Depends(require_role(Role.admin, Role.manager, Role.executive))]
-
-TYPE_LABELS = {
-    "call": "Call",
-    "whatsapp": "WhatsApp",
-    "meeting": "Meeting",
-    "site_visit": "Site visit",
-    "email": "Email",
-    "other": "Follow-up",
-}
 
 
 def _rule_error(exc: Exception) -> HTTPException:
@@ -43,10 +33,6 @@ async def _task_for_action(db: DbSession, user: User, task_id: int) -> FollowUpT
     except svc.TaskRuleError as exc:
         raise _rule_error(exc) from None
     return task
-
-
-def _when(dt: datetime) -> str:
-    return dt.astimezone(lead_svc.IST).strftime("%-d %b, %-I:%M %p")
 
 
 @router.get("", response_model=TaskPage)
@@ -87,40 +73,15 @@ async def create_task(
         except lead_svc.LeadRuleError as exc:
             raise _rule_error(exc) from None
 
-    task = FollowUpTask(
-        lead_id=lead.id,
+    task = await svc.create_follow_up(
+        db,
+        lead=lead,
+        actor=user,
         task_type=body.task_type,
         due_at=body.due_at,
-        notes=body.notes or None,
-        assigned_to_id=assignee.id,
-        created_by_id=user.id,
+        notes=body.notes,
+        assignee=assignee,
     )
-    db.add(task)
-    await db.flush()
-
-    label = TYPE_LABELS[body.task_type.value]
-    lead_svc.add_activity(
-        db,
-        lead,
-        actor=user,
-        type="task_created",
-        note=task.notes,
-        details={
-            "task_id": task.id,
-            "task_type": body.task_type.value,
-            "due_at": body.due_at.isoformat(),
-            "assigned_to": assignee.full_name,
-        },
-    )
-    if assignee.id != user.id:
-        notify(
-            db,
-            user_id=assignee.id,
-            type="task_assigned",
-            title=f"{label} with {lead.name}",
-            body=f"{user.full_name} gave you a follow-up due {_when(body.due_at)}",
-            link=f"/leads/{lead.id}",
-        )
     log_audit(
         db,
         action="task.create",

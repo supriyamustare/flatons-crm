@@ -7,10 +7,12 @@ import { TASK_TYPE_ICONS, TASK_TYPE_LABELS, formatDue } from "../../lib/tasks";
 import type { Task } from "../../lib/tasks";
 
 export function TaskItem({
-  task, canAct, showLead = true, showAssignee = false, onComplete, onReschedule,
+  task, canAct, showLead = true, showAssignee = false, onComplete, onReschedule, onCall,
 }: {
   task: Task; canAct: boolean; showLead?: boolean; showAssignee?: boolean;
   onComplete: () => void; onReschedule: () => void;
+  /** Called when Call is tapped (the phone dialer still opens), e.g. to open the call log. */
+  onCall?: () => void;
 }) {
   const Icon = TASK_TYPE_ICONS[task.task_type];
   const open = task.status === "pending";
@@ -44,7 +46,7 @@ export function TaskItem({
       </div>
       {open && (
         <div className="mt-3 flex flex-wrap gap-2 sm:pl-12">
-          <a href={`tel:${task.lead.mobile}`} aria-label={`Call ${task.lead.name} on ${formatMobile(task.lead.mobile)}`}
+          <a href={`tel:${task.lead.mobile}`} onClick={() => canAct && onCall?.()} aria-label={`Call ${task.lead.name} on ${formatMobile(task.lead.mobile)}`}
             className="inline-flex min-h-11 items-center gap-2 rounded-lg px-3 text-sm font-medium text-forest-800 ring-1 ring-line hover:bg-forest-50">
             <Phone className="size-4" aria-hidden /> Call
           </a>

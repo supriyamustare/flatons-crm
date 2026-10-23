@@ -1,7 +1,8 @@
-import { NavLink, Outlet } from "react-router";
-import { LogOut } from "lucide-react";
+import { useEffect, useState } from "react";
+import { NavLink, Outlet, useLocation } from "react-router";
+import { Ellipsis, LogOut, X } from "lucide-react";
 import { useAuth, useCurrentUser } from "../hooks/useAuth";
-import { navFor } from "../lib/nav";
+import { mobileNavFor, navFor } from "../lib/nav";
 import { ROLE_LABELS } from "../lib/types";
 import { NotificationBell } from "./NotificationBell";
 import { cx } from "./ui";
@@ -79,29 +80,77 @@ export function AppLayout() {
       </div>
 
       {/* Mobile bottom navigation */}
-      <nav
-        aria-label="Main"
-        className="fixed inset-x-0 bottom-0 z-30 flex border-t border-forest-800 bg-forest-900 pb-[env(safe-area-inset-bottom)] md:hidden"
-      >
-        {items
-          .filter((i) => i.mobile)
-          .map(({ to, label, icon: Icon }) => (
-            <NavLink
-              key={to}
-              to={to}
-              end={to === "/"}
-              className={({ isActive }) =>
-                cx(
-                  "flex min-h-16 flex-1 flex-col items-center justify-center gap-1 text-[11px]",
-                  isActive ? "text-gold-300" : "text-forest-100/70",
-                )
-              }
-            >
-              <Icon className="size-5" aria-hidden />
-              {label}
-            </NavLink>
-          ))}
-      </nav>
+      <MobileNav />
     </div>
+  );
+}
+
+
+/** Phone bottom bar. Items that don't fit live in a "More" sheet. */
+function MobileNav() {
+  const user = useCurrentUser();
+  const { logout } = useAuth();
+  const { bar, more } = mobileNavFor(user.role);
+  const [open, setOpen] = useState(false);
+  const location = useLocation();
+  const moreActive = more.some((i) => location.pathname.startsWith(i.to));
+
+  useEffect(() => setOpen(false), [location.pathname]);
+  useEffect(() => {
+    if (!open) return;
+    const onKey = (e: KeyboardEvent) => e.key === "Escape" && setOpen(false);
+    document.addEventListener("keydown", onKey);
+    return () => document.removeEventListener("keydown", onKey);
+  }, [open]);
+
+  const tab = "flex min-h-16 flex-1 flex-col items-center justify-center gap-1 text-[11px]";
+  return (
+    <>
+      {open && (
+        <div className="fixed inset-0 z-40 md:hidden" role="dialog" aria-modal="true" aria-label="More">
+          <div className="absolute inset-0 bg-forest-950/50" onClick={() => setOpen(false)} aria-hidden />
+          <div className="absolute inset-x-0 bottom-0 rounded-t-2xl bg-white p-3 pb-[calc(5rem+env(safe-area-inset-bottom))] shadow-xl">
+            <div className="flex items-center justify-between px-2 pb-2">
+              <p className="text-sm text-muted">{user.full_name}</p>
+              <button type="button" onClick={() => setOpen(false)} aria-label="Close" className="grid size-11 place-items-center rounded-lg text-muted">
+                <X className="size-5" />
+              </button>
+            </div>
+            <ul>
+              {more.map(({ to, label, icon: Icon }) => (
+                <li key={to}>
+                  <NavLink to={to} className={({ isActive }) => cx(
+                    "flex min-h-12 items-center gap-3 rounded-lg px-3 text-base",
+                    isActive ? "bg-forest-50 font-medium text-forest-900" : "text-ink")}>
+                    <Icon className="size-5 text-forest-800" aria-hidden />
+                    {label}
+                  </NavLink>
+                </li>
+              ))}
+              <li>
+                <button type="button" onClick={() => void logout()} className="flex min-h-12 w-full items-center gap-3 rounded-lg px-3 text-base text-ink">
+                  <LogOut className="size-5 text-forest-800" aria-hidden />
+                  Sign out
+                </button>
+              </li>
+            </ul>
+          </div>
+        </div>
+      )}
+      <nav aria-label="Main" className="fixed inset-x-0 bottom-0 z-[45] flex border-t border-forest-800 bg-forest-900 pb-[env(safe-area-inset-bottom)] md:hidden">
+        {bar.map(({ to, label, icon: Icon }) => (
+          <NavLink key={to} to={to} end={to === "/"}
+            className={({ isActive }) => cx(tab, isActive && !open ? "text-gold-300" : "text-forest-100/70")}>
+            <Icon className="size-5" aria-hidden />
+            {label}
+          </NavLink>
+        ))}
+        <button type="button" onClick={() => setOpen(!open)} aria-expanded={open}
+          className={cx(tab, open || moreActive ? "text-gold-300" : "text-forest-100/70")}>
+          <Ellipsis className="size-5" aria-hidden />
+          More
+        </button>
+      </nav>
+    </>
   );
 }

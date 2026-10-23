@@ -5,6 +5,7 @@ import { AppLayout } from "./components/AppLayout";
 import { RequireAuth, RequireRole } from "./components/RouteGuards";
 import { AuthProvider } from "./hooks/useAuth";
 import { AccountPage } from "./pages/AccountPage";
+import { CallsPage } from "./pages/CallsPage";
 import { DashboardPage } from "./pages/DashboardPage";
 import { FollowUpsPage } from "./pages/FollowUpsPage";
 import { LoginPage } from "./pages/LoginPage";
@@ -13,6 +14,7 @@ import { EditLeadPage, NewLeadPage } from "./pages/leads/LeadFormPage";
 import { LeadsPage } from "./pages/leads/LeadsPage";
 import { NotFoundPage } from "./pages/NotFoundPage";
 import { ProjectsPage } from "./pages/ProjectsPage";
+import { VisitsPage } from "./pages/VisitsPage";
 import { UsersPage } from "./pages/users/UsersPage";
 
 export function createQueryClient() {
@@ -40,6 +42,8 @@ export function AppRoutes() {
           <Route path="leads/:id" element={<LeadDetailPage />} />
           <Route element={<RequireRole roles={["admin", "manager", "executive"]} />}>
             <Route path="follow-ups" element={<FollowUpsPage />} />
+            <Route path="visits" element={<VisitsPage />} />
+            <Route path="calls" element={<CallsPage />} />
           </Route>
           <Route element={<RequireRole roles={["admin", "manager", "executive"]} />}>
             <Route path="leads/new" element={<NewLeadPage />} />

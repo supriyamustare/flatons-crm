@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { Plus } from "lucide-react";
+import { LogCallDialog } from "../components/calls/LogCallDialog";
 import { CompleteTaskDialog, NewTaskDialog, RescheduleDialog } from "../components/tasks/TaskDialogs";
 import { TaskItem } from "../components/tasks/TaskItem";
 import { Button, ErrorState, PageHeader, SelectInput, cx } from "../components/ui";
@@ -30,7 +31,7 @@ export function FollowUpsPage() {
   // Managers: "" = everyone, "me" = mine, or a person's id
   const [person, setPerson] = useState(isManager ? "" : "me");
   const [page, setPage] = useState(1);
-  const [dialog, setDialog] = useState<{ kind: "new" } | { kind: "done" | "move"; task: Task } | null>(null);
+  const [dialog, setDialog] = useState<{ kind: "new" } | { kind: "done" | "move" | "call"; task: Task } | null>(null);
 
   const query: TaskQuery = {
     view, page,
@@ -112,7 +113,8 @@ export function FollowUpsPage() {
               <TaskItem key={t.id} task={t} showAssignee={isManager && person !== "me"}
                 canAct={isManager || t.assigned_to?.id === me.id}
                 onComplete={() => setDialog({ kind: "done", task: t })}
-                onReschedule={() => setDialog({ kind: "move", task: t })} />
+                onReschedule={() => setDialog({ kind: "move", task: t })}
+                onCall={() => setDialog({ kind: "call", task: t })} />
             ))}
           </ul>
           {total > pageSize && (
@@ -130,6 +132,7 @@ export function FollowUpsPage() {
       {dialog?.kind === "new" && <NewTaskDialog onClose={() => setDialog(null)} />}
       {dialog?.kind === "done" && <CompleteTaskDialog task={dialog.task} onClose={() => setDialog(null)} />}
       {dialog?.kind === "move" && <RescheduleDialog task={dialog.task} onClose={() => setDialog(null)} />}
+      {dialog?.kind === "call" && <LogCallDialog lead={dialog.task.lead} task={dialog.task} onClose={() => setDialog(null)} />}
     </>
   );
 }
