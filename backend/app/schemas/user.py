@@ -46,3 +46,11 @@ class PasswordChange(BaseModel):
 
     current_password: Annotated[str, StringConstraints(min_length=1, max_length=200)]
     new_password: NewPassword
+
+
+class UserBrief(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
+    id: int
+    full_name: str
+    role: Role

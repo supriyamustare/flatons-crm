@@ -7,7 +7,8 @@ from app.api.auth import set_auth_cookies
 from app.core.deps import CurrentUser, DbSession, require_role
 from app.core.security import hash_password, verify_password
 from app.models.user import Role, User
-from app.schemas.user import PasswordChange, UserCreate, UserOut, UserUpdate
+from app.schemas.user import PasswordChange, UserBrief, UserCreate, UserOut, UserUpdate
+from app.services import leads as leads_service
 from app.services import users as users_service
 from app.services.audit import log_audit
 
@@ -59,6 +60,14 @@ async def change_my_password(
 @router.get("", response_model=list[UserOut])
 async def list_users(_: AdminUser, db: DbSession) -> list[User]:
     return await users_service.list_users(db)
+
+
+@router.get("/assignable", response_model=list[UserBrief])
+async def assignable_users(
+    _: Annotated[User, Depends(require_role(Role.admin, Role.manager))], db: DbSession
+) -> list[User]:
+    """Active executives and managers, for the lead assignment picker."""
+    return await leads_service.list_assignable_users(db)
 
 
 @router.post("", response_model=UserOut, status_code=status.HTTP_201_CREATED)
