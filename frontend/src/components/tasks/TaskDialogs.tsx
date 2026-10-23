@@ -28,7 +28,7 @@ function Actions({ onCancel, submitLabel, loading, disabled }: {
 }
 
 /** Date and time with one-tap presets. Times are the user's own (India) time. */
-function DueTimeField({ value, onChange, label = "When" }: { value: string; onChange: (v: string) => void; label?: string }) {
+export function DueTimeField({ value, onChange, label = "When" }: { value: string; onChange: (v: string) => void; label?: string }) {
   const presets = duePresets();
   return (
     <div className="space-y-2">

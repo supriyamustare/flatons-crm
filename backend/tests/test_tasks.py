@@ -381,7 +381,7 @@ async def test_daily_digest(login_as, make_user, db):
     await db.commit()
     note = await db.scalar(select(Notification).where(Notification.type == "daily_digest"))
     assert note.user_id == busy.id
-    assert note.body == "2 due later today, 1 overdue"
+    assert note.body == "2 follow-ups due later today, 1 overdue"
     assert note.link == "/follow-ups"
     assert await db.scalar(select(Notification).where(Notification.user_id == idle.id)) is None
 

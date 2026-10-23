@@ -5,11 +5,12 @@ from datetime import UTC, datetime, timedelta
 from sqlalchemy import Select, and_, func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.models.task import FollowUpTask, TaskStatus
+from app.models.lead import Lead
+from app.models.task import FollowUpTask, TaskStatus, TaskType
 from app.models.user import User
 from app.schemas.task import TaskCounts, TaskOut, TaskQuery, TaskView
-from app.services.leads import MANAGERS
-from app.services.notifications import ist_day_bounds
+from app.services.leads import IST, MANAGERS, add_activity
+from app.services.notifications import ist_day_bounds, notify
 
 # A follow-up can't be set in the past; a few minutes' grace covers slow typing and clocks.
 PAST_GRACE = timedelta(minutes=5)
@@ -117,3 +118,64 @@ def require_pending(task: FollowUpTask) -> None:
 
 def assignee_label(user: User | None) -> str:
     return user.full_name if user else "nobody"
+
+
+async def create_follow_up(
+    db: AsyncSession,
+    *,
+    lead: Lead,
+    actor: User,
+    task_type: TaskType,
+    due_at: datetime,
+    notes: str | None = None,
+    assignee: User | None = None,
+    source: str | None = None,
+) -> FollowUpTask:
+    """Create a follow-up, add it to the lead's timeline and notify the assignee if it's
+    someone else. Caller checks permissions and commits. `source` notes where it came from
+    (e.g. "call", "visit") for the timeline."""
+    assignee = assignee or actor
+    task = FollowUpTask(
+        lead_id=lead.id,
+        task_type=task_type,
+        due_at=due_at,
+        notes=notes or None,
+        assigned_to_id=assignee.id,
+        created_by_id=actor.id,
+    )
+    db.add(task)
+    await db.flush()
+    details = {
+        "task_id": task.id,
+        "task_type": task.task_type.value,
+        "due_at": due_at.isoformat(),
+        "assigned_to": assignee.full_name,
+    }
+    if source:
+        details["source"] = source
+    add_activity(db, lead, actor=actor, type="task_created", note=task.notes, details=details)
+    if assignee.id != actor.id:
+        label = TYPE_LABELS[task.task_type.value]
+        notify(
+            db,
+            user_id=assignee.id,
+            type="task_assigned",
+            title=f"{label} with {lead.name}",
+            body=f"{actor.full_name} gave you a follow-up due {format_when(due_at)}",
+            link=f"/leads/{lead.id}",
+        )
+    return task
+
+
+TYPE_LABELS = {
+    "call": "Call",
+    "whatsapp": "WhatsApp",
+    "meeting": "Meeting",
+    "site_visit": "Site visit",
+    "email": "Email",
+    "other": "Follow-up",
+}
+
+
+def format_when(dt: datetime) -> str:
+    return dt.astimezone(IST).strftime("%-d %b, %-I:%M %p")
