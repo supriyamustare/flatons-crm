@@ -7,13 +7,14 @@ import { useAssignableUsers, useLeadSearch } from "../../hooks/useLeads";
 import { useCompleteTask, useCreateTask, useRescheduleTask } from "../../hooks/useTasks";
 import { errorMessage } from "../../lib/api";
 import { EMPTY_FILTERS, formatMobile } from "../../lib/leads";
-import { TASK_TYPES, TASK_TYPE_LABELS, duePresets, formatDue, localInputToIso, toLocalInput } from "../../lib/tasks";
+import { TASK_TYPES, TASK_TYPE_LABELS, duePresets, formatDue, localInputToIso, toLocalInput, taskTypeInSentence } from "../../lib/tasks";
 import type { Task, TaskType } from "../../lib/tasks";
 
-interface LeadRef {
+export interface LeadRef {
   id: number;
   name: string;
   assigned_to_id?: number | null;
+  project_id?: number | null;
 }
 
 function Actions({ onCancel, submitLabel, loading, disabled }: {
@@ -51,7 +52,7 @@ export function DueTimeField({ value, onChange, label = "When" }: { value: strin
 }
 
 /** Pick a lead by name, phone or lead ID (only leads you can see). */
-function LeadPicker({ onPick }: { onPick: (lead: LeadRef) => void }) {
+export function LeadPicker({ onPick }: { onPick: (lead: LeadRef) => void }) {
   const [q, setQ] = useState("");
   const [debounced, setDebounced] = useState("");
   useEffect(() => {
@@ -74,7 +75,7 @@ function LeadPicker({ onPick }: { onPick: (lead: LeadRef) => void }) {
         {results.data?.items.map((l) => (
           <li key={l.id}>
             <button type="button" className="flex w-full items-center justify-between gap-3 px-3 py-2.5 text-left hover:bg-paper"
-              onClick={() => onPick({ id: l.id, name: l.name, assigned_to_id: l.assigned_to?.id })}>
+              onClick={() => onPick({ id: l.id, name: l.name, assigned_to_id: l.assigned_to?.id, project_id: l.project?.id })}>
               <span className="min-w-0 truncate font-medium">{l.name}</span>
               <span className="shrink-0 text-xs text-muted">{formatMobile(l.mobile)}</span>
             </button>
@@ -162,7 +163,7 @@ export function CompleteTaskDialog({ task, onClose }: { task: Task; onClose: () 
   const complete = useCompleteTask();
   const [note, setNote] = useState("");
   return (
-    <Modal title={`Complete ${TASK_TYPE_LABELS[task.task_type].toLowerCase()} with ${task.lead.name}`} onClose={onClose}>
+    <Modal title={`Complete ${taskTypeInSentence(task.task_type)} with ${task.lead.name}`} onClose={onClose}>
       <form className="space-y-4" noValidate onSubmit={(e) => {
         e.preventDefault();
         complete.mutate({ id: task.id, completion_note: note.trim() }, { onSuccess: onClose });
@@ -182,7 +183,7 @@ export function RescheduleDialog({ task, onClose }: { task: Task; onClose: () =>
   const [due, setDue] = useState(() => toLocalInput(duePresets()[1].value));
   const [reason, setReason] = useState("");
   return (
-    <Modal title={`Reschedule ${TASK_TYPE_LABELS[task.task_type].toLowerCase()} with ${task.lead.name}`} onClose={onClose}>
+    <Modal title={`Reschedule ${taskTypeInSentence(task.task_type)} with ${task.lead.name}`} onClose={onClose}>
       <form className="space-y-4" noValidate onSubmit={(e) => {
         e.preventDefault();
         reschedule.mutate({ id: task.id, due_at: localInputToIso(due), reason: reason.trim() }, { onSuccess: onClose });

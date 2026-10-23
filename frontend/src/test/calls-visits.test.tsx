@@ -123,3 +123,31 @@ describe("site visits", () => {
     expect(screen.getByText(/Time has passed/)).toBeInTheDocument();
   });
 });
+
+describe("scheduling from the Site visits page", () => {
+  it("asks for the lead, then the project and time", async () => {
+    const lead = {
+      id: 11, lead_code: "LEAD-1", name: "Anita Desai", mobile: "+919876543210", project: { id: 1, name: "Flatons Heights" },
+      assigned_to: { id: 7, full_name: "Ravi Kumar", role: "executive" }, status: "new",
+    };
+    const { post } = mockApi(exec, {
+      get: { "/visits": visitPage([]), "/projects": [{ id: 1, name: "Flatons Heights", is_active: true }] },
+      post: {
+        "/leads/search": { items: [lead], total: 1, page: 1, page_size: 6 },
+        "/visits": (b: unknown) => ({ ...visit(), ...(b as object) }),
+      },
+    });
+    renderApp("/visits");
+
+    await userEvent.click((await screen.findAllByRole("button", { name: /schedule (a )?visit/i }))[0]);
+    const dialog = await screen.findByRole("dialog", { name: "Schedule a site visit" });
+    await userEvent.click(await within(dialog).findByRole("button", { name: /anita desai/i }));
+
+    const form = await screen.findByRole("dialog", { name: "Site visit for Anita Desai" });
+    expect(within(form).getByLabelText("Project")).toHaveValue("1"); // lead's project preselected
+    await userEvent.click(within(form).getByRole("button", { name: "Tomorrow 10 am" }));
+    await userEvent.click(within(form).getByRole("button", { name: "Schedule visit" }));
+
+    await waitFor(() => expect(post).toHaveBeenCalledWith("/visits", expect.objectContaining({ lead_id: 11, project_id: 1 })));
+  });
+});
