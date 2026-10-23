@@ -7,7 +7,11 @@ import { AuthProvider } from "./hooks/useAuth";
 import { AccountPage } from "./pages/AccountPage";
 import { DashboardPage } from "./pages/DashboardPage";
 import { LoginPage } from "./pages/LoginPage";
+import { LeadDetailPage } from "./pages/leads/LeadDetailPage";
+import { EditLeadPage, NewLeadPage } from "./pages/leads/LeadFormPage";
+import { LeadsPage } from "./pages/leads/LeadsPage";
 import { NotFoundPage } from "./pages/NotFoundPage";
+import { ProjectsPage } from "./pages/ProjectsPage";
 import { UsersPage } from "./pages/users/UsersPage";
 
 export function createQueryClient() {
@@ -31,8 +35,15 @@ export function AppRoutes() {
         <Route element={<AppLayout />}>
           <Route index element={<DashboardPage />} />
           <Route path="account" element={<AccountPage />} />
+          <Route path="leads" element={<LeadsPage />} />
+          <Route path="leads/:id" element={<LeadDetailPage />} />
+          <Route element={<RequireRole roles={["admin", "manager", "executive"]} />}>
+            <Route path="leads/new" element={<NewLeadPage />} />
+            <Route path="leads/:id/edit" element={<EditLeadPage />} />
+          </Route>
           <Route element={<RequireRole roles={["admin"]} />}>
             <Route path="users" element={<UsersPage />} />
+            <Route path="projects" element={<ProjectsPage />} />
           </Route>
           <Route path="*" element={<NotFoundPage />} />
         </Route>

@@ -1,5 +1,11 @@
 import { useEffect, useId } from "react";
-import type { ButtonHTMLAttributes, InputHTMLAttributes, ReactNode, SelectHTMLAttributes } from "react";
+import type {
+  ButtonHTMLAttributes,
+  InputHTMLAttributes,
+  ReactNode,
+  SelectHTMLAttributes,
+  TextareaHTMLAttributes,
+} from "react";
 import { CircleAlert, LoaderCircle, RefreshCw, X } from "lucide-react";
 
 const cx = (...c: (string | false | null | undefined)[]) => c.filter(Boolean).join(" ");
@@ -75,6 +81,19 @@ export function TextInput({
   );
 }
 
+export function TextArea({
+  label,
+  hint,
+  ...props
+}: TextareaHTMLAttributes<HTMLTextAreaElement> & { label: string; hint?: ReactNode }) {
+  const id = useId();
+  return (
+    <Field label={label} hint={hint} htmlFor={props.id ?? id}>
+      <textarea id={props.id ?? id} rows={3} className={`${inputClass} py-2.5`} {...props} />
+    </Field>
+  );
+}
+
 export function SelectInput({
   label,
   hint,
@@ -106,11 +125,15 @@ export function Alert({ children, tone = "error" }: { children: ReactNode; tone?
   );
 }
 
-export function Badge({ children, tone = "neutral" }: { children: ReactNode; tone?: "neutral" | "gold" | "muted" }) {
-  const tones = {
+export type BadgeTone = "neutral" | "gold" | "muted" | "solid" | "danger";
+
+export function Badge({ children, tone = "neutral" }: { children: ReactNode; tone?: BadgeTone }) {
+  const tones: Record<BadgeTone, string> = {
     neutral: "bg-forest-50 text-forest-800 ring-forest-100",
     gold: "bg-gold-100 text-gold-600 ring-gold-300/60",
     muted: "bg-paper text-muted ring-line",
+    solid: "bg-forest-900 text-gold-300 ring-forest-900",
+    danger: "bg-danger-soft text-danger ring-danger/20",
   };
   return (
     <span className={cx("inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ring-1", tones[tone])}>

@@ -10,6 +10,12 @@ export interface User {
   created_at: string;
 }
 
+export interface UserBrief {
+  id: number;
+  full_name: string;
+  role: Role;
+}
+
 export const ROLES: Role[] = ["admin", "manager", "executive", "docs"];
 
 export const ROLE_LABELS: Record<Role, string> = {

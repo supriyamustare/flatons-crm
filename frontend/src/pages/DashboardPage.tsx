@@ -21,19 +21,17 @@ export function DashboardPage() {
         description={`Signed in as ${ROLE_LABELS[user.role].toLowerCase()}`}
       />
       <div className="rounded-xl border border-dashed border-line bg-white px-6 py-12 text-center">
-        <p className="font-display text-xl text-forest-900">Your leads and follow-ups will appear here</p>
+        <p className="font-display text-xl text-forest-900">Today’s numbers will appear here</p>
         <p className="mx-auto mt-2 max-w-md text-sm text-muted">
-          Lead management is being built next. Once it’s ready, this page will show today’s
-          follow-ups, new enquiries and upcoming site visits.
+          Once follow-ups and site visits are built, this page will show what’s due today. For now,
+          work your enquiries from the Leads page.
         </p>
-        {user.role === "admin" && (
-          <Link
-            to="/users"
-            className="mt-6 inline-flex min-h-11 items-center rounded-lg bg-forest-900 px-4 text-sm font-medium text-white hover:bg-forest-800"
-          >
-            Add your team
-          </Link>
-        )}
+        <Link
+          to="/leads"
+          className="mt-6 inline-flex min-h-11 items-center rounded-lg bg-forest-900 px-4 text-sm font-medium text-white hover:bg-forest-800"
+        >
+          Go to leads
+        </Link>
       </div>
     </>
   );

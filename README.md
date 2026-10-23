@@ -85,6 +85,16 @@ npm run typecheck
 npm test
 ```
 
+## Leads (Sprint 2)
+
+- Lead IDs look like `LEAD-20261022-0001`, numbered per day in India time.
+- Executives see and work only the leads assigned to them; leads they create are assigned to them.
+  Managers and admins see everything and can reassign. Documents staff have read-only access.
+- Lost and Junk need a reason. Only managers and admins can set or undo Booked.
+- Duplicate phone numbers or emails trigger a warning, never a block.
+- Search and filters are sent in the body of `POST /api/leads/search`, so phone numbers and
+  names never appear in URLs or server logs.
+
 ## Frontend notes
 
 - Design tokens (forest green, gold, paper, ink) live in `frontend/src/index.css` under `@theme`.

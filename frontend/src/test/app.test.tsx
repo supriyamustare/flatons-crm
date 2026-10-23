@@ -1,49 +1,14 @@
 import { screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { AxiosError, AxiosHeaders } from "axios";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { api } from "../lib/api";
+import { httpError, makeUser, mockApi } from "./mockApi";
 import { navFor } from "../lib/nav";
 import type { Role, User } from "../lib/types";
 import { renderApp } from "./render";
 
-function makeUser(role: Role, overrides: Partial<User> = {}): User {
-  return {
-    id: 1,
-    email: `${role}@flatons.com`,
-    full_name: `Priya ${role}`,
-    role,
-    is_active: true,
-    last_login_at: null,
-    created_at: "2026-10-22T10:00:00Z",
-    ...overrides,
-  };
-}
-
-function httpError(status: number, detail: unknown) {
-  const config = { headers: new AxiosHeaders() };
-  return new AxiosError("Request failed", String(status), config, null, {
-    status,
-    statusText: "",
-    data: { detail },
-    headers: {},
-    config,
-  });
-}
-
 function signedInAs(user: User | null, extra: Record<string, unknown> = {}) {
-  vi.spyOn(api, "get").mockImplementation(async (url: string) => {
-    if (url === "/users/me") {
-      if (!user) throw httpError(401, "Not authenticated");
-      return { data: user };
-    }
-    if (url in extra) {
-      const value = extra[url];
-      if (value instanceof Error) throw value;
-      return { data: value };
-    }
-    throw new Error(`Unexpected GET ${url}`);
-  });
+  mockApi(user, { get: extra as Record<string, unknown> });
 }
 
 beforeEach(() => {
@@ -51,10 +16,13 @@ beforeEach(() => {
 });
 
 describe("navigation by role", () => {
-  it("shows Users only to admins", () => {
-    expect(navFor("admin").map((i) => i.label)).toContain("Users");
+  it("shows Users and Projects only to admins, Leads to everyone", () => {
+    expect(navFor("admin").map((i) => i.label)).toEqual(expect.arrayContaining(["Users", "Projects", "Leads"]));
     for (const role of ["manager", "executive", "docs"] as Role[]) {
-      expect(navFor(role).map((i) => i.label)).not.toContain("Users");
+      const labels = navFor(role).map((i) => i.label);
+      expect(labels).not.toContain("Users");
+      expect(labels).not.toContain("Projects");
+      expect(labels).toContain("Leads");
     }
   });
 

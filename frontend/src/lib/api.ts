@@ -46,6 +46,18 @@ const FIELD_LABELS: Record<string, string> = {
   new_password: "New password",
   current_password: "Current password",
   role: "Role",
+  name: "Name",
+  mobile: "Mobile",
+  alt_mobile: "Alternate mobile",
+  city: "City",
+  source: "Source",
+  sub_source: "Sub-source",
+  budget_min: "Budget from",
+  budget_max: "Budget up to",
+  estimated_value: "Estimated value",
+  remarks: "Remarks",
+  reason: "Reason",
+  note: "Note",
 };
 
 /** Turn an API error into one sentence a person can act on. */
