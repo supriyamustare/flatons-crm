@@ -2,6 +2,7 @@ import { useState } from "react";
 import type { ReactNode } from "react";
 import { Link, useLocation, useNavigate, useParams } from "react-router";
 import { ArrowLeft, ArrowRightLeft, CalendarPlus, MapPin, Pencil, Phone, PhoneCall, StickyNote, Trash2, UserRoundCog } from "lucide-react";
+import { describeActivity } from "../../components/leads/ActivityText";
 import { DuplicateBanner, StatusBadge } from "../../components/leads/LeadBits";
 import { AssignDialog, DeleteDialog, NoteDialog, StatusDialog } from "../../components/leads/LeadDialogs";
 import { LogCallDialog } from "../../components/calls/LogCallDialog";
@@ -14,18 +15,14 @@ import { useCurrentUser } from "../../hooks/useAuth";
 import { useLead } from "../../hooks/useLeads";
 import { useLeadTasks } from "../../hooks/useTasks";
 import { useLeadVisits } from "../../hooks/useVisits";
-import { OUTCOME_LABELS, formatDuration } from "../../lib/calls";
-import type { CallOutcome } from "../../lib/calls";
-import { INTEREST_LABELS } from "../../lib/visits";
-import type { InterestLevel, Visit } from "../../lib/visits";
-import { TASK_TYPE_LABELS, formatDue } from "../../lib/tasks";
-import type { Task, TaskType } from "../../lib/tasks";
+import type { Visit } from "../../lib/visits";
+import type { Task } from "../../lib/tasks";
 import { errorMessage, formatDateTime } from "../../lib/api";
 import {
-  CONFIG_LABELS, FIELD_LABELS, PURPOSE_LABELS, SOURCE_LABELS, STATUS_LABELS, TIMELINE_LABELS,
+  CONFIG_LABELS, PURPOSE_LABELS, SOURCE_LABELS, TIMELINE_LABELS,
   formatBudget, formatMobile, formatRupees,
 } from "../../lib/leads";
-import type { Activity, Duplicate, LeadDetail, LeadStatus } from "../../lib/leads";
+import type { Activity, Duplicate, LeadDetail } from "../../lib/leads";
 
 function Row({ label, children }: { label: string; children: ReactNode }) {
   return (
@@ -36,60 +33,6 @@ function Row({ label, children }: { label: string; children: ReactNode }) {
   );
 }
 
-function describe(a: Activity): ReactNode {
-  const d = a.details ?? {};
-  switch (a.type) {
-    case "created": {
-      const dups = d.possible_duplicates as string[] | undefined;
-      return <>Created the lead{dups?.length ? <> (possible duplicate of {dups.join(", ")})</> : null}</>;
-    }
-    case "status_change":
-      return (
-        <>
-          {d.automatic ? <span className="text-muted">Automatically: </span> : null}
-          Changed status from <b>{STATUS_LABELS[d.from as LeadStatus]}</b> to <b>{STATUS_LABELS[d.to as LeadStatus]}</b>
-          {d.reason ? <>: {String(d.reason)}</> : null}
-        </>
-      );
-    case "assignment": {
-      const to = d.to as { name: string } | null;
-      const from = d.from as { name: string } | null;
-      if (!to) return <>Unassigned the lead{from ? <> from {from.name}</> : null}</>;
-      return from ? <>Reassigned from {from.name} to <b>{to.name}</b></> : <>Assigned to <b>{to.name}</b></>;
-    }
-    case "updated": {
-      const fields = Object.keys((d.changes as Record<string, unknown>) ?? {}).map((k) => FIELD_LABELS[k] ?? k);
-      return <>Updated {fields.join(", ")}</>;
-    }
-    case "note":
-      return <>Added a note</>;
-    case "call_logged":
-      return (
-        <>
-          {d.direction === "incoming" ? "Took a call" : "Called"}: <b>{OUTCOME_LABELS[d.outcome as CallOutcome]}</b>
-          {d.duration_sec ? <> ({formatDuration(Number(d.duration_sec))})</> : null}
-        </>
-      );
-    case "visit_scheduled":
-      return <>Scheduled a site visit at {String(d.project)} for <b>{formatDue(String(d.scheduled_at))}</b> ({String(d.host)})</>;
-    case "visit_completed":
-      return <>Site visit done at {String(d.project)}: <b>{INTEREST_LABELS[d.interest_level as InterestLevel].split(":")[0]}</b></>;
-    case "visit_rescheduled":
-      return <>Moved the site visit to <b>{formatDue(String(d.to))}</b></>;
-    case "visit_no_show":
-      return <>Customer didn’t come for the site visit</>;
-    case "visit_cancelled":
-      return <>Cancelled the site visit</>;
-    case "task_created":
-      return <>Planned a <b>{TASK_TYPE_LABELS[d.task_type as TaskType].toLowerCase()}</b> for {formatDue(String(d.due_at))}{d.assigned_to ? <> ({String(d.assigned_to)})</> : null}</>;
-    case "task_completed":
-      return <>Completed a {TASK_TYPE_LABELS[d.task_type as TaskType].toLowerCase()}{d.was_overdue ? " (late)" : ""}</>;
-    case "task_rescheduled":
-      return <>Moved a {TASK_TYPE_LABELS[d.task_type as TaskType].toLowerCase()} from {formatDue(String(d.from))} to <b>{formatDue(String(d.to))}</b></>;
-    default:
-      return a.type;
-  }
-}
 
 /** Open follow-ups first, then a short history. */
 function LeadFollowUps({ leadId, canAdd, onAdd }: { leadId: number; canAdd: boolean; onAdd: () => void }) {
@@ -170,7 +113,7 @@ function Timeline({ activities }: { activities: Activity[] }) {
       {activities.map((a) => (
         <li key={a.id} className="relative">
           <span className={`absolute top-1.5 -left-[25px] size-2.5 rounded-full ring-4 ring-white ${a.type === "note" ? "bg-gold-500" : "bg-forest-700"}`} aria-hidden />
-          <p className="text-sm text-ink">{describe(a)}</p>
+          <p className="text-sm text-ink">{describeActivity(a)}</p>
           {a.note && <p className="mt-1 rounded-lg bg-paper px-3 py-2 text-sm whitespace-pre-wrap text-ink">{a.note}</p>}
           <p className="mt-1 text-xs text-muted">
             {a.actor?.full_name ?? "System"}, {formatDateTime(a.created_at)}

@@ -112,3 +112,8 @@ export function duePresets(now = new Date()): { label: string; value: Date }[] {
     { label: "Next Monday", value: at(daysToMonday, 10) },
   ];
 }
+
+/** Type name for use mid-sentence: "a call", "a site visit", but "a WhatsApp" (brand name). */
+export function taskTypeInSentence(t: TaskType): string {
+  return t === "whatsapp" ? "WhatsApp" : TASK_TYPE_LABELS[t].toLowerCase();
+}

@@ -1,7 +1,8 @@
 import { useState } from "react";
 import type { FormEvent } from "react";
 import { Alert, Button, Modal, SelectInput, TextArea, TextInput, cx } from "../ui";
-import { DueTimeField } from "../tasks/TaskDialogs";
+import { DueTimeField, LeadPicker } from "../tasks/TaskDialogs";
+import type { LeadRef } from "../tasks/TaskDialogs";
 import { useCurrentUser } from "../../hooks/useAuth";
 import { useAssignableUsers, useProjects } from "../../hooks/useLeads";
 import { useScheduleVisit, useVisitAction } from "../../hooks/useVisits";
@@ -23,9 +24,24 @@ function Actions({ onCancel, submitLabel, loading, disabled, danger = false }: {
   );
 }
 
-export function ScheduleVisitDialog({ lead, onClose }: {
-  lead: { id: number; name: string; project_id?: number | null; assigned_to_id?: number | null };
+/** Schedule a visit. Without a lead (e.g. from the Site visits page) it asks for one first. */
+export function ScheduleVisitDialog({ lead, onClose }: { lead?: LeadRef; onClose: () => void }) {
+  const [picked, setPicked] = useState<LeadRef | null>(lead ?? null);
+  if (!picked) {
+    return (
+      <Modal title="Schedule a site visit" onClose={onClose}>
+        <p className="mb-3 text-sm text-muted">Who is visiting? Search for the lead.</p>
+        <LeadPicker onPick={setPicked} />
+      </Modal>
+    );
+  }
+  return <ScheduleVisitForm lead={picked} onClose={onClose} onChangeLead={lead ? undefined : () => setPicked(null)} />;
+}
+
+function ScheduleVisitForm({ lead, onClose, onChangeLead }: {
+  lead: LeadRef;
   onClose: () => void;
+  onChangeLead?: () => void;
 }) {
   const me = useCurrentUser();
   const isManager = me.role === "admin" || me.role === "manager";
@@ -56,6 +72,12 @@ export function ScheduleVisitDialog({ lead, onClose }: {
       <form onSubmit={submit} className="space-y-4" noValidate>
         {schedule.isError && <Alert>{errorMessage(schedule.error)}</Alert>}
         {noProjects && <Alert>No projects yet. An admin needs to add one under Projects first.</Alert>}
+        {onChangeLead && (
+          <p className="text-sm">
+            Lead: <b>{lead.name}</b>{" "}
+            <button type="button" className="text-forest-700 underline" onClick={onChangeLead}>Change</button>
+          </p>
+        )}
         <SelectInput label="Project" value={projectId} onChange={(e) => setProjectId(e.target.value)} required>
           <option value="" disabled>Choose a project</option>
           {projects.data?.map((p) => <option key={p.id} value={p.id}>{p.name}</option>)}

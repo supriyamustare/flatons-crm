@@ -123,6 +123,38 @@ npm test
   timeline and audit log.
 - The 8:00 daily digest also counts the day's site visits.
 
+## Dashboards (Sprint 5)
+
+`GET /api/dashboard/admin` (admins, managers: whole team) and `GET /api/dashboard/executive`
+(your own work). Periods: `today`, `7d`, `30d`, or `custom` with `date_from`/`date_to` (max one year),
+all in India time. Exact definitions are on `Kpis` in `backend/app/schemas/dashboard.py`:
+
+- total leads (any date) and new leads (created in the period); deleted leads never count
+- follow-ups due today (incl. today's late ones) and overdue follow-ups (any day)
+- site visits in the period, excluding cancelled; and those completed
+- calls in the period, connected calls, and connection rate (N/A when there were no calls)
+
+`tests/test_dashboard.py` checks every figure against plain SQL on a 60-lead dataset.
+
+## Demo data
+
+Clearly marked data for training and testing (users `@demo.example.com`, projects "Demo: …",
+leads tagged "DEMO DATA"). `remove-demo` deletes exactly that and nothing else.
+
+```bash
+poetry run python -m app.cli seed-demo        # asks for the demo users' password
+poetry run python -m app.cli remove-demo
+```
+
+On a production server both commands refuse unless you add `--allow-production`.
+
+## Installable app (PWA)
+
+`frontend/public/manifest.webmanifest` plus icons make the CRM installable ("Add to Home Screen").
+Android Chrome only offers installation over **HTTPS**; iPhone Safari works via Share → Add to Home
+Screen. The icons are placeholders made from the "F" mark; replace the PNGs in `frontend/public/`
+with the official logo at the same sizes. Offline support arrives in Sprint 16.
+
 ## Frontend notes
 
 - Design tokens (forest green, gold, paper, ink) live in `frontend/src/index.css` under `@theme`.

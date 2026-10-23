@@ -27,7 +27,7 @@ export function mockApi(me: User | null, routes: { get?: Record<string, Handler>
     if (handler instanceof Error) throw handler;
     return { data: typeof handler === "function" ? (handler as (b: unknown) => unknown)(body) : handler };
   };
-  vi.spyOn(api, "get").mockImplementation(async (url: string) => {
+  const get = vi.spyOn(api, "get").mockImplementation(async (url: string) => {
     if (url === "/users/me") {
       if (!me) throw httpError(401, "Not authenticated");
       return { data: me };
@@ -43,5 +43,5 @@ export function mockApi(me: User | null, routes: { get?: Record<string, Handler>
   const patch = vi.spyOn(api, "patch").mockImplementation(async (url: string, body?: unknown) =>
     respond(routes.patch, url, body),
   );
-  return { post, patch };
+  return { get, post, patch };
 }

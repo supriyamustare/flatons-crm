@@ -7,7 +7,18 @@ from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from app.api import auth, calls, health, leads, notifications, projects, tasks, users, visits
+from app.api import (
+    auth,
+    calls,
+    dashboard,
+    health,
+    leads,
+    notifications,
+    projects,
+    tasks,
+    users,
+    visits,
+)
 from app.core.config import get_settings
 from app.core.db import engine
 from app.core.redis import redis_client
@@ -49,4 +60,5 @@ app.include_router(tasks.router, prefix="/api")
 app.include_router(notifications.router, prefix="/api")
 app.include_router(calls.router, prefix="/api")
 app.include_router(visits.router, prefix="/api")
+app.include_router(dashboard.router, prefix="/api")
 app.include_router(leads.router, prefix="/api")

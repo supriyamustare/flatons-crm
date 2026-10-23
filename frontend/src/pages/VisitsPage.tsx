@@ -1,5 +1,6 @@
 import { useState } from "react";
-import { VisitOutcomeDialog } from "../components/visits/VisitDialogs";
+import { Plus } from "lucide-react";
+import { ScheduleVisitDialog, VisitOutcomeDialog } from "../components/visits/VisitDialogs";
 import { VisitItem } from "../components/visits/VisitItem";
 import { Button, ErrorState, PageHeader, SelectInput, cx } from "../components/ui";
 import { useCurrentUser } from "../hooks/useAuth";
@@ -31,6 +32,7 @@ export function VisitsPage() {
   const [person, setPerson] = useState("");
   const [page, setPage] = useState(1);
   const [updating, setUpdating] = useState<Visit | null>(null);
+  const [scheduling, setScheduling] = useState(false);
 
   const query: VisitQuery = {
     view, page,
@@ -45,7 +47,10 @@ export function VisitsPage() {
 
   return (
     <>
-      <PageHeader title="Site visits" description="Schedule visits from a lead’s page." />
+      <PageHeader
+        title="Site visits"
+        action={<Button onClick={() => setScheduling(true)}><Plus className="size-4" aria-hidden />Schedule visit</Button>}
+      />
 
       <div role="tablist" aria-label="Visit views" className="mb-4 flex gap-1 rounded-xl bg-white p-1 ring-1 ring-line">
         {VIEWS.map(({ key, label }) => {
@@ -87,6 +92,9 @@ export function VisitsPage() {
       {visits.isSuccess && total === 0 && (
         <div className="rounded-xl border border-dashed border-line bg-white px-6 py-12 text-center">
           <p className="font-display text-xl text-forest-900">{EMPTY[view]}</p>
+          {view === "upcoming" && (
+            <Button className="mt-5" onClick={() => setScheduling(true)}><Plus className="size-4" aria-hidden />Schedule a visit</Button>
+          )}
         </div>
       )}
       {visits.isSuccess && total > 0 && (
@@ -107,6 +115,7 @@ export function VisitsPage() {
         </div>
       )}
       {updating && <VisitOutcomeDialog visit={updating} onClose={() => setUpdating(null)} />}
+      {scheduling && <ScheduleVisitDialog onClose={() => setScheduling(false)} />}
     </>
   );
 }
