@@ -21,8 +21,11 @@ from app.schemas.lead import (
     NoteCreate,
     StatusChange,
 )
+from app.schemas.task import TaskOut
 from app.services import leads as svc
+from app.services import tasks as task_svc
 from app.services.audit import log_audit
+from app.services.notifications import notify
 
 router = APIRouter(prefix="/leads", tags=["leads"])
 
@@ -111,6 +114,15 @@ async def create_lead(
     if duplicates:
         details["possible_duplicates"] = [d.lead_code for d in duplicates]
     svc.add_activity(db, lead, actor=user, type="created", details=details)
+    if assignee_id is not None and assignee_id != user.id:
+        notify(
+            db,
+            user_id=assignee_id,
+            type="lead_assigned",
+            title=f"New lead: {lead.name}",
+            body=f"{user.full_name} assigned {lead.lead_code} to you",
+            link=f"/leads/{lead.id}",
+        )
     log_audit(
         db, action="lead.create", entity_type="lead", entity_id=lead.id, actor=user, request=request
     )
@@ -240,6 +252,15 @@ async def assign_lead(
     }
     lead.assigned_to_id = body.assigned_to_id
     svc.add_activity(db, lead, actor=user, type="assignment", details=details)
+    if new_user is not None and new_user.id != user.id:
+        notify(
+            db,
+            user_id=new_user.id,
+            type="lead_assigned",
+            title=f"Lead assigned: {lead.name}",
+            body=f"{user.full_name} assigned {lead.lead_code} to you",
+            link=f"/leads/{lead.id}",
+        )
     log_audit(
         db,
         action="lead.assign",
@@ -278,3 +299,12 @@ async def delete_lead(lead_id: int, request: Request, user: Admin, db: DbSession
         request=request,
     )
     await db.commit()
+
+
+@router.get("/{lead_id}/tasks", response_model=list[TaskOut])
+async def lead_tasks(lead_id: int, user: CurrentUser, db: DbSession) -> list[TaskOut]:
+    """All follow-ups on a lead (open ones first), for the lead page."""
+    lead = await svc.get_visible_lead(db, user, lead_id)
+    if lead is None:
+        raise NOT_FOUND
+    return [task_svc.to_out(t) for t in await task_svc.tasks_for_lead(db, lead.id)]

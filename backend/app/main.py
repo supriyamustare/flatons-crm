@@ -7,7 +7,7 @@ from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from app.api import auth, health, leads, projects, users
+from app.api import auth, health, leads, notifications, projects, tasks, users
 from app.core.config import get_settings
 from app.core.db import engine
 from app.core.redis import redis_client
@@ -45,4 +45,6 @@ app.include_router(health.router, prefix="/api")
 app.include_router(auth.router, prefix="/api")
 app.include_router(users.router, prefix="/api")
 app.include_router(projects.router, prefix="/api")
+app.include_router(tasks.router, prefix="/api")
+app.include_router(notifications.router, prefix="/api")
 app.include_router(leads.router, prefix="/api")

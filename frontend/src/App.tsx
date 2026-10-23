@@ -6,6 +6,7 @@ import { RequireAuth, RequireRole } from "./components/RouteGuards";
 import { AuthProvider } from "./hooks/useAuth";
 import { AccountPage } from "./pages/AccountPage";
 import { DashboardPage } from "./pages/DashboardPage";
+import { FollowUpsPage } from "./pages/FollowUpsPage";
 import { LoginPage } from "./pages/LoginPage";
 import { LeadDetailPage } from "./pages/leads/LeadDetailPage";
 import { EditLeadPage, NewLeadPage } from "./pages/leads/LeadFormPage";
@@ -37,6 +38,9 @@ export function AppRoutes() {
           <Route path="account" element={<AccountPage />} />
           <Route path="leads" element={<LeadsPage />} />
           <Route path="leads/:id" element={<LeadDetailPage />} />
+          <Route element={<RequireRole roles={["admin", "manager", "executive"]} />}>
+            <Route path="follow-ups" element={<FollowUpsPage />} />
+          </Route>
           <Route element={<RequireRole roles={["admin", "manager", "executive"]} />}>
             <Route path="leads/new" element={<NewLeadPage />} />
             <Route path="leads/:id/edit" element={<EditLeadPage />} />

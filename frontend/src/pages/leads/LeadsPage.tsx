@@ -1,8 +1,9 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router";
-import { ArrowRightLeft, Phone, Plus, Search, SlidersHorizontal, StickyNote } from "lucide-react";
+import { ArrowRightLeft, CalendarPlus, Phone, Plus, Search, SlidersHorizontal, StickyNote } from "lucide-react";
 import { StatusBadge } from "../../components/leads/LeadBits";
 import { NoteDialog, StatusDialog } from "../../components/leads/LeadDialogs";
+import { NewTaskDialog } from "../../components/tasks/TaskDialogs";
 import { Button, ErrorState, PageHeader } from "../../components/ui";
 import { useCurrentUser } from "../../hooks/useAuth";
 import { useLeadSearch } from "../../hooks/useLeads";
@@ -51,8 +52,8 @@ function useDebounced<T>(value: T, ms = 300): T {
   return v;
 }
 
-function QuickActions({ lead, canEdit, onStatus, onNote }: {
-  lead: Lead; canEdit: boolean; onStatus: () => void; onNote: () => void;
+function QuickActions({ lead, canEdit, onStatus, onNote, onTask }: {
+  lead: Lead; canEdit: boolean; onStatus: () => void; onNote: () => void; onTask: () => void;
 }) {
   const btn = "grid size-11 place-items-center rounded-lg text-forest-800 hover:bg-forest-50";
   return (
@@ -62,6 +63,9 @@ function QuickActions({ lead, canEdit, onStatus, onNote }: {
       </a>
       {canEdit && (
         <>
+          <button type="button" onClick={onTask} className={btn} aria-label={`Add follow-up for ${lead.name}`} title="Add follow-up">
+            <CalendarPlus className="size-[18px]" />
+          </button>
           <button type="button" onClick={onNote} className={btn} aria-label={`Add note for ${lead.name}`} title="Add note">
             <StickyNote className="size-[18px]" />
           </button>
@@ -86,7 +90,7 @@ export function LeadsPage() {
   const [sortKey, setSortKey] = useState<SortKey>(initial.sortKey);
   const [page, setPage] = useState(initial.page);
   const [showFilters, setShowFilters] = useState(false);
-  const [dialog, setDialog] = useState<{ kind: "status" | "note"; lead: Lead } | null>(null);
+  const [dialog, setDialog] = useState<{ kind: "status" | "note" | "task"; lead: Lead } | null>(null);
 
   const q = useDebounced(search.trim());
   // Back to page 1 when the search, filters or sort change (but not on first render,
@@ -208,7 +212,8 @@ export function LeadsPage() {
                   <span className="px-2 text-xs text-muted">{l.assigned_to?.full_name ?? "Unassigned"}</span>
                   <QuickActions lead={l} canEdit={canEdit(l)}
                     onStatus={() => setDialog({ kind: "status", lead: l })}
-                    onNote={() => setDialog({ kind: "note", lead: l })} />
+                    onNote={() => setDialog({ kind: "note", lead: l })}
+                    onTask={() => setDialog({ kind: "task", lead: l })} />
                 </div>
               </li>
             ))}
@@ -247,7 +252,8 @@ export function LeadsPage() {
                     <td className="px-2 py-1">
                       <QuickActions lead={l} canEdit={canEdit(l)}
                         onStatus={() => setDialog({ kind: "status", lead: l })}
-                        onNote={() => setDialog({ kind: "note", lead: l })} />
+                        onNote={() => setDialog({ kind: "note", lead: l })}
+                    onTask={() => setDialog({ kind: "task", lead: l })} />
                     </td>
                   </tr>
                 ))}
@@ -270,6 +276,9 @@ export function LeadsPage() {
       )}
       {dialog?.kind === "status" && <StatusDialog lead={dialog.lead} onClose={() => setDialog(null)} />}
       {dialog?.kind === "note" && <NoteDialog lead={dialog.lead} onClose={() => setDialog(null)} />}
+      {dialog?.kind === "task" && (
+        <NewTaskDialog lead={{ id: dialog.lead.id, name: dialog.lead.name, assigned_to_id: dialog.lead.assigned_to?.id }} onClose={() => setDialog(null)} />
+      )}
     </>
   );
 }
