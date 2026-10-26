@@ -10,7 +10,10 @@ os.environ.setdefault(
 )
 os.environ["DATABASE_URL"] = os.environ["TEST_DATABASE_URL"]
 os.environ.setdefault("SECRET_KEY", "test-secret-key-that-is-long-enough-1234567890")
-os.environ["BCRYPT_ROUNDS"] = "4"  # fast hashing in tests only
+os.environ["BCRYPT_ROUNDS"] = "4"
+os.environ.setdefault(
+    "FILE_STORAGE_PATH", __import__("tempfile").mkdtemp(prefix="crm-test-files-")
+)  # fast hashing in tests only
 
 from collections.abc import AsyncIterator, Awaitable, Callable  # noqa: E402
 

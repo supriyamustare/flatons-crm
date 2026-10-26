@@ -1,5 +1,5 @@
 import {
-  Building2, CalendarCheck, Columns3, Contact, LayoutDashboard, MapPin, Phone, UserRound, Users,
+  BarChart3, Building2, CalendarCheck, Columns3, Contact, LayoutDashboard, MapPin, Megaphone, Phone, UserRound, Users,
   type LucideIcon,
 } from "lucide-react";
 import type { Role } from "./types";
@@ -24,6 +24,8 @@ export const NAV_ITEMS: NavItem[] = [
   { to: "/pipeline", label: "Pipeline", icon: Columns3, roles: SALES },
   { to: "/visits", label: "Site visits", icon: MapPin, roles: SALES, mobile: true },
   { to: "/calls", label: "Calls", icon: Phone, roles: SALES },
+  { to: "/reports", label: "Reports", icon: BarChart3, roles: SALES },
+  { to: "/marketing", label: "Marketing", icon: Megaphone, roles: ["admin", "manager"] },
   { to: "/projects", label: "Projects", icon: Building2 },
   { to: "/users", label: "Users", icon: Users, roles: ["admin"] },
   { to: "/account", label: "My account", icon: UserRound },

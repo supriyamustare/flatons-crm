@@ -5,6 +5,7 @@ from fastapi import APIRouter, Depends, HTTPException, Request, status
 
 from app.core.deps import CurrentUser, DbSession, require_role
 from app.models.lead import REASON_REQUIRED, Lead
+from app.models.marketing import Campaign
 from app.models.project import Project
 from app.models.user import Role, User
 from app.schemas.lead import (
@@ -54,6 +55,11 @@ async def _check_project(db: DbSession, project_id: int | None) -> None:
             raise HTTPException(status.HTTP_422_UNPROCESSABLE_CONTENT, "Choose an active project")
 
 
+async def _check_campaign(db: DbSession, campaign_id: int | None) -> None:
+    if campaign_id is not None and await db.get(Campaign, campaign_id) is None:
+        raise HTTPException(status.HTTP_422_UNPROCESSABLE_CONTENT, "That campaign doesn't exist")
+
+
 async def _detail(db: DbSession, user: User, lead: Lead) -> LeadDetail:
     await db.refresh(lead)
     activities = await svc.list_activities(db, lead.id)
@@ -90,6 +96,7 @@ async def create_lead(
     body: LeadCreate, request: Request, user: Writer, db: DbSession
 ) -> LeadCreated:
     await _check_project(db, body.project_id)
+    await _check_campaign(db, body.campaign_id)
 
     assignee_id: int | None = user.id if user.role == Role.executive else body.assigned_to_id
     if assignee_id is not None and assignee_id != user.id:
@@ -155,6 +162,7 @@ _TRACKED_VALUES = {
     "estimated_value",
     "city",
     "project_id",
+    "campaign_id",
 }
 
 
@@ -169,6 +177,8 @@ async def update_lead(lead_id: int, body: LeadUpdate, user: Writer, db: DbSessio
             )
     if "project_id" in changes:
         await _check_project(db, changes["project_id"])
+    if "campaign_id" in changes:
+        await _check_campaign(db, changes["campaign_id"])
 
     budget_min = changes.get("budget_min", lead.budget_min)
     budget_max = changes.get("budget_max", lead.budget_max)
