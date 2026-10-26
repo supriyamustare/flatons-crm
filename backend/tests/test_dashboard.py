@@ -9,9 +9,10 @@ import pytest
 from sqlalchemy import select, text, update
 
 from app.demo import DEMO_DOMAIN, remove_demo, seed_demo
-from app.models import Lead, Project, Role, User
+from app.models import Developer, Lead, Project, Role, User
 from app.schemas.dashboard import DashboardQuery
 from app.services.dashboard import build_dashboard
+from tests.conftest import new_project
 
 IST = ZoneInfo("Asia/Kolkata")
 NOW = datetime(2026, 10, 23, 11, 30, tzinfo=IST).astimezone(UTC)
@@ -181,7 +182,7 @@ async def test_invalid_ranges_are_rejected(login_as, params):
 
 async def test_remove_demo_leaves_real_data_alone(db, make_user):
     real_user = await make_user(Role.executive)
-    db.add(Project(name="Real Project"))
+    await new_project(db, "Real Project")
     db.add(
         Lead(
             lead_code="LEAD-REAL-1",
@@ -200,4 +201,5 @@ async def test_remove_demo_leaves_real_data_alone(db, make_user):
 
     assert await db.scalar(select(Lead.name)) == "Real Customer"
     assert list(await db.scalars(select(Project.name))) == ["Real Project"]
+    assert list(await db.scalars(select(Developer.name))) == ["Real Project Developers"]
     assert list(await db.scalars(select(User.id))) == [real_user.id]

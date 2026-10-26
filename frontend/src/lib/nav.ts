@@ -23,7 +23,7 @@ export const NAV_ITEMS: NavItem[] = [
   { to: "/follow-ups", label: "Follow-ups", icon: CalendarCheck, roles: SALES, mobile: true },
   { to: "/visits", label: "Site visits", icon: MapPin, roles: SALES, mobile: true },
   { to: "/calls", label: "Calls", icon: Phone, roles: SALES },
-  { to: "/projects", label: "Projects", icon: Building2, roles: ["admin"] },
+  { to: "/projects", label: "Projects", icon: Building2 },
   { to: "/users", label: "Users", icon: Users, roles: ["admin"] },
   { to: "/account", label: "My account", icon: UserRound },
 ];

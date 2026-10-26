@@ -114,3 +114,23 @@ async def login_as(make_user) -> AsyncIterator[Callable[..., Awaitable[tuple[Asy
     yield _login
     for c in clients:
         await c.aclose()
+
+
+async def new_project(db: AsyncSession, name: str = "Flatons Heights", *, resale: bool = False):
+    """A valid project: developer projects get a developer (the database requires it)."""
+    from app.models import Developer, Project, ProjectType
+
+    developer = None
+    if not resale:
+        developer = Developer(name=f"{name} Developers")
+        db.add(developer)
+        await db.flush()
+    project = Project(
+        name=name,
+        project_type=ProjectType.resale if resale else ProjectType.developer,
+        developer_id=developer.id if developer else None,
+    )
+    db.add(project)
+    await db.commit()
+    await db.refresh(project)
+    return project

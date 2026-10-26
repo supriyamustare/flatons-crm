@@ -2,7 +2,7 @@
 
 Everything created is marked so it can be removed exactly:
   users     email ends with @demo.example.com
-  projects  name starts with "Demo: "
+  projects  name starts with "Demo: " (as does the demo developer); buildings and units go with them
   leads     sub_source = "DEMO DATA" (their activities, follow-ups, calls and visits go with them)
 """
 
@@ -14,6 +14,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.security import hash_password
 from app.models.call import CONNECTED_OUTCOMES, CallDirection, CallLog, CallOutcome
+from app.models.inventory import Building, Unit, UnitStatus, UnitType
 from app.models.lead import (
     BuyingTimeline,
     Configuration,
@@ -22,10 +23,12 @@ from app.models.lead import (
     LeadSource,
     LeadStatus,
 )
-from app.models.project import Project
+from app.models.project import Developer, Project, ProjectStatus
 from app.models.task import FollowUpTask, TaskStatus, TaskType
 from app.models.user import Role, User
 from app.models.visit import InterestLevel, SiteVisit, VisitSource, VisitStatus
+from app.schemas.inventory import GenerateUnits
+from app.services.inventory import generate_units
 from app.services.leads import next_lead_code
 
 DEMO_DOMAIN = "@demo.example.com"
@@ -122,15 +125,70 @@ async def seed_demo(
     execs = [person("Ravi Kumar", Role.executive), person("Kiran Rao", Role.executive)]
     docs = person("Farah Khan", Role.docs)
     db.add_all([manager, *execs, docs])
+    developer = Developer(name=f"{PROJECT_PREFIX}Skyline Developers")
+    db.add(developer)
+    await db.flush()
     projects = [
-        Project(name=f"{PROJECT_PREFIX}Green Meadows"),
-        Project(name=f"{PROJECT_PREFIX}Skyline Towers"),
+        Project(
+            name=f"{PROJECT_PREFIX}Green Meadows",
+            developer_id=developer.id,
+            status=ProjectStatus.under_construction,
+            location="Baner, Pune",
+        ),
+        Project(
+            name=f"{PROJECT_PREFIX}Skyline Towers",
+            developer_id=developer.id,
+            status=ProjectStatus.ready_to_move,
+            location="Wakad, Pune",
+        ),
     ]
     db.add_all(projects)
     await db.flush()
+    # Buildings and a grid of units, with a realistic mix of statuses
+    unit_count = 0
+    for project, wings in ((projects[0], ("A Wing", "B Wing")), (projects[1], ("Tower 1",))):
+        for order, wing in enumerate(wings):
+            building = Building(project_id=project.id, name=wing, sort_order=order)
+            db.add(building)
+            await db.flush()
+            unit_count += await generate_units(
+                db,
+                building,
+                GenerateUnits(
+                    floor_from=1,
+                    floor_to=8 if project is projects[0] else 12,
+                    units_per_floor=4,
+                    unit_type=UnitType.bhk2,
+                    carpet_sqft=680,
+                    builtup_sqft=890,
+                    base_price=7_200_000,
+                ),
+            )
+    await db.flush()
+    for unit in await db.scalars(
+        select(Unit).join(Project).where(Project.name.like(f"{PROJECT_PREFIX}%"))
+    ):
+        roll = rnd.random()
+        if roll < 0.18:
+            unit.status = UnitStatus.sold
+        elif roll < 0.22:
+            unit.status = UnitStatus.withdrawn
+        if unit.unit_no.endswith(("01", "04")):
+            unit.unit_type = UnitType.bhk3
+            unit.carpet_sqft, unit.builtup_sqft, unit.base_price = 980, 1250, 10_500_000
+            unit.current_asking_price = unit.base_price
     sellers = [*execs, *execs, manager]  # executives carry most leads
 
-    counts = {"users": 4, "projects": 2, "leads": 0, "follow_ups": 0, "calls": 0, "visits": 0}
+    counts = {
+        "users": 4,
+        "projects": 2,
+        "units": 0,
+        "leads": 0,
+        "follow_ups": 0,
+        "calls": 0,
+        "visits": 0,
+    }
+    counts["units"] = unit_count
     statuses = list(STATUS_WEIGHTS)
     weights = list(STATUS_WEIGHTS.values())
 
@@ -297,6 +355,8 @@ async def remove_demo(db: AsyncSession) -> dict[str, int]:
     removed["projects"] = (
         await db.execute(delete(Project).where(Project.name.like(f"{PROJECT_PREFIX}%")))
     ).rowcount
+    # The demo developer can only go once its projects are gone (projects -> developer is RESTRICT)
+    await db.execute(delete(Developer).where(Developer.name.like(f"{PROJECT_PREFIX}%")))
     removed["users"] = (
         await db.execute(delete(User).where(User.email.like(f"%{DEMO_DOMAIN}")))
     ).rowcount

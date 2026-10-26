@@ -10,13 +10,13 @@ from app.models import (
     LeadActivity,
     LeadStatus,
     Notification,
-    Project,
     Role,
     SiteVisit,
     TaskStatus,
 )
 from app.services.leads import IST
 from app.services.notifications import create_daily_digests
+from tests.conftest import new_project
 
 
 def later(**kw) -> str:
@@ -33,11 +33,7 @@ async def new_lead(c, name="Anita Desai", mobile="98765 43210", **extra):
 
 @pytest.fixture
 async def project(db):
-    p = Project(name="Flatons Heights")
-    db.add(p)
-    await db.commit()
-    await db.refresh(p)
-    return p
+    return await new_project(db)
 
 
 async def activity_types(db, lead_id):
