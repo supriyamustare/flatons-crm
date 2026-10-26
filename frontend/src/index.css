@@ -39,3 +39,11 @@
     @apply outline-2 outline-offset-2 outline-gold-500;
   }
 }
+
+/* On-hold grid cells: amber with diagonal stripes, so "on hold" reads without colour. */
+@layer components {
+  .unit-hold {
+    background-color: #fde68a;
+    background-image: repeating-linear-gradient(135deg, rgb(180 83 9 / 0.18) 0 4px, transparent 4px 9px);
+  }
+}

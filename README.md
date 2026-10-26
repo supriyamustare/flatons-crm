@@ -155,6 +155,24 @@ Android Chrome only offers installation over **HTTPS**; iPhone Safari works via 
 Screen. The icons are placeholders made from the "F" mark; replace the PNGs in `frontend/public/`
 with the official logo at the same sizes. Offline support arrives in Sprint 16.
 
+## Projects and inventory (Sprint 6)
+
+- **Developer projects** (a builder's new project) must have a developer; **resale listings** must not.
+  This is a database CHECK constraint, not just a form rule. Existing projects from before Sprint 6
+  were attached to a placeholder developer, "Developer to be confirmed"; an admin should edit those
+  projects and choose the real developer.
+- Developer projects: Building → Floor → Unit. Admins generate floors and units in bulk (e.g. floors
+  1–4 × 6 units → 101…406; ground floor G01, basements B1-01). Resale units belong to the project
+  directly, with an optional "where" note.
+- Unit status: Available, On hold, Booked (set by bookings in Sprint 11), Sold, Withdrawn. Admins set
+  Available/Withdrawn/Sold by hand; holds and bookings have their own flows.
+- **Holds** (admins and managers): up to 14 days, optionally for a lead. Every status change locks the
+  unit row first (`SELECT … FOR UPDATE`), so two people can never hold or book the same unit at once;
+  `tests/test_inventory.py::test_simultaneous_holds_only_one_wins` fires five requests at the same
+  instant to prove it. Expired holds show as expired immediately and are released by the Celery beat job
+  `inventory.release_expired_holds` every 5 minutes.
+- Everyone can browse inventory; only admins change it.
+
 ## Frontend notes
 
 - Design tokens (forest green, gold, paper, ink) live in `frontend/src/index.css` under `@theme`.
@@ -162,6 +180,8 @@ with the official logo at the same sizes. Offline support arrives in Sprint 16.
   `text-gold-500`, etc.
 - All API calls go through `src/lib/api.ts`. It sends cookies, renews an expired session once
   automatically, and turns API errors into readable messages (`errorMessage()`).
+- Pages other than sign-in, the dashboard and "not found" load on first visit (`lazy()` in
+  `src/App.tsx`), which keeps the first download small on phones.
 - Navigation items and which roles see them are defined in `src/lib/nav.ts`. Pages restricted to
   certain roles are wrapped in `<RequireRole>` in `src/App.tsx`. The API enforces the same rules.
 
