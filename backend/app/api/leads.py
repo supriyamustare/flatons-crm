@@ -195,6 +195,8 @@ async def update_lead(lead_id: int, body: LeadUpdate, user: Writer, db: DbSessio
     return await _detail(db, user, lead)
 
 
+# PATCH /pipeline is the same action under the name used by the pipeline board.
+@router.patch("/{lead_id}/pipeline", response_model=LeadDetail)
 @router.post("/{lead_id}/status", response_model=LeadDetail)
 async def change_status(
     lead_id: int, body: StatusChange, request: Request, user: Writer, db: DbSession

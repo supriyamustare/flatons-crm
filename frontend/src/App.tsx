@@ -14,6 +14,7 @@ import { NotFoundPage } from "./pages/NotFoundPage";
 // Pages load on first visit, so phones download less up front.
 const AccountPage = lazy(() => import("./pages/AccountPage").then((m) => ({ default: m.AccountPage })));
 const CallsPage = lazy(() => import("./pages/CallsPage").then((m) => ({ default: m.CallsPage })));
+const PipelinePage = lazy(() => import("./pages/PipelinePage").then((m) => ({ default: m.PipelinePage })));
 const FollowUpsPage = lazy(() => import("./pages/FollowUpsPage").then((m) => ({ default: m.FollowUpsPage })));
 const LeadDetailPage = lazy(() => import("./pages/leads/LeadDetailPage").then((m) => ({ default: m.LeadDetailPage })));
 const LeadsPage = lazy(() => import("./pages/leads/LeadsPage").then((m) => ({ default: m.LeadsPage })));
@@ -50,6 +51,7 @@ export function AppRoutes() {
           <Route path="projects/:id" element={<ProjectDetailPage />} />
           <Route element={<RequireRole roles={["admin", "manager", "executive"]} />}>
             <Route path="follow-ups" element={<FollowUpsPage />} />
+            <Route path="pipeline" element={<PipelinePage />} />
             <Route path="visits" element={<VisitsPage />} />
             <Route path="calls" element={<CallsPage />} />
           </Route>

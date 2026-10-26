@@ -23,7 +23,7 @@ from sqlalchemy.pool import NullPool  # noqa: E402
 from app.core.db import SessionLocal, engine  # noqa: E402
 from app.core.security import hash_password  # noqa: E402
 from app.main import app  # noqa: E402
-from app.models import Base, Role, User  # noqa: E402
+from app.models import DEFAULT_PROBABILITIES, Base, Role, User  # noqa: E402
 
 TEST_PASSWORD = "correct-horse-battery"
 
@@ -59,6 +59,13 @@ async def _clean_tables() -> None:
     async with engine.begin() as conn:
         tables = ", ".join(t.name for t in reversed(Base.metadata.sorted_tables))
         await conn.execute(text(f"TRUNCATE {tables} RESTART IDENTITY CASCADE"))
+        # Reference data that the migrations insert; tests build the schema from the models.
+        await conn.execute(
+            text(
+                "INSERT INTO pipeline_stages (stage, probability_pct) VALUES "
+                + ", ".join(f"('{st.value}', {pct})" for st, pct in DEFAULT_PROBABILITIES.items())
+            )
+        )
 
 
 @pytest.fixture
