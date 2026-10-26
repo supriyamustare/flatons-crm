@@ -221,6 +221,8 @@ async def seed_demo(
             created_by_id=(owner or manager).id,
             created_at=created,
             last_activity_at=created,
+            # Entered its current stage somewhere between creation and now
+            status_changed_at=created + (now - created) * rnd.uniform(0.2, 1.0),
         )
         db.add(lead)
         await db.flush()
@@ -265,6 +267,21 @@ async def seed_demo(
                 )
             )
             counts["calls"] += 1
+            lead.last_activity_at = max(lead.last_activity_at, at)
+
+        # Most leads were touched in the last week; the rest go quiet ("stale" on the pipeline)
+        if rnd.random() < 0.65:
+            touched = max(created, now - timedelta(days=rnd.uniform(0, 6)))
+            db.add(
+                LeadActivity(
+                    lead_id=lead.id,
+                    actor_id=owner.id,
+                    type="note",
+                    created_at=touched,
+                    note="Followed up on WhatsApp",
+                )
+            )
+            lead.last_activity_at = max(lead.last_activity_at, touched)
 
         # Follow-ups: open ones spread across overdue / today / upcoming, plus some done
         if status not in {LeadStatus.lost, LeadStatus.junk, LeadStatus.booked}:

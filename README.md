@@ -173,6 +173,24 @@ with the official logo at the same sizes. Offline support arrives in Sprint 16.
   `inventory.release_expired_holds` every 5 minutes.
 - Everyone can browse inventory; only admins change it.
 
+## Sales pipeline (Sprint 7)
+
+- `GET /api/pipeline`: leads grouped by stage with count, value, weighted value and stale count;
+  `GET /api/pipeline/forecast`: weighted value of open deals by project and by person;
+  `GET /api/pipeline/aged`: open leads quiet for 7+ days. Same visibility as the leads list.
+- **Deal value** = estimated value, else the top of the budget, else the bottom. Leads with none are
+  counted as "missing value". **Weighted value** = deal value × the stage's probability.
+  **Open** = every stage except Booked, Lost and Junk; Booked value is reported separately.
+- **Stage probabilities** live in `pipeline_stages` (defaults in `app/models/pipeline.py`); admins edit
+  them on the Pipeline page. Booked is fixed at 100%, Lost and Junk at 0%.
+- **Days in stage** comes from `leads.status_changed_at`, which an ORM listener on `Lead.status`
+  updates whenever the status changes, by hand, by a site visit or by any future module.
+- Moving a card uses the normal status rules (`PATCH /api/leads/{id}/pipeline` is the same action as
+  `POST /api/leads/{id}/status`): Lost and Junk need a reason; Booked is for managers and admins.
+- The board supports mouse and touch dragging (dnd-kit), keyboard moving (focus a card's grip, Space,
+  ←/→, Space; Escape cancels) and a "Move to…" menu on every card. Phones open in list view.
+- `tests/test_pipeline.py` checks every board and forecast figure against plain SQL on a 60-lead dataset.
+
 ## Frontend notes
 
 - Design tokens (forest green, gold, paper, ink) live in `frontend/src/index.css` under `@theme`.

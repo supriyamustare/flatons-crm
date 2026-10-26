@@ -15,12 +15,15 @@ from app.models.lead import (
     Purpose,
 )
 from app.models.notification import Notification
+from app.models.pipeline import DEFAULT_PROBABILITIES, PipelineStage
 from app.models.project import Developer, Project, ProjectStatus, ProjectType
 from app.models.task import FollowUpTask, TaskStatus, TaskType
 from app.models.user import Role, User
 from app.models.visit import InterestLevel, SiteVisit, VisitSource, VisitStatus
 
 __all__ = [
+    "DEFAULT_PROBABILITIES",
+    "PipelineStage",
     "Building",
     "Developer",
     "Floor",
