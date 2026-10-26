@@ -191,6 +191,23 @@ with the official logo at the same sizes. Offline support arrives in Sprint 16.
   ←/→, Space; Escape cancels) and a "Move to…" menu on every card. Phones open in list view.
 - `tests/test_pipeline.py` checks every board and forecast figure against plain SQL on a 60-lead dataset.
 
+## Marketing and reports (Sprint 8)
+
+- **Campaigns** (name, channel, optional project, dates) and **expenses** (date, amount in whole rupees,
+  category, vendor) for admins and managers. A lead can be linked to a campaign when it's created or edited.
+- **Receipts** (PDF, JPG or PNG, max 10 MB) are checked by their actual content, stored with a random name
+  under `FILE_STORAGE_PATH/receipts/`, and only served through `GET /api/expenses/{id}/receipt` to admins
+  and managers. They are never in a public folder.
+- **Reports** (`/api/reports/{calls|visits|conversion|campaigns|staff}`, periods today/7d/30d/custom):
+  every figure's definition is in `app/services/reports.py` and shown on screen under "How these are
+  calculated". **Cost per lead = spend ÷ leads attributed to that campaign** (not all leads). Every rate or
+  cost is **N/A when its denominator is zero**, never 0%. Deleted leads, and their calls and visits, never count.
+- Executives see their own figures only and no campaign report or marketing spend.
+  **CSV export** (`/api/reports/{kind}/export`, UTF-8 with BOM for Excel) is for admins and managers, and
+  every export is written to the audit log.
+- `tests/test_reports.py` checks every report against plain SQL on the demo dataset (with a deleted lead),
+  and covers the Phase 2 gate items on cost per lead, N/A and export permissions.
+
 ## Frontend notes
 
 - Design tokens (forest green, gold, paper, ink) live in `frontend/src/index.css` under `@theme`.

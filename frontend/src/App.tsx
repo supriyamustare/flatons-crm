@@ -14,6 +14,8 @@ import { NotFoundPage } from "./pages/NotFoundPage";
 // Pages load on first visit, so phones download less up front.
 const AccountPage = lazy(() => import("./pages/AccountPage").then((m) => ({ default: m.AccountPage })));
 const CallsPage = lazy(() => import("./pages/CallsPage").then((m) => ({ default: m.CallsPage })));
+const ReportsPage = lazy(() => import("./pages/ReportsPage").then((m) => ({ default: m.ReportsPage })));
+const MarketingPage = lazy(() => import("./pages/MarketingPage").then((m) => ({ default: m.MarketingPage })));
 const PipelinePage = lazy(() => import("./pages/PipelinePage").then((m) => ({ default: m.PipelinePage })));
 const FollowUpsPage = lazy(() => import("./pages/FollowUpsPage").then((m) => ({ default: m.FollowUpsPage })));
 const LeadDetailPage = lazy(() => import("./pages/leads/LeadDetailPage").then((m) => ({ default: m.LeadDetailPage })));
@@ -52,12 +54,16 @@ export function AppRoutes() {
           <Route element={<RequireRole roles={["admin", "manager", "executive"]} />}>
             <Route path="follow-ups" element={<FollowUpsPage />} />
             <Route path="pipeline" element={<PipelinePage />} />
+            <Route path="reports" element={<ReportsPage />} />
             <Route path="visits" element={<VisitsPage />} />
             <Route path="calls" element={<CallsPage />} />
           </Route>
           <Route element={<RequireRole roles={["admin", "manager", "executive"]} />}>
             <Route path="leads/new" element={<NewLeadPage />} />
             <Route path="leads/:id/edit" element={<EditLeadPage />} />
+          </Route>
+          <Route element={<RequireRole roles={["admin", "manager"]} />}>
+            <Route path="marketing" element={<MarketingPage />} />
           </Route>
           <Route element={<RequireRole roles={["admin"]} />}>
             <Route path="users" element={<UsersPage />} />

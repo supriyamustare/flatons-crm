@@ -14,9 +14,11 @@ from app.api import (
     health,
     inventory,
     leads,
+    marketing,
     notifications,
     pipeline,
     projects,
+    reports,
     tasks,
     users,
     visits,
@@ -65,4 +67,6 @@ app.include_router(calls.router, prefix="/api")
 app.include_router(visits.router, prefix="/api")
 app.include_router(dashboard.router, prefix="/api")
 app.include_router(pipeline.router, prefix="/api")
+app.include_router(marketing.router, prefix="/api")
+app.include_router(reports.router, prefix="/api")
 app.include_router(leads.router, prefix="/api")

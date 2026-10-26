@@ -188,6 +188,7 @@ function LeadView({ lead }: { lead: LeadDetail }) {
             <h2 className="pt-2 pb-1 font-semibold">Requirement</h2>
             <dl className="divide-y divide-line">
               <Row label="Project">{lead.project?.name}</Row>
+              <Row label="Campaign">{lead.campaign?.name}</Row>
               <Row label="Configuration">{lead.configuration ? CONFIG_LABELS[lead.configuration] : null}</Row>
               <Row label="Budget">{formatBudget(lead.budget_min, lead.budget_max)}</Row>
               <Row label="Purpose">{lead.purpose ? PURPOSE_LABELS[lead.purpose] : null}</Row>

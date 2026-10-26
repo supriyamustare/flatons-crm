@@ -14,6 +14,7 @@ from app.models.lead import (
     LeadStatus,
     Purpose,
 )
+from app.models.marketing import Campaign, Channel, Expense, ExpenseCategory
 from app.models.notification import Notification
 from app.models.pipeline import DEFAULT_PROBABILITIES, PipelineStage
 from app.models.project import Developer, Project, ProjectStatus, ProjectType
@@ -22,6 +23,10 @@ from app.models.user import Role, User
 from app.models.visit import InterestLevel, SiteVisit, VisitSource, VisitStatus
 
 __all__ = [
+    "Campaign",
+    "Channel",
+    "Expense",
+    "ExpenseCategory",
     "DEFAULT_PROBABILITIES",
     "PipelineStage",
     "Building",

@@ -23,6 +23,7 @@ from app.models.lead import (
     LeadSource,
     LeadStatus,
 )
+from app.models.marketing import Campaign, Channel, Expense, ExpenseCategory
 from app.models.project import Developer, Project, ProjectStatus
 from app.models.task import FollowUpTask, TaskStatus, TaskType
 from app.models.user import Role, User
@@ -179,6 +180,50 @@ async def seed_demo(
             unit.current_asking_price = unit.base_price
     sellers = [*execs, *execs, manager]  # executives carry most leads
 
+    # Marketing: campaigns with spend over the last ~6 weeks. The expo has spend but no leads
+    # yet, so reports show its cost per lead as N/A.
+    campaign_specs = [
+        (
+            "Google Ads: Green Meadows",
+            Channel.google_ads,
+            projects[0],
+            [(4, 38_000), (11, 42_000), (18, 40_000), (25, 45_000), (32, 39_000)],
+        ),
+        ("99acres premium listing", Channel.portal_99acres, None, [(2, 60_000), (30, 60_000)]),
+        ("Diwali hoardings", Channel.print, projects[1], [(9, 1_25_000), (14, 35_000)]),
+        ("Property expo stall", Channel.event, None, [(1, 85_000)]),
+    ]
+    campaigns: dict[str, Campaign] = {}
+    for name, channel, proj, spends in campaign_specs:
+        camp = Campaign(
+            name=f"{PROJECT_PREFIX}{name}",
+            channel=channel,
+            project_id=proj.id if proj else None,
+            start_date=(now - timedelta(days=45)).date(),
+            created_by_id=manager.id,
+        )
+        db.add(camp)
+        await db.flush()
+        campaigns[channel.value] = camp
+        for days_ago, amount in spends:
+            db.add(
+                Expense(
+                    campaign_id=camp.id,
+                    spent_on=(now - timedelta(days=days_ago)).date(),
+                    amount=amount,
+                    category=ExpenseCategory.ad_spend
+                    if channel != Channel.print
+                    else ExpenseCategory.printing,
+                    vendor="Demo vendor",
+                    entered_by_id=manager.id,
+                )
+            )
+    source_to_campaign = {
+        LeadSource.google_ads: campaigns["google_ads"],
+        LeadSource.acres_99: campaigns["99acres"],
+        LeadSource.print: campaigns["print"],
+    }
+
     counts = {
         "users": 4,
         "projects": 2,
@@ -188,6 +233,7 @@ async def seed_demo(
         "calls": 0,
         "visits": 0,
     }
+    counts["campaigns"] = len(campaigns)
     counts["units"] = unit_count
     statuses = list(STATUS_WEIGHTS)
     weights = list(STATUS_WEIGHTS.values())
@@ -224,6 +270,14 @@ async def seed_demo(
             # Entered its current stage somewhere between creation and now
             status_changed_at=created + (now - created) * rnd.uniform(0.2, 1.0),
         )
+        camp = source_to_campaign.get(lead.source)
+        if (
+            camp is None
+            and lead.source in (LeadSource.website, LeadSource.social)
+            and rnd.random() < 0.5
+        ):
+            camp = campaigns["google_ads"]
+        lead.campaign_id = camp.id if camp else None
         db.add(lead)
         await db.flush()
         db.add(
@@ -369,6 +423,11 @@ async def remove_demo(db: AsyncSession) -> dict[str, int]:
     }
     await db.execute(delete(LeadActivity).where(LeadActivity.lead_id.in_(lead_ids)))
     removed["leads"] = (await db.execute(delete(Lead).where(Lead.sub_source == DEMO_TAG))).rowcount
+    demo_campaigns = select(Campaign.id).where(Campaign.name.like(f"{PROJECT_PREFIX}%"))
+    await db.execute(delete(Expense).where(Expense.campaign_id.in_(demo_campaigns)))
+    removed["campaigns"] = (
+        await db.execute(delete(Campaign).where(Campaign.name.like(f"{PROJECT_PREFIX}%")))
+    ).rowcount
     removed["projects"] = (
         await db.execute(delete(Project).where(Project.name.like(f"{PROJECT_PREFIX}%")))
     ).rowcount
