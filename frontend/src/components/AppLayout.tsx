@@ -3,6 +3,8 @@ import { NavLink, Outlet, useLocation } from "react-router";
 import { Ellipsis, LogOut, X } from "lucide-react";
 import { useAuth, useCurrentUser } from "../hooks/useAuth";
 import { mobileNavFor, navFor } from "../lib/nav";
+import type { NavItem } from "../lib/nav";
+import { useInboxCount } from "../hooks/useInbox";
 import { ROLE_LABELS } from "../lib/types";
 import { NotificationBell } from "./NotificationBell";
 import { cx } from "./ui";
@@ -22,7 +24,7 @@ export function AppLayout() {
           <NotificationBell align="left" />
         </div>
         <nav aria-label="Main" className="flex-1 space-y-1 px-3">
-          {items.map(({ to, label, icon: Icon }) => (
+          {items.map(({ to, label, icon: Icon, badge }) => (
             <NavLink
               key={to}
               to={to}
@@ -38,6 +40,7 @@ export function AppLayout() {
             >
               <Icon className="size-[18px]" aria-hidden />
               {label}
+              <NavBadge kind={badge} />
             </NavLink>
           ))}
         </nav>
@@ -103,7 +106,7 @@ function MobileNav() {
     return () => document.removeEventListener("keydown", onKey);
   }, [open]);
 
-  const tab = "flex min-h-16 flex-1 flex-col items-center justify-center gap-1 text-[11px]";
+  const tab = "relative flex min-h-16 flex-1 flex-col items-center justify-center gap-1 text-[11px]";
   return (
     <>
       {open && (
@@ -138,11 +141,12 @@ function MobileNav() {
         </div>
       )}
       <nav aria-label="Main" className="fixed inset-x-0 bottom-0 z-[45] flex border-t border-forest-800 bg-forest-900 pb-[env(safe-area-inset-bottom)] md:hidden">
-        {bar.map(({ to, label, icon: Icon }) => (
+        {bar.map(({ to, label, icon: Icon, badge }) => (
           <NavLink key={to} to={to} end={to === "/"}
             className={({ isActive }) => cx(tab, isActive && !open ? "text-gold-300" : "text-forest-100/70")}>
             <Icon className="size-5" aria-hidden />
             {label}
+            <NavBadge kind={badge} compact />
           </NavLink>
         ))}
         <button type="button" onClick={() => setOpen(!open)} aria-expanded={open}
@@ -152,5 +156,20 @@ function MobileNav() {
         </button>
       </nav>
     </>
+  );
+}
+
+
+/** Live count beside a menu item (e.g. new enquiries waiting). Hidden at zero. */
+function NavBadge({ kind, compact = false }: { kind?: NavItem["badge"]; compact?: boolean }) {
+  const user = useCurrentUser();
+  const count = useInboxCount(kind === "inbox" && (user.role === "admin" || user.role === "manager"));
+  const n = count.data ?? 0;
+  if (!kind || n === 0) return null;
+  return (
+    <span className={cx("rounded-full bg-gold-500 px-1.5 text-xs font-semibold text-forest-950", compact ? "absolute top-1.5 ml-7 min-w-5 text-center text-[10px]" : "ml-auto")}>
+      <span aria-hidden>{n > 99 ? "99+" : n}</span>
+      <span className="sr-only">{`, ${n} waiting`}</span>
+    </span>
   );
 }

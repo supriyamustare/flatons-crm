@@ -11,7 +11,7 @@ celery_app = Celery(
     "flatons_crm",
     broker=settings.broker_url,
     backend=settings.redis_url,
-    include=["app.tasks.system", "app.tasks.digest", "app.tasks.inventory"],
+    include=["app.tasks.system", "app.tasks.digest", "app.tasks.inventory", "app.tasks.inbound"],
 )
 
 celery_app.conf.update(

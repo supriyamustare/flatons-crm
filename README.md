@@ -219,6 +219,28 @@ with the official logo at the same sizes. Offline support arrives in Sprint 16.
 - `tests/test_reports.py` checks every report against plain SQL on the demo dataset (with a deleted lead),
   and covers the Phase 2 gate items on cost per lead, N/A and export permissions.
 
+## Incoming enquiries and the inbox (replaces CSV import)
+
+- **Connections** (admin → Connections): one per source: website form, 99acres, MagicBricks, Housing.com,
+  Facebook/Instagram lead ads, Google Ads lead forms. Each has its own address (`/api/inbound/{id}`, or
+  `/api/inbound/{id}/facebook`) and a secret key that is shown once (only its SHA-256 is stored; "New key"
+  replaces it). Facebook's app secret and page token are stored encrypted (key derived from `SECRET_KEY`;
+  changing `SECRET_KEY` means re-entering them).
+- Keys: `X-Flatons-Key` header, `?key=` in the address (portals), or `google_key` (Google Ads). Facebook is
+  verified by its `X-Hub-Signature-256`; lead details are then fetched from the Graph API by the Celery job
+  `inbound.facebook_lead` (retries 3 times).
+- Website and portals send JSON or form fields with common names (`name`, `mobile`/`phone`/`contact_number`,
+  `email`, `city`, `message`/`query`, `project`/`property_name`, `id`/`lead_id`/`query_id`), one at a time or
+  as `{"leads": [...]}`. Every request is logged with its raw contents (Connections → Activity), so a portal
+  that names fields differently is quick to adapt.
+- Rules: a valid phone number is required (otherwise logged as "Not used"); a phone that matches an existing
+  lead adds the enquiry to that lead's timeline and alerts its owner (or managers if unassigned); the same
+  enquiry re-sent by a platform is recorded once; `?test=true` (or Google's test data) checks without
+  creating a lead. Requests over 64 KB are refused.
+- **New enquiries** (managers and admins): unassigned open leads, newest first, refreshed every 15 seconds,
+  with a live count in the menu. Assigning hands the lead over and notifies the person.
+- Platforms only send to **HTTPS** addresses, so live connections need the domain and certificate in place.
+
 ## Frontend notes
 
 - Design tokens (forest green, gold, paper, ink) live in `frontend/src/index.css` under `@theme`.
