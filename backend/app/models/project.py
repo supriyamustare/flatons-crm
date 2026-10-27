@@ -1,4 +1,5 @@
 import enum
+from decimal import Decimal
 
 from sqlalchemy import (
     BigInteger,
@@ -7,6 +8,7 @@ from sqlalchemy import (
     Enum,
     ForeignKey,
     Identity,
+    Numeric,
     String,
     Text,
     text,
@@ -47,6 +49,10 @@ class Project(TimestampMixin, Base):
         # The Flatons/Developer distinction lives in the data, not just the UI:
         # developer projects must name their developer; resale listings must not have one.
         CheckConstraint(
+            "commission_pct IS NULL OR (commission_pct >= 0 AND commission_pct <= 100)",
+            name="commission_pct_range",
+        ),
+        CheckConstraint(
             "(project_type = 'developer' AND developer_id IS NOT NULL)"
             " OR (project_type = 'resale' AND developer_id IS NULL)",
             name="developer_matches_type",
@@ -69,5 +75,7 @@ class Project(TimestampMixin, Base):
     )
     location: Mapped[str | None] = mapped_column(String(200))
     description: Mapped[str | None] = mapped_column(Text)
+    # Flatons' commission (or brokerage) as a % of the deal value, for estimated revenue
+    commission_pct: Mapped[Decimal | None] = mapped_column(Numeric(5, 2))
 
     developer: Mapped[Developer | None] = relationship(lazy="selectin")

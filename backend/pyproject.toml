@@ -49,3 +49,4 @@ select = ["E", "F", "I", "B", "UP"]
 # Reference SQL written out in full, so it reads as plain SQL
 "tests/test_reports.py" = ["E501"]
 "tests/test_pipeline.py" = ["E501"]
+"tests/test_dashboard.py" = ["E501"]

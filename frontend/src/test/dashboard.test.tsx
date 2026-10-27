@@ -22,6 +22,7 @@ function dash(overrides: Partial<Dashboard["kpis"]> = {}, extra: Partial<Dashboa
     activity: [{ id: 5, type: "call_logged", note: null, details: { outcome: "busy", direction: "outgoing" },
       actor: { id: 7, full_name: "Ravi Kumar", role: "executive" }, lead_id: 11, lead_name: "Anita Desai", lead_code: "LEAD-1",
       created_at: "2026-10-23T06:00:00Z" }],
+    business: null,
     ...extra,
   };
 }
@@ -81,5 +82,35 @@ describe("dashboard", () => {
   it("writes task types naturally mid-sentence", () => {
     expect(taskTypeInSentence("whatsapp")).toBe("WhatsApp");
     expect(taskTypeInSentence("site_visit")).toBe("site visit");
+  });
+});
+
+describe("business figures (manager's Team view)", () => {
+  const business = { leads_generated: 40, leads_booked: 3, booking_rate: 0.075, revenue: 160_000, expense: 200_000, profit: -40_000, unvalued_bookings: 2 };
+
+  it("shows leads generated, booked, revenue, expense and a loss in red", async () => {
+    mockApi(makeUser("manager"), { get: { "/dashboard/admin": dash({}, { business }) } });
+    renderApp("/");
+    const section = await screen.findByRole("region", { name: "Business" });
+    expect(within(section).getByRole("link", { name: "Leads generated: 40" })).toBeInTheDocument();
+    expect(within(section).getByRole("link", { name: "Leads booked: 3, 8% of leads generated" })).toBeInTheDocument();
+    expect(within(section).getByLabelText(/^Commission revenue: ₹1\.6 L/)).toBeInTheDocument();
+    expect(within(section).getByLabelText(/^Estimated loss: −₹40,000/)).toBeInTheDocument();
+    expect(within(section).getByText(/2 booked leads aren’t counted in revenue/)).toBeInTheDocument();
+  });
+
+  it("calls a positive result a profit", async () => {
+    mockApi(makeUser("admin"), { get: { "/dashboard/admin": dash({}, { business: { ...business, revenue: 500_000, profit: 300_000, unvalued_bookings: 0 } }) } });
+    renderApp("/");
+    const section = await screen.findByRole("region", { name: "Business" });
+    expect(within(section).getByLabelText(/^Estimated profit: ₹3 L/)).toBeInTheDocument();
+    expect(within(section).queryByText(/aren’t counted/)).not.toBeInTheDocument();
+  });
+
+  it("isn't shown on an executive's dashboard", async () => {
+    mockApi(makeUser("executive"), { get: { "/dashboard/executive": dash({}, { scope: "mine", business: null }) } });
+    renderApp("/");
+    await screen.findByRole("region", { name: "Key numbers" });
+    expect(screen.queryByRole("region", { name: "Business" })).not.toBeInTheDocument();
   });
 });

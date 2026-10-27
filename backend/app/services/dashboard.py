@@ -7,10 +7,12 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.models.call import CONNECTED_OUTCOMES, CallLog
 from app.models.lead import Lead, LeadActivity, LeadStatus
+from app.models.marketing import Expense
+from app.models.project import Project
 from app.models.task import FollowUpTask, TaskStatus
 from app.models.user import User
 from app.models.visit import SiteVisit, VisitStatus
-from app.schemas.dashboard import ActivityFeedItem, Dashboard, DashboardQuery, Kpis
+from app.schemas.dashboard import ActivityFeedItem, Business, Dashboard, DashboardQuery, Kpis
 from app.schemas.user import UserBrief
 from app.services import tasks as task_svc
 from app.services import visits as visit_svc
@@ -151,4 +153,61 @@ async def build_dashboard(
         overdue=[task_svc.to_out(t, now) for t in overdue],
         visits_needing_update=[visit_svc.to_out(v, now) for v in stale_visits],
         activity=feed,
+        business=None if mine else await _business(db, start, end, p_start, p_end),
+    )
+
+
+async def _business(
+    db: AsyncSession, start: date, end: date, p_start: datetime, p_end: datetime
+) -> Business:
+    """Company figures for the Team view. Definitions are on schemas.dashboard.Business."""
+    live = Lead.deleted_at.is_(None)
+    generated = (
+        await db.scalar(
+            select(func.count())
+            .select_from(Lead)
+            .where(live, Lead.created_at >= p_start, Lead.created_at < p_end)
+        )
+        or 0
+    )
+    deal_value = func.coalesce(Lead.estimated_value, Lead.budget_max, Lead.budget_min)
+    # Revenue is computed in whole rupees per lead, then summed (no fractional paise)
+    commission = func.round(deal_value * Project.commission_pct / 100)
+    booked = (
+        select(Lead.id, commission.label("commission"))
+        .outerjoin(Project, Project.id == Lead.project_id)
+        .where(
+            live,
+            Lead.status == LeadStatus.booked,
+            Lead.status_changed_at >= p_start,
+            Lead.status_changed_at < p_end,
+        )
+        .subquery()
+    )
+    n_booked, revenue, unvalued = (
+        await db.execute(
+            select(
+                func.count(),
+                func.coalesce(func.sum(booked.c.commission), 0),
+                func.count().filter(booked.c.commission.is_(None)),
+            )
+        )
+    ).one()
+    expense = (
+        await db.scalar(
+            select(func.coalesce(func.sum(Expense.amount), 0)).where(
+                Expense.spent_on >= start, Expense.spent_on <= end
+            )
+        )
+        or 0
+    )
+    revenue = int(revenue)
+    return Business(
+        leads_generated=generated,
+        leads_booked=n_booked,
+        booking_rate=round(n_booked / generated, 4) if generated else None,
+        revenue=revenue,
+        expense=int(expense),
+        profit=revenue - int(expense),
+        unvalued_bookings=unvalued,
     )

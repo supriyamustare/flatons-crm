@@ -37,6 +37,17 @@ export interface FeedItem {
   created_at: string;
 }
 
+/** Company figures (Team view only). */
+export interface Business {
+  leads_generated: number;
+  leads_booked: number;
+  booking_rate: number | null;
+  revenue: number;
+  expense: number;
+  profit: number;
+  unvalued_bookings: number;
+}
+
 export interface Dashboard {
   scope: "team" | "mine";
   date_from: string;
@@ -46,6 +57,7 @@ export interface Dashboard {
   overdue: Task[];
   visits_needing_update: Visit[];
   activity: FeedItem[];
+  business: Business | null;
 }
 
 export function useDashboard(scope: "team" | "mine", query: DashboardQuery, enabled = true) {

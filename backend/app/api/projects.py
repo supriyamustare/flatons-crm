@@ -128,6 +128,7 @@ async def create_project(
         developer_id=developer.id if developer else None,
         location=body.location,
         description=body.description,
+        commission_pct=body.commission_pct,
     )
     db.add(project)
     await db.flush()
@@ -175,7 +176,7 @@ async def update_project(
                 raise _unprocessable("A developer project needs its developer")
             project.developer_id = dev_id
         project.project_type = new_type
-    for field in ("name", "is_active", "status", "location", "description"):
+    for field in ("name", "is_active", "status", "location", "description", "commission_pct"):
         if field in changes:
             setattr(project, field, changes[field])
 

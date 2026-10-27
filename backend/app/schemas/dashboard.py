@@ -65,6 +65,27 @@ class ActivityFeedItem(BaseModel):
     created_at: datetime
 
 
+class Business(BaseModel):
+    """Company figures for the period (Team view only). Definitions:
+
+    leads_generated   leads created in the period
+    leads_booked      leads that moved to Booked in the period ("leads done")
+    revenue           estimated commission: each booked lead's deal value x its project's
+                      commission %; deal value = estimated value, else top of budget, else bottom
+    expense           marketing expenses dated in the period
+    profit            revenue - expense (estimated)
+    unvalued_bookings booked leads left out of revenue (no project, no commission % or no value)
+    """
+
+    leads_generated: int
+    leads_booked: int
+    booking_rate: float | None
+    revenue: int
+    expense: int
+    profit: int
+    unvalued_bookings: int
+
+
 class Dashboard(BaseModel):
     scope: Literal["team", "mine"]
     date_from: date
@@ -74,3 +95,4 @@ class Dashboard(BaseModel):
     overdue: list[TaskOut]
     visits_needing_update: list[VisitOut]
     activity: list[ActivityFeedItem]
+    business: Business | None = None

@@ -5,9 +5,9 @@ import { describeActivity } from "../components/leads/ActivityText";
 import { Alert, ErrorState, PageHeader, TextInput, cx } from "../components/ui";
 import { useCurrentUser } from "../hooks/useAuth";
 import { useDashboard } from "../hooks/useDashboard";
-import type { Dashboard, DashboardQuery, RangeKey } from "../hooks/useDashboard";
+import type { Business, Dashboard, DashboardQuery, RangeKey } from "../hooks/useDashboard";
 import { errorMessage, formatDateTime } from "../lib/api";
-import { STATUSES, STATUS_LABELS } from "../lib/leads";
+import { STATUSES, STATUS_LABELS, formatRupees } from "../lib/leads";
 import { formatDue, taskTypeInSentence } from "../lib/tasks";
 import { ROLE_LABELS } from "../lib/types";
 
@@ -26,7 +26,7 @@ function greeting(): string {
 }
 
 function Kpi({ label, value, hint, to, tone = "plain" }: {
-  label: string; value: number; hint?: string; to?: string; tone?: "plain" | "alert";
+  label: string; value: number | string; hint?: string; to?: string; tone?: "plain" | "alert";
 }) {
   const spoken = `${label}: ${value}${hint ? `, ${hint}` : ""}`;
   const body = (
@@ -38,6 +38,31 @@ function Kpi({ label, value, hint, to, tone = "plain" }: {
   );
   const cls = cx("block rounded-xl border bg-white p-4", tone === "alert" ? "border-danger/40" : "border-line");
   return to ? <Link to={to} aria-label={spoken} className={cx(cls, "hover:border-forest-700")}>{body}</Link> : <div className={cls} aria-label={spoken}>{body}</div>;
+}
+
+function BusinessSection({ b, isAdmin }: { b: Business; isAdmin: boolean }) {
+  const loss = b.profit < 0;
+  return (
+    <section aria-labelledby="business-h" className="mb-6">
+      <h2 id="business-h" className="mb-3 font-semibold">Business</h2>
+      <div className="grid grid-cols-2 gap-3 lg:grid-cols-5">
+        <Kpi label="Leads generated" value={b.leads_generated} to="/leads" />
+        <Kpi label="Leads booked" value={b.leads_booked}
+          hint={b.booking_rate === null ? "Booking rate: N/A" : `${Math.round(b.booking_rate * 100)}% of leads generated`} to="/pipeline" />
+        <Kpi label="Commission revenue" value={formatRupees(b.revenue)} hint="estimated, from booked leads" />
+        <Kpi label="Marketing expense" value={formatRupees(b.expense)} to="/marketing" />
+        <Kpi label={loss ? "Estimated loss" : "Estimated profit"} value={(loss ? "−" : "") + formatRupees(Math.abs(b.profit))}
+          hint="revenue − expense" tone={loss ? "alert" : "plain"} />
+      </div>
+      {b.unvalued_bookings > 0 && (
+        <p className="mt-2 text-sm text-gold-600">
+          {b.unvalued_bookings} booked {b.unvalued_bookings === 1 ? "lead isn’t" : "leads aren’t"} counted in revenue: no project,
+          no commission % on the project, or no value or budget on the lead.
+          {isAdmin && <> Set commission % under <Link to="/projects" className="underline">Projects</Link>.</>}
+        </p>
+      )}
+    </section>
+  );
 }
 
 function rangeLabel(d: Dashboard): string {
@@ -148,6 +173,7 @@ export function DashboardPage() {
 
       {d && k && (
         <div className={dash.isPlaceholderData ? "opacity-60 transition-opacity" : ""}>
+          {d.business && <BusinessSection b={d.business} isAdmin={me.role === "admin"} />}
           <section aria-label="Key numbers" className="grid grid-cols-2 gap-3 lg:grid-cols-3">
             <Kpi label="New leads" value={k.new_leads} hint={`${k.total_leads} in total`} to="/leads" />
             <Kpi label="Follow-ups due today" value={k.follow_ups_today} to="/follow-ups" />

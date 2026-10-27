@@ -51,6 +51,7 @@ export interface ProjectInput {
   location?: string | null;
   description?: string | null;
   is_active?: boolean;
+  commission_pct?: number | null;
 }
 
 export const useCreateProject = () =>

@@ -135,12 +135,14 @@ async def seed_demo(
             developer_id=developer.id,
             status=ProjectStatus.under_construction,
             location="Baner, Pune",
+            commission_pct=2,
         ),
         Project(
             name=f"{PROJECT_PREFIX}Skyline Towers",
             developer_id=developer.id,
             status=ProjectStatus.ready_to_move,
             location="Wakad, Pune",
+            commission_pct=1.5,
         ),
     ]
     db.add_all(projects)
