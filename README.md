@@ -136,6 +136,26 @@ all in India time. Exact definitions are on `Kpis` in `backend/app/schemas/dashb
 
 `tests/test_dashboard.py` checks every figure against plain SQL on a 60-lead dataset.
 
+### Dashboard overview (everyone in sales; managers can pick a person)
+
+`GET /api/dashboard/overview?person_id=&tab=`: summary line (deals in Negotiation, New leads with no call yet),
+tiles (follow-ups due by end of today incl. overdue, visits today, in closing), this week (Mon–today) and this
+month for completed site visits, **sales closed** and **sales value** (live bookings by booking date), performance
+cards (enquiries, site visits, sales, and spend with cost per sale for the team or calls for one person) with the
+change against the **same number of days last month** and a 30-day trend, lead tabs (Fresh, Due today, Visit
+booked, Closing, Re-engage = quiet 7+ days) and This month (new, active, qualified or further, unassigned, active
+rate, win rate). Executives always get their own figures. Definitions: `Overview` in `backend/app/schemas/overview.py`.
+The header search (Ctrl/⌘+K) passes the query to Leads in navigation state, never the address bar.
+
+### Bookings (backend; screens next)
+
+`/api/bookings`: an executive (or manager) books a unit for a lead; the unit row is locked (`SELECT … FOR UPDATE`)
+and partial unique indexes allow one live booking per unit and per lead. The unit turns Booked, the lead Booked,
+managers and admins are notified. Managers/admins edit details, record commission received, and cancel (reason
+required; the unit returns to Available and the lead to Negotiation). Expected commission = agreed price × the
+project's commission %. Leads marked Booked without a booking are listed as `missing_details`. CSV export for
+managers. The dashboard's commission revenue uses a booking's expected commission where one exists.
+
 ### Business figures (managers and admins, Team view)
 
 - **Leads generated**: leads created in the period. **Leads booked**: leads that moved to Booked in the period.

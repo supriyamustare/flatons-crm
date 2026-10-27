@@ -70,8 +70,9 @@ class Business(BaseModel):
 
     leads_generated   leads created in the period
     leads_booked      leads that moved to Booked in the period ("leads done")
-    revenue           estimated commission: each booked lead's deal value x its project's
-                      commission %; deal value = estimated value, else top of budget, else bottom
+    revenue           commission on booked leads: the booking's expected commission (agreed price x
+                      project %) where a booking is recorded, else deal value x project % (deal
+                      value = estimated value, else top of budget, else bottom)
     expense           marketing expenses dated in the period
     profit            revenue - expense (estimated)
     unvalued_bookings booked leads left out of revenue (no project, no commission % or no value)
