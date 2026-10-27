@@ -147,6 +147,15 @@ all in India time. Exact definitions are on `Kpis` in `backend/app/schemas/dashb
   left out of revenue and counted separately on screen. From Sprint 11, real booking prices replace the
   estimated deal value. Executives, and anyone's "Mine" view, never see these figures.
 
+### Team performance (managers and admins, Team view)
+
+One row per sales person (all executives, plus managers/admins with any activity), following the dashboard
+period except **Calls today**, which is always today: calls and connected (%), completed site visits,
+**converted** (their leads that moved to Booked in the period), **dead** (moved to Lost or Junk in the period),
+**closing rate** = converted ÷ (converted + dead) (N/A when none closed), **open leads** (assigned now and still
+in progress) and **overdue** follow-ups. Each name links to that person's Staff report. Definitions are on
+`TeamMember` in `backend/app/schemas/dashboard.py`; `tests/test_dashboard.py` checks every figure against SQL.
+
 ## Demo data
 
 Clearly marked data for training and testing (users `@demo.example.com`, projects "Demo: …",

@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useSearchParams } from "react-router";
 import type { ReactNode } from "react";
 import { Download } from "lucide-react";
 import { Bar, BarChart, CartesianGrid, Legend, Line, LineChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
@@ -180,12 +181,15 @@ export function ReportsPage() {
   const me = useCurrentUser();
   const isManager = me.role === "admin" || me.role === "manager";
   const kinds: ReportKind[] = isManager ? ["calls", "visits", "conversion", "campaigns", "staff"] : ["calls", "visits", "conversion", "staff"];
-  const [kind, setKind] = useState<ReportKind>("calls");
+  // The dashboard links here with ?report=staff&person=ID
+  const [params] = useSearchParams();
+  const fromLink = params.get("report") as ReportKind | null;
+  const [kind, setKind] = useState<ReportKind>(fromLink && kinds.includes(fromLink) ? fromLink : "calls");
   const [range, setRange] = useState<RangeKey>("30d");
   const [from, setFrom] = useState("");
   const [to, setTo] = useState("");
   const [projectId, setProjectId] = useState("");
-  const [person, setPerson] = useState("");
+  const [person, setPerson] = useState(isManager ? (params.get("person") ?? "") : "");
   const projects = useProjects();
   const people = useAssignableUsers(isManager);
   const ready = range !== "custom" || Boolean(from && to && from <= to);
