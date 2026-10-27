@@ -19,9 +19,12 @@ export function describeActivity(a: ActivityLike): ReactNode {
   const d = a.details ?? {};
   switch (a.type) {
     case "created": {
+      if (d.via) return <>Enquiry received from <b>{String(d.via)}</b></>;
       const dups = d.possible_duplicates as string[] | undefined;
       return <>Created the lead{dups?.length ? <> (possible duplicate of {dups.join(", ")})</> : null}</>;
     }
+    case "enquiry":
+      return <>Enquired again via <b>{String(d.via)}</b>{d.sub_source ? <> ({String(d.sub_source)})</> : null}</>;
     case "status_change":
       return (
         <>

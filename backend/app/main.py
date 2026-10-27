@@ -12,6 +12,8 @@ from app.api import (
     calls,
     dashboard,
     health,
+    inbound,
+    integrations,
     inventory,
     leads,
     marketing,
@@ -69,4 +71,6 @@ app.include_router(dashboard.router, prefix="/api")
 app.include_router(pipeline.router, prefix="/api")
 app.include_router(marketing.router, prefix="/api")
 app.include_router(reports.router, prefix="/api")
+app.include_router(integrations.router, prefix="/api")
+app.include_router(inbound.router, prefix="/api")
 app.include_router(leads.router, prefix="/api")

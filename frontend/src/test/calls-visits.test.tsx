@@ -55,8 +55,8 @@ describe("helpers", () => {
 
   it("puts the extra pages under More on phones", () => {
     const admin = mobileNavFor("admin");
-    expect(admin.bar.map((i) => i.label)).toEqual(["Dashboard", "Leads", "Follow-ups", "Site visits"]);
-    expect(admin.more.map((i) => i.label)).toEqual(["Pipeline", "Calls", "Reports", "Marketing", "Projects", "Users", "My account"]);
+    expect(admin.bar.map((i) => i.label)).toEqual(["Dashboard", "Leads", "Enquiries", "Follow-ups", "Site visits"]);
+    expect(admin.more.map((i) => i.label)).toEqual(["Pipeline", "Calls", "Reports", "Marketing", "Projects", "Connections", "Users", "My account"]);
     expect(mobileNavFor("docs").bar.map((i) => i.label)).toEqual(["Dashboard", "Leads"]);
   });
 });
