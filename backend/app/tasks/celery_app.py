@@ -1,6 +1,7 @@
 """Celery application (worker + beat)."""
 
 from celery import Celery
+from celery.schedules import crontab
 
 from app.core.config import get_settings
 
@@ -10,7 +11,7 @@ celery_app = Celery(
     "flatons_crm",
     broker=settings.broker_url,
     backend=settings.redis_url,
-    include=["app.tasks.system"],
+    include=["app.tasks.system", "app.tasks.digest", "app.tasks.inventory"],
 )
 
 celery_app.conf.update(
@@ -25,5 +26,14 @@ celery_app.conf.update(
     broker_connection_retry_on_startup=True,
 )
 
-# Scheduled jobs are added here in later sprints (e.g. daily digest at 08:00 IST).
-celery_app.conf.beat_schedule = {}
+# Times are India time (timezone above). Email delivery is added in Sprint 15.
+celery_app.conf.beat_schedule = {
+    "daily-follow-up-digest": {
+        "task": "followups.daily_digest",
+        "schedule": crontab(hour=8, minute=0),
+    },
+    "release-expired-unit-holds": {
+        "task": "inventory.release_expired_holds",
+        "schedule": crontab(minute="*/5"),
+    },
+}

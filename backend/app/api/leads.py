@@ -5,6 +5,7 @@ from fastapi import APIRouter, Depends, HTTPException, Request, status
 
 from app.core.deps import CurrentUser, DbSession, require_role
 from app.models.lead import REASON_REQUIRED, Lead
+from app.models.marketing import Campaign
 from app.models.project import Project
 from app.models.user import Role, User
 from app.schemas.lead import (
@@ -21,8 +22,13 @@ from app.schemas.lead import (
     NoteCreate,
     StatusChange,
 )
+from app.schemas.task import TaskOut
+from app.schemas.visit import VisitOut
 from app.services import leads as svc
+from app.services import tasks as task_svc
+from app.services import visits as visit_svc
 from app.services.audit import log_audit
+from app.services.notifications import notify
 
 router = APIRouter(prefix="/leads", tags=["leads"])
 
@@ -47,6 +53,11 @@ async def _check_project(db: DbSession, project_id: int | None) -> None:
         project = await db.get(Project, project_id)
         if project is None or not project.is_active:
             raise HTTPException(status.HTTP_422_UNPROCESSABLE_CONTENT, "Choose an active project")
+
+
+async def _check_campaign(db: DbSession, campaign_id: int | None) -> None:
+    if campaign_id is not None and await db.get(Campaign, campaign_id) is None:
+        raise HTTPException(status.HTTP_422_UNPROCESSABLE_CONTENT, "That campaign doesn't exist")
 
 
 async def _detail(db: DbSession, user: User, lead: Lead) -> LeadDetail:
@@ -85,6 +96,7 @@ async def create_lead(
     body: LeadCreate, request: Request, user: Writer, db: DbSession
 ) -> LeadCreated:
     await _check_project(db, body.project_id)
+    await _check_campaign(db, body.campaign_id)
 
     assignee_id: int | None = user.id if user.role == Role.executive else body.assigned_to_id
     if assignee_id is not None and assignee_id != user.id:
@@ -111,6 +123,15 @@ async def create_lead(
     if duplicates:
         details["possible_duplicates"] = [d.lead_code for d in duplicates]
     svc.add_activity(db, lead, actor=user, type="created", details=details)
+    if assignee_id is not None and assignee_id != user.id:
+        notify(
+            db,
+            user_id=assignee_id,
+            type="lead_assigned",
+            title=f"New lead: {lead.name}",
+            body=f"{user.full_name} assigned {lead.lead_code} to you",
+            link=f"/leads/{lead.id}",
+        )
     log_audit(
         db, action="lead.create", entity_type="lead", entity_id=lead.id, actor=user, request=request
     )
@@ -141,6 +162,7 @@ _TRACKED_VALUES = {
     "estimated_value",
     "city",
     "project_id",
+    "campaign_id",
 }
 
 
@@ -155,6 +177,8 @@ async def update_lead(lead_id: int, body: LeadUpdate, user: Writer, db: DbSessio
             )
     if "project_id" in changes:
         await _check_project(db, changes["project_id"])
+    if "campaign_id" in changes:
+        await _check_campaign(db, changes["campaign_id"])
 
     budget_min = changes.get("budget_min", lead.budget_min)
     budget_max = changes.get("budget_max", lead.budget_max)
@@ -181,6 +205,8 @@ async def update_lead(lead_id: int, body: LeadUpdate, user: Writer, db: DbSessio
     return await _detail(db, user, lead)
 
 
+# PATCH /pipeline is the same action under the name used by the pipeline board.
+@router.patch("/{lead_id}/pipeline", response_model=LeadDetail)
 @router.post("/{lead_id}/status", response_model=LeadDetail)
 async def change_status(
     lead_id: int, body: StatusChange, request: Request, user: Writer, db: DbSession
@@ -240,6 +266,15 @@ async def assign_lead(
     }
     lead.assigned_to_id = body.assigned_to_id
     svc.add_activity(db, lead, actor=user, type="assignment", details=details)
+    if new_user is not None and new_user.id != user.id:
+        notify(
+            db,
+            user_id=new_user.id,
+            type="lead_assigned",
+            title=f"Lead assigned: {lead.name}",
+            body=f"{user.full_name} assigned {lead.lead_code} to you",
+            link=f"/leads/{lead.id}",
+        )
     log_audit(
         db,
         action="lead.assign",
@@ -278,3 +313,21 @@ async def delete_lead(lead_id: int, request: Request, user: Admin, db: DbSession
         request=request,
     )
     await db.commit()
+
+
+@router.get("/{lead_id}/tasks", response_model=list[TaskOut])
+async def lead_tasks(lead_id: int, user: CurrentUser, db: DbSession) -> list[TaskOut]:
+    """All follow-ups on a lead (open ones first), for the lead page."""
+    lead = await svc.get_visible_lead(db, user, lead_id)
+    if lead is None:
+        raise NOT_FOUND
+    return [task_svc.to_out(t) for t in await task_svc.tasks_for_lead(db, lead.id)]
+
+
+@router.get("/{lead_id}/visits", response_model=list[VisitOut])
+async def lead_visits(lead_id: int, user: CurrentUser, db: DbSession) -> list[VisitOut]:
+    """All site visits for a lead (scheduled first), for the lead page."""
+    lead = await svc.get_visible_lead(db, user, lead_id)
+    if lead is None:
+        raise NOT_FOUND
+    return [visit_svc.to_out(v) for v in await visit_svc.visits_for_lead(db, lead.id)]

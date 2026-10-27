@@ -95,6 +95,130 @@ npm test
 - Search and filters are sent in the body of `POST /api/leads/search`, so phone numbers and
   names never appear in URLs or server logs.
 
+## Follow-ups and notifications (Sprint 3)
+
+- Follow-ups belong to a lead and a person. Views: Today (everything due today, including
+  anything already late), Overdue (past due and not done), Upcoming (after today) and Completed.
+  "Overdue" is worked out from the due time, so it is always current.
+- Completing needs a short note, which goes on the lead's timeline. Rescheduling closes the old
+  follow-up and creates a new one linked to it, so the history of postponements is kept.
+- Executives work their own follow-ups. Managers and admins see everyone's and can assign
+  follow-ups to others. Documents staff don't use follow-ups.
+- In-app notifications: lead assigned to you, follow-up given to you by someone else, and a daily
+  digest at 08:00 India time (Celery beat job `followups.daily_digest`). The bell checks for new
+  notifications every minute. Email delivery comes in Sprint 15.
+
+## Calls and site visits (Sprint 4)
+
+- Calls: outcome (connected: Interested, Call back later, Not interested; not connected: No answer,
+  Busy, Switched off/unreachable, Wrong number), direction, optional duration and notes. Setting a
+  next date creates a follow-up. Logged from a follow-up, a call can close that follow-up too.
+  Calls can be logged up to 30 days after they happened, never in the future.
+- Site visits: project, date and time, how the visit came about (separate from the lead source) and
+  who hosts it. Afterwards: completed (feedback, interest, next step, optional follow-up), no-show,
+  rescheduled or cancelled (reason required). Outcomes can be recorded from the visit day on.
+- Lead status moves automatically: scheduling a visit moves an early-stage lead to Visit scheduled;
+  completing one moves it to Visit done (Revisit for later visits). Leads in Negotiation, On hold,
+  Booked, Lost or Junk are never changed automatically. These changes are marked "automatic" in the
+  timeline and audit log.
+- The 8:00 daily digest also counts the day's site visits.
+
+## Dashboards (Sprint 5)
+
+`GET /api/dashboard/admin` (admins, managers: whole team) and `GET /api/dashboard/executive`
+(your own work). Periods: `today`, `7d`, `30d`, or `custom` with `date_from`/`date_to` (max one year),
+all in India time. Exact definitions are on `Kpis` in `backend/app/schemas/dashboard.py`:
+
+- total leads (any date) and new leads (created in the period); deleted leads never count
+- follow-ups due today (incl. today's late ones) and overdue follow-ups (any day)
+- site visits in the period, excluding cancelled; and those completed
+- calls in the period, connected calls, and connection rate (N/A when there were no calls)
+
+`tests/test_dashboard.py` checks every figure against plain SQL on a 60-lead dataset.
+
+### Business figures (managers and admins, Team view)
+
+- **Leads generated**: leads created in the period. **Leads booked**: leads that moved to Booked in the period.
+- **Commission revenue (estimated)**: for each booked lead, deal value (estimated value, else top of budget,
+  else bottom) × its project's **Flatons commission %** (set by admins on each project, 0–100).
+- **Marketing expense**: expenses dated in the period. **Estimated profit** = revenue − expense (shown as a
+  loss in red when negative).
+- Booked leads that can't be valued (no project, no commission % on the project, or no value or budget) are
+  left out of revenue and counted separately on screen. From Sprint 11, real booking prices replace the
+  estimated deal value. Executives, and anyone's "Mine" view, never see these figures.
+
+## Demo data
+
+Clearly marked data for training and testing (users `@demo.example.com`, projects "Demo: …",
+leads tagged "DEMO DATA"). `remove-demo` deletes exactly that and nothing else.
+
+```bash
+poetry run python -m app.cli seed-demo        # asks for the demo users' password
+poetry run python -m app.cli remove-demo
+```
+
+On a production server both commands refuse unless you add `--allow-production`.
+
+## Installable app (PWA)
+
+`frontend/public/manifest.webmanifest` plus icons make the CRM installable ("Add to Home Screen").
+Android Chrome only offers installation over **HTTPS**; iPhone Safari works via Share → Add to Home
+Screen. The icons are placeholders made from the "F" mark; replace the PNGs in `frontend/public/`
+with the official logo at the same sizes. Offline support arrives in Sprint 16.
+
+## Projects and inventory (Sprint 6)
+
+- **Developer projects** (a builder's new project) must have a developer; **resale listings** must not.
+  This is a database CHECK constraint, not just a form rule. Existing projects from before Sprint 6
+  were attached to a placeholder developer, "Developer to be confirmed"; an admin should edit those
+  projects and choose the real developer.
+- Developer projects: Building → Floor → Unit. Admins generate floors and units in bulk (e.g. floors
+  1–4 × 6 units → 101…406; ground floor G01, basements B1-01). Resale units belong to the project
+  directly, with an optional "where" note.
+- Unit status: Available, On hold, Booked (set by bookings in Sprint 11), Sold, Withdrawn. Admins set
+  Available/Withdrawn/Sold by hand; holds and bookings have their own flows.
+- **Holds** (admins and managers): up to 14 days, optionally for a lead. Every status change locks the
+  unit row first (`SELECT … FOR UPDATE`), so two people can never hold or book the same unit at once;
+  `tests/test_inventory.py::test_simultaneous_holds_only_one_wins` fires five requests at the same
+  instant to prove it. Expired holds show as expired immediately and are released by the Celery beat job
+  `inventory.release_expired_holds` every 5 minutes.
+- Everyone can browse inventory; only admins change it.
+
+## Sales pipeline (Sprint 7)
+
+- `GET /api/pipeline`: leads grouped by stage with count, value, weighted value and stale count;
+  `GET /api/pipeline/forecast`: weighted value of open deals by project and by person;
+  `GET /api/pipeline/aged`: open leads quiet for 7+ days. Same visibility as the leads list.
+- **Deal value** = estimated value, else the top of the budget, else the bottom. Leads with none are
+  counted as "missing value". **Weighted value** = deal value × the stage's probability.
+  **Open** = every stage except Booked, Lost and Junk; Booked value is reported separately.
+- **Stage probabilities** live in `pipeline_stages` (defaults in `app/models/pipeline.py`); admins edit
+  them on the Pipeline page. Booked is fixed at 100%, Lost and Junk at 0%.
+- **Days in stage** comes from `leads.status_changed_at`, which an ORM listener on `Lead.status`
+  updates whenever the status changes, by hand, by a site visit or by any future module.
+- Moving a card uses the normal status rules (`PATCH /api/leads/{id}/pipeline` is the same action as
+  `POST /api/leads/{id}/status`): Lost and Junk need a reason; Booked is for managers and admins.
+- The board supports mouse and touch dragging (dnd-kit), keyboard moving (focus a card's grip, Space,
+  ←/→, Space; Escape cancels) and a "Move to…" menu on every card. Phones open in list view.
+- `tests/test_pipeline.py` checks every board and forecast figure against plain SQL on a 60-lead dataset.
+
+## Marketing and reports (Sprint 8)
+
+- **Campaigns** (name, channel, optional project, dates) and **expenses** (date, amount in whole rupees,
+  category, vendor) for admins and managers. A lead can be linked to a campaign when it's created or edited.
+- **Receipts** (PDF, JPG or PNG, max 10 MB) are checked by their actual content, stored with a random name
+  under `FILE_STORAGE_PATH/receipts/`, and only served through `GET /api/expenses/{id}/receipt` to admins
+  and managers. They are never in a public folder.
+- **Reports** (`/api/reports/{calls|visits|conversion|campaigns|staff}`, periods today/7d/30d/custom):
+  every figure's definition is in `app/services/reports.py` and shown on screen under "How these are
+  calculated". **Cost per lead = spend ÷ leads attributed to that campaign** (not all leads). Every rate or
+  cost is **N/A when its denominator is zero**, never 0%. Deleted leads, and their calls and visits, never count.
+- Executives see their own figures only and no campaign report or marketing spend.
+  **CSV export** (`/api/reports/{kind}/export`, UTF-8 with BOM for Excel) is for admins and managers, and
+  every export is written to the audit log.
+- `tests/test_reports.py` checks every report against plain SQL on the demo dataset (with a deleted lead),
+  and covers the Phase 2 gate items on cost per lead, N/A and export permissions.
+
 ## Frontend notes
 
 - Design tokens (forest green, gold, paper, ink) live in `frontend/src/index.css` under `@theme`.
@@ -102,6 +226,8 @@ npm test
   `text-gold-500`, etc.
 - All API calls go through `src/lib/api.ts`. It sends cookies, renews an expired session once
   automatically, and turns API errors into readable messages (`errorMessage()`).
+- Pages other than sign-in, the dashboard and "not found" load on first visit (`lazy()` in
+  `src/App.tsx`), which keeps the first download small on phones.
 - Navigation items and which roles see them are defined in `src/lib/nav.ts`. Pages restricted to
   certain roles are wrapped in `<RequireRole>` in `src/App.tsx`. The API enforces the same rules.
 

@@ -5,6 +5,7 @@ import { DuplicateBanner } from "../../components/leads/LeadBits";
 import { Alert, Button, ErrorState, PageHeader, SelectInput, Spinner, TextArea, TextInput } from "../../components/ui";
 import { useCurrentUser } from "../../hooks/useAuth";
 import { checkDuplicates, useAssignableUsers, useCreateLead, useLead, useProjects, useUpdateLead } from "../../hooks/useLeads";
+import { useCampaigns } from "../../hooks/useMarketing";
 import type { LeadPayload } from "../../hooks/useLeads";
 import { errorMessage } from "../../lib/api";
 import {
@@ -14,21 +15,21 @@ import type { Duplicate, LeadDetail } from "../../lib/leads";
 
 interface FormState {
   name: string; mobile: string; alt_mobile: string; email: string; city: string;
-  source: string; sub_source: string; project_id: string; configuration: string;
+  source: string; sub_source: string; campaign_id: string; project_id: string; configuration: string;
   budget_min: string; budget_max: string; purpose: string; timeline: string;
   estimated_value: string; remarks: string; assigned_to_id: string;
 }
 
 const EMPTY: FormState = {
   name: "", mobile: "", alt_mobile: "", email: "", city: "", source: "", sub_source: "",
-  project_id: "", configuration: "", budget_min: "", budget_max: "", purpose: "", timeline: "",
+  campaign_id: "", project_id: "", configuration: "", budget_min: "", budget_max: "", purpose: "", timeline: "",
   estimated_value: "", remarks: "", assigned_to_id: "",
 };
 
 function fromLead(l: LeadDetail): FormState {
   return {
     name: l.name, mobile: l.mobile, alt_mobile: l.alt_mobile ?? "", email: l.email ?? "", city: l.city ?? "",
-    source: l.source, sub_source: l.sub_source ?? "", project_id: l.project ? String(l.project.id) : "",
+    source: l.source, sub_source: l.sub_source ?? "", campaign_id: l.campaign ? String(l.campaign.id) : "", project_id: l.project ? String(l.project.id) : "",
     configuration: l.configuration ?? "", budget_min: rupeesToLakh(l.budget_min), budget_max: rupeesToLakh(l.budget_max),
     purpose: l.purpose ?? "", timeline: l.timeline ?? "", estimated_value: rupeesToLakh(l.estimated_value),
     remarks: l.remarks ?? "", assigned_to_id: l.assigned_to ? String(l.assigned_to.id) : "",
@@ -41,6 +42,7 @@ function toPayload(f: FormState): LeadPayload {
   return {
     name: f.name.trim(), mobile: f.mobile.trim(), alt_mobile: text(f.alt_mobile), email: text(f.email),
     city: text(f.city), source: f.source, sub_source: text(f.sub_source),
+    campaign_id: f.campaign_id ? Number(f.campaign_id) : null,
     project_id: f.project_id ? Number(f.project_id) : null, configuration: text(f.configuration),
     budget_min: lakhToRupees(f.budget_min), budget_max: lakhToRupees(f.budget_max),
     purpose: text(f.purpose), timeline: text(f.timeline), estimated_value: lakhToRupees(f.estimated_value),
@@ -64,6 +66,7 @@ function LeadForm({ initial, existing }: { initial: FormState; existing?: LeadDe
   const navigate = useNavigate();
   const isManager = me.role === "admin" || me.role === "manager";
   const projects = useProjects();
+  const campaigns = useCampaigns();
   const people = useAssignableUsers(isManager && !existing);
   const create = useCreateLead();
   const update = useUpdateLead();
@@ -128,7 +131,11 @@ function LeadForm({ initial, existing }: { initial: FormState; existing?: LeadDe
           <option value="" disabled>Choose a source</option>
           {SOURCES.map((s) => <option key={s} value={s}>{SOURCE_LABELS[s]}</option>)}
         </SelectInput>
-        <TextInput label="Sub-source or campaign" value={f.sub_source} onChange={set("sub_source")} placeholder="e.g. Diwali offer ad" maxLength={150} />
+        <SelectInput label="Campaign" value={f.campaign_id} onChange={set("campaign_id")} hint="Links the lead to marketing spend, for cost per lead">
+          <option value="">No campaign</option>
+          {campaigns.data?.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
+        </SelectInput>
+        <TextInput label="Sub-source (optional)" value={f.sub_source} onChange={set("sub_source")} placeholder="e.g. ad set or listing name" maxLength={150} />
       </Section>
 
       <Section title="Requirement">
