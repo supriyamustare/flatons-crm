@@ -1,4 +1,4 @@
-import { screen, within } from "@testing-library/react";
+import { screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import type { Dashboard } from "../hooks/useDashboard";
@@ -23,6 +23,7 @@ function dash(overrides: Partial<Dashboard["kpis"]> = {}, extra: Partial<Dashboa
       actor: { id: 7, full_name: "Ravi Kumar", role: "executive" }, lead_id: 11, lead_name: "Anita Desai", lead_code: "LEAD-1",
       created_at: "2026-10-23T06:00:00Z" }],
     business: null,
+    team: null,
     ...extra,
   };
 }
@@ -112,5 +113,41 @@ describe("business figures (manager's Team view)", () => {
     renderApp("/");
     await screen.findByRole("region", { name: "Key numbers" });
     expect(screen.queryByRole("region", { name: "Business" })).not.toBeInTheDocument();
+  });
+});
+
+
+describe("team performance (manager's Team view)", () => {
+  const member = (id: number, name: string, extra = {}) => ({
+    user: { id, full_name: name, role: "executive" as const }, calls_today: 12, calls: 40, connected: 18, connection_rate: 0.45,
+    visits_done: 3, converted: 2, dead: 1, closing_rate: 0.6667, open_leads: 14, overdue: 0, ...extra,
+  });
+
+  it("shows each person's calls today, conversions, dead leads and closing rate", async () => {
+    const team = [member(7, "Ravi Kumar"), member(8, "Kiran Rao", { calls_today: 0, converted: 0, dead: 0, closing_rate: null, overdue: 4 })];
+    mockApi(makeUser("manager"), { get: { "/dashboard/admin": dash({}, { team }) } });
+    renderApp("/");
+    const table = await screen.findByRole("table", { name: "Team performance" });
+    const ravi = within(table).getByRole("row", { name: /Ravi Kumar/ });
+    expect(within(ravi).getAllByRole("cell").map((c) => c.textContent)).toEqual(["12", "40", "18 (45%)", "3", "2", "1", "67%", "14", "0"]);
+    const kiran = within(table).getByRole("row", { name: /Kiran Rao/ });
+    expect(within(kiran).getAllByRole("cell")[6]).toHaveTextContent("N/A");
+    expect(within(table).getByRole("link", { name: "Ravi Kumar" })).toHaveAttribute("href", "/reports?report=staff&person=7");
+  });
+
+  it("isn't on an executive's dashboard", async () => {
+    mockApi(makeUser("executive"), { get: { "/dashboard/executive": dash({}, { scope: "mine", team: null }) } });
+    renderApp("/");
+    await screen.findByRole("region", { name: "Key numbers" });
+    expect(screen.queryByRole("heading", { name: "Team performance" })).not.toBeInTheDocument();
+  });
+
+  it("the link opens that person's staff report", async () => {
+    const { get } = mockApi(makeUser("manager"), { get: { "/reports/staff": { date_from: "2026-09-28", date_to: "2026-10-27", scope: "person",
+      definitions: {}, rows: [], totals: { user: { id: 0, full_name: "Everyone", role: "executive" }, leads: 0, calls: 0, connected: 0,
+      connection_rate: null, visits_completed: 0, bookings: 0, lead_to_booking_rate: null } } } });
+    renderApp("/reports?report=staff&person=7");
+    expect(await screen.findByRole("tab", { name: "Staff" })).toHaveAttribute("aria-selected", "true");
+    await waitFor(() => expect(get).toHaveBeenCalledWith("/reports/staff", { params: expect.objectContaining({ user_id: 7 }) }));
   });
 });

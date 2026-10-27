@@ -314,3 +314,114 @@ async def test_project_commission_percent_validated(login_as, pct, status):
         assert float(r.json()["commission_pct"]) == pct
         upd = await c.patch(f"/api/projects/{r.json()['id']}", json={"commission_pct": 1.75})
         assert upd.json()["commission_pct"] == "1.75"
+
+
+# ---------------------------------------------------------------- team performance (Team view)
+
+
+@pytest.mark.parametrize("q", QUERIES, ids=lambda q: q.range)
+async def test_team_performance_reconciles_with_database(db, dataset, q):
+    admin, ravi, _ = dataset
+    dash = await build_dashboard(db, admin, q, mine=False, now=NOW)
+    ps, pe = period(q)
+    ds = datetime.combine(NOW.astimezone(IST).date(), time.min, IST)
+    p = {"ps": ps, "pe": pe, "ds": ds, "de": ds + timedelta(days=1), "now": NOW}
+    conn = "('interested','callback','not_interested')"
+
+    async def per_user(sql):
+        return {r[0]: tuple(r[1:]) for r in (await db.execute(text(sql), p)).all()}
+
+    calls = await per_user(f"""SELECT c.user_id,
+        count(*) FILTER (WHERE c.called_at >= :ps AND c.called_at < :pe),
+        count(*) FILTER (WHERE c.called_at >= :ps AND c.called_at < :pe AND c.outcome IN {conn}),
+        count(*) FILTER (WHERE c.called_at >= :ds AND c.called_at < :de)
+        FROM call_logs c JOIN leads l ON l.id = c.lead_id WHERE l.deleted_at IS NULL GROUP BY 1""")
+    visits = await per_user("""SELECT v.host_id, count(*) FROM site_visits v JOIN leads l ON l.id = v.lead_id
+        WHERE l.deleted_at IS NULL AND v.status = 'completed' AND v.scheduled_at >= :ps AND v.scheduled_at < :pe GROUP BY 1""")
+    leads = await per_user("""SELECT assigned_to_id,
+        count(*) FILTER (WHERE status = 'booked' AND status_changed_at >= :ps AND status_changed_at < :pe),
+        count(*) FILTER (WHERE status IN ('lost','junk') AND status_changed_at >= :ps AND status_changed_at < :pe),
+        count(*) FILTER (WHERE status NOT IN ('booked','lost','junk'))
+        FROM leads WHERE deleted_at IS NULL AND assigned_to_id IS NOT NULL GROUP BY 1""")
+    overdue = await per_user("""SELECT t.assigned_to_id, count(*) FROM follow_up_tasks t JOIN leads l ON l.id = t.lead_id
+        WHERE l.deleted_at IS NULL AND t.status = 'pending' AND t.due_at < :now GROUP BY 1""")
+
+    assert dash.team, "team performance missing from the Team view"
+    for row in dash.team:
+        uid = row.user.id
+        n, k, today = calls.get(uid, (0, 0, 0))
+        conv, dead, open_ = leads.get(uid, (0, 0, 0))
+        assert (row.calls, row.connected, row.calls_today) == (n, k, today), row.user.full_name
+        assert row.visits_done == visits.get(uid, (0,))[0]
+        assert (row.converted, row.dead, row.open_leads) == (conv, dead, open_)
+        assert row.overdue == overdue.get(uid, (0,))[0]
+        assert row.connection_rate == (round(k / n, 4) if n else None)
+        assert row.closing_rate == (round(conv / (conv + dead), 4) if conv + dead else None)
+    assert ravi.id in {r.user.id for r in dash.team}
+
+
+async def test_team_performance_worked_example(db, make_user):
+    """Hand-checkable: 2 converted + 1 lost + 1 junk -> closing rate 50%; 3 calls today, 2 answered."""
+    from app.models import CallLog, Lead, LeadStatus
+
+    admin = await make_user(Role.admin)
+    asha = await make_user(Role.executive)
+    idle = await make_user(Role.executive)
+    yesterday, now_ish = NOW - timedelta(days=1), NOW - timedelta(minutes=30)
+    statuses = [
+        LeadStatus.booked,
+        LeadStatus.booked,
+        LeadStatus.lost,
+        LeadStatus.junk,
+        LeadStatus.negotiation,
+        LeadStatus.new,
+    ]
+    for i, st in enumerate(statuses):
+        db.add(
+            Lead(
+                lead_code=f"T-{i}",
+                name=f"Lead {i}",
+                mobile=f"+91987654320{i}",
+                source="website",
+                status=st,
+                assigned_to_id=asha.id,
+                created_by_id=admin.id,
+                created_at=yesterday,
+                status_changed_at=yesterday,
+                lost_reason="x" if st in (LeadStatus.lost, LeadStatus.junk) else None,
+            )
+        )
+    await db.flush()
+    lead_id = await db.scalar(select(Lead.id).order_by(Lead.id))
+    for outcome in ("interested", "no_answer", "callback"):
+        db.add(CallLog(lead_id=lead_id, user_id=asha.id, outcome=outcome, called_at=now_ish))
+    await db.commit()
+
+    team = (
+        await build_dashboard(db, admin, DashboardQuery(range="today"), mine=False, now=NOW)
+    ).team
+    row = next(r for r in team if r.user.id == asha.id)
+    assert (row.calls_today, row.calls, row.connected) == (3, 3, 2)
+    assert row.connection_rate == 0.6667
+    # Closed yesterday, so not in "today"; switch to 7 days for those
+    assert (row.converted, row.dead, row.closing_rate) == (0, 0, None)
+    week = next(
+        r
+        for r in (
+            await build_dashboard(db, admin, DashboardQuery(range="7d"), mine=False, now=NOW)
+        ).team
+        if r.user.id == asha.id
+    )
+    assert (week.converted, week.dead, week.closing_rate, week.open_leads) == (2, 2, 0.5, 2)
+    # Executives with no activity still appear, so a quiet day is visible too
+    assert idle.id in {r.user.id for r in team}
+
+
+async def test_team_performance_is_team_only(login_as):
+    ex, _ = await login_as(Role.executive)
+    mgr, _ = await login_as(Role.manager)
+    assert (await ex.get("/api/dashboard/executive")).json()["team"] is None
+    assert (await mgr.get("/api/dashboard/executive")).json()[
+        "team"
+    ] is None  # manager's own "Mine" view
+    assert isinstance((await mgr.get("/api/dashboard/admin")).json()["team"], list)

@@ -86,6 +86,32 @@ class Business(BaseModel):
     unvalued_bookings: int
 
 
+class TeamMember(BaseModel):
+    """One sales person's figures (Team view only). Definitions:
+
+    calls_today       calls they logged today (India time), whatever the period
+    calls / connected calls they logged in the period / of those, answered
+    visits_done       completed site visits they hosted, dated in the period
+    converted         their leads that moved to Booked in the period
+    dead              their leads that moved to Lost or Junk in the period
+    closing_rate      converted / (converted + dead); None when nothing closed
+    open_leads        leads assigned to them now, not Booked/Lost/Junk
+    overdue           their open follow-ups past due right now
+    """
+
+    user: UserBrief
+    calls_today: int
+    calls: int
+    connected: int
+    connection_rate: float | None
+    visits_done: int
+    converted: int
+    dead: int
+    closing_rate: float | None
+    open_leads: int
+    overdue: int
+
+
 class Dashboard(BaseModel):
     scope: Literal["team", "mine"]
     date_from: date
@@ -96,3 +122,4 @@ class Dashboard(BaseModel):
     visits_needing_update: list[VisitOut]
     activity: list[ActivityFeedItem]
     business: Business | None = None
+    team: list[TeamMember] | None = None

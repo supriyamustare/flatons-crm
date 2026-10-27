@@ -2,7 +2,7 @@
 
 from datetime import UTC, date, datetime, time, timedelta
 
-from sqlalchemy import Select, func, or_, select
+from sqlalchemy import Select, and_, func, or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.models.call import CONNECTED_OUTCOMES, CallLog
@@ -10,9 +10,16 @@ from app.models.lead import Lead, LeadActivity, LeadStatus
 from app.models.marketing import Expense
 from app.models.project import Project
 from app.models.task import FollowUpTask, TaskStatus
-from app.models.user import User
+from app.models.user import Role, User
 from app.models.visit import SiteVisit, VisitStatus
-from app.schemas.dashboard import ActivityFeedItem, Business, Dashboard, DashboardQuery, Kpis
+from app.schemas.dashboard import (
+    ActivityFeedItem,
+    Business,
+    Dashboard,
+    DashboardQuery,
+    Kpis,
+    TeamMember,
+)
 from app.schemas.user import UserBrief
 from app.services import tasks as task_svc
 from app.services import visits as visit_svc
@@ -154,6 +161,7 @@ async def build_dashboard(
         visits_needing_update=[visit_svc.to_out(v, now) for v in stale_visits],
         activity=feed,
         business=None if mine else await _business(db, start, end, p_start, p_end),
+        team=None if mine else await _team(db, p_start, p_end, day_start, day_end, now),
     )
 
 
@@ -211,3 +219,99 @@ async def _business(
         profit=revenue - int(expense),
         unvalued_bookings=unvalued,
     )
+
+
+async def _team(
+    db: AsyncSession,
+    p_start: datetime,
+    p_end: datetime,
+    day_start: datetime,
+    day_end: datetime,
+    now: datetime,
+) -> list[TeamMember]:
+    """Per-person figures for the Team view. Definitions are on schemas.dashboard.TeamMember.
+    Everyone active in sales appears: all executives, plus managers/admins with any activity."""
+    live = Lead.deleted_at.is_(None)
+
+    async def by_user(stmt) -> dict[int, tuple]:
+        return {r[0]: tuple(r[1:]) for r in await db.execute(stmt)}
+
+    connected = CallLog.outcome.in_(list(CONNECTED_OUTCOMES))
+    calls = await by_user(
+        select(
+            CallLog.user_id,
+            func.count().filter(CallLog.called_at >= p_start, CallLog.called_at < p_end),
+            func.count().filter(CallLog.called_at >= p_start, CallLog.called_at < p_end, connected),
+            func.count().filter(CallLog.called_at >= day_start, CallLog.called_at < day_end),
+        )
+        .join(Lead, Lead.id == CallLog.lead_id)
+        .where(live)
+        .group_by(CallLog.user_id)
+    )
+    visits = await by_user(
+        select(SiteVisit.host_id, func.count())
+        .join(Lead, Lead.id == SiteVisit.lead_id)
+        .where(
+            live,
+            SiteVisit.status == VisitStatus.completed,
+            SiteVisit.scheduled_at >= p_start,
+            SiteVisit.scheduled_at < p_end,
+        )
+        .group_by(SiteVisit.host_id)
+    )
+    closed_in_period = and_(Lead.status_changed_at >= p_start, Lead.status_changed_at < p_end)
+    dead_statuses = [LeadStatus.lost, LeadStatus.junk]
+    leads = await by_user(
+        select(
+            Lead.assigned_to_id,
+            func.count().filter(Lead.status == LeadStatus.booked, closed_in_period),
+            func.count().filter(Lead.status.in_(dead_statuses), closed_in_period),
+            func.count().filter(Lead.status.notin_([LeadStatus.booked, *dead_statuses])),
+        )
+        .where(live, Lead.assigned_to_id.is_not(None))
+        .group_by(Lead.assigned_to_id)
+    )
+    overdue = await by_user(
+        select(FollowUpTask.assigned_to_id, func.count())
+        .join(Lead, Lead.id == FollowUpTask.lead_id)
+        .where(live, FollowUpTask.status == TaskStatus.pending, FollowUpTask.due_at < now)
+        .group_by(FollowUpTask.assigned_to_id)
+    )
+
+    people = await db.scalars(
+        select(User)
+        .where(User.is_active.is_(True), User.role.in_([Role.admin, Role.manager, Role.executive]))
+        .order_by(User.full_name)
+    )
+    rows = []
+    for u in people:
+        n_calls, n_conn, n_today = calls.get(u.id, (0, 0, 0))
+        conv, dead, open_ = leads.get(u.id, (0, 0, 0))
+        row = TeamMember(
+            user=UserBrief.model_validate(u),
+            calls_today=n_today,
+            calls=n_calls,
+            connected=n_conn,
+            connection_rate=round(n_conn / n_calls, 4) if n_calls else None,
+            visits_done=visits.get(u.id, (0,))[0],
+            converted=conv,
+            dead=dead,
+            closing_rate=round(conv / (conv + dead), 4) if conv + dead else None,
+            open_leads=open_,
+            overdue=overdue.get(u.id, (0,))[0],
+        )
+        busy = any(
+            (
+                row.calls,
+                row.calls_today,
+                row.visits_done,
+                row.converted,
+                row.dead,
+                row.open_leads,
+                row.overdue,
+            )
+        )
+        if u.role == Role.executive or busy:
+            rows.append(row)
+    rows.sort(key=lambda r: (-r.converted, -r.calls, r.user.full_name))
+    return rows

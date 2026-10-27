@@ -48,6 +48,21 @@ export interface Business {
   unvalued_bookings: number;
 }
 
+/** One sales person's figures (Team view only). */
+export interface TeamMember {
+  user: UserBrief;
+  calls_today: number;
+  calls: number;
+  connected: number;
+  connection_rate: number | null;
+  visits_done: number;
+  converted: number;
+  dead: number;
+  closing_rate: number | null;
+  open_leads: number;
+  overdue: number;
+}
+
 export interface Dashboard {
   scope: "team" | "mine";
   date_from: string;
@@ -58,6 +73,7 @@ export interface Dashboard {
   visits_needing_update: Visit[];
   activity: FeedItem[];
   business: Business | null;
+  team: TeamMember[] | null;
 }
 
 export function useDashboard(scope: "team" | "mine", query: DashboardQuery, enabled = true) {
