@@ -38,6 +38,9 @@ export function ProjectFormDialog({ project, onClose, onSaved }: {
   const [status, setStatus] = useState<ProjectStatus>(project?.status ?? "under_construction");
   const [location, setLocation] = useState(project?.location ?? "");
   const [description, setDescription] = useState(project?.description ?? "");
+  const [commission, setCommission] = useState(project?.commission_pct ? String(Number(project.commission_pct)) : "");
+  const pct = commission.trim() === "" ? null : Number(commission);
+  const pctOk = pct === null || (Number.isFinite(pct) && pct >= 0 && pct <= 100);
 
   const typingNew = devChoice === "new";
   const devOk = type === "resale" || (typingNew ? newDev.trim() !== "" : devChoice !== "");
@@ -46,7 +49,7 @@ export function ProjectFormDialog({ project, onClose, onSaved }: {
     e.preventDefault();
     const body = {
       name: name.trim(), project_type: type, status,
-      location: location.trim() || null, description: description.trim() || null,
+      location: location.trim() || null, description: description.trim() || null, commission_pct: pct,
       ...(type === "developer" ? (typingNew ? { developer_name: newDev.trim() } : { developer_id: Number(devChoice) }) : {}),
     };
     const done = { onSuccess: (p: ProjectFull) => { onSaved?.(p); onClose(); } };
@@ -87,6 +90,9 @@ export function ProjectFormDialog({ project, onClose, onSaved }: {
           {(Object.keys(PROJECT_STATUS_LABELS) as ProjectStatus[]).map((s) => <option key={s} value={s}>{PROJECT_STATUS_LABELS[s]}</option>)}
         </SelectInput>
         <TextInput label="Location (optional)" value={location} onChange={(e) => setLocation(e.target.value)} placeholder="e.g. Baner, Pune" maxLength={200} />
+        <TextInput label="Flatons commission %" type="number" inputMode="decimal" min={0} max={100} step="0.25" value={commission}
+          onChange={(e) => setCommission(e.target.value)} placeholder="e.g. 2"
+          hint={pctOk ? "Commission or brokerage on each deal; used for the dashboard’s estimated revenue" : "Enter a number from 0 to 100"} />
         <TextArea label="Description (optional)" value={description} onChange={(e) => setDescription(e.target.value)} maxLength={5000} />
         {project && (
           <label className="flex items-center gap-3 text-sm">
@@ -95,7 +101,7 @@ export function ProjectFormDialog({ project, onClose, onSaved }: {
             Active (inactive projects are hidden from lead and visit forms)
           </label>
         )}
-        <Actions onCancel={onClose} label={project ? "Save" : "Create project"} loading={m.isPending} disabled={!name.trim() || !devOk} />
+        <Actions onCancel={onClose} label={project ? "Save" : "Create project"} loading={m.isPending} disabled={!name.trim() || !devOk || !pctOk} />
       </form>
     </Modal>
   );

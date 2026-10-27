@@ -19,7 +19,7 @@ const counts = { total: 4, available: 2, on_hold: 1, booked: 0, sold: 1, withdra
 function inventory(units: Unit[]): Inventory {
   return {
     project: { id: 1, name: "Green Meadows", is_active: true, project_type: "developer", status: "under_construction",
-      developer: { id: 1, name: "Skyline Developers" }, location: "Baner", description: null, created_at: "2026-10-23T00:00:00Z" },
+      developer: { id: 1, name: "Skyline Developers" }, location: "Baner", description: null, commission_pct: "2.00", created_at: "2026-10-23T00:00:00Z" },
     counts,
     buildings: [{ id: 1, name: "A Wing", sort_order: 0, counts, floors: [
       { id: 2, number: 2, units: units.filter((u) => u.floor_number === 2) },

@@ -20,6 +20,7 @@ export interface ProjectFull {
   developer: Developer | null;
   location: string | null;
   description: string | null;
+  commission_pct: string | null;
   created_at: string;
   units?: UnitCounts;
 }

@@ -136,6 +136,17 @@ all in India time. Exact definitions are on `Kpis` in `backend/app/schemas/dashb
 
 `tests/test_dashboard.py` checks every figure against plain SQL on a 60-lead dataset.
 
+### Business figures (managers and admins, Team view)
+
+- **Leads generated**: leads created in the period. **Leads booked**: leads that moved to Booked in the period.
+- **Commission revenue (estimated)**: for each booked lead, deal value (estimated value, else top of budget,
+  else bottom) × its project's **Flatons commission %** (set by admins on each project, 0–100).
+- **Marketing expense**: expenses dated in the period. **Estimated profit** = revenue − expense (shown as a
+  loss in red when negative).
+- Booked leads that can't be valued (no project, no commission % on the project, or no value or budget) are
+  left out of revenue and counted separately on screen. From Sprint 11, real booking prices replace the
+  estimated deal value. Executives, and anyone's "Mine" view, never see these figures.
+
 ## Demo data
 
 Clearly marked data for training and testing (users `@demo.example.com`, projects "Demo: …",

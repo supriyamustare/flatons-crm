@@ -1,11 +1,13 @@
 from datetime import datetime
+from decimal import Decimal
 from typing import Annotated
 
-from pydantic import BaseModel, ConfigDict, StringConstraints, model_validator
+from pydantic import BaseModel, ConfigDict, Field, StringConstraints, model_validator
 
 from app.models.project import ProjectStatus, ProjectType
 from app.schemas.common import LongText, PlainText
 
+CommissionPct = Annotated[Decimal, Field(ge=0, le=100, max_digits=5, decimal_places=2)]
 ProjectName = Annotated[PlainText, StringConstraints(max_length=150)]
 DeveloperName = Annotated[PlainText, StringConstraints(max_length=150)]
 
@@ -43,6 +45,7 @@ class ProjectOut(ProjectBrief):
     developer: DeveloperOut | None
     location: str | None
     description: str | None
+    commission_pct: Decimal | None = None
     created_at: datetime
 
 
@@ -71,6 +74,7 @@ class ProjectCreate(_DeveloperChoice):
     status: ProjectStatus = ProjectStatus.under_construction
     location: Annotated[PlainText, StringConstraints(max_length=200)] | None = None
     description: LongText | None = None
+    commission_pct: CommissionPct | None = None
 
     @model_validator(mode="after")
     def _developer_matches_type(self) -> "ProjectCreate":
@@ -91,3 +95,4 @@ class ProjectUpdate(_DeveloperChoice):
     status: ProjectStatus | None = None
     location: Annotated[PlainText, StringConstraints(max_length=200)] | None = None
     description: LongText | None = None
+    commission_pct: CommissionPct | None = None
