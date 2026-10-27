@@ -9,6 +9,7 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from app.api import (
     auth,
+    bookings,
     calls,
     dashboard,
     health,
@@ -73,4 +74,5 @@ app.include_router(marketing.router, prefix="/api")
 app.include_router(reports.router, prefix="/api")
 app.include_router(integrations.router, prefix="/api")
 app.include_router(inbound.router, prefix="/api")
+app.include_router(bookings.router, prefix="/api")
 app.include_router(leads.router, prefix="/api")

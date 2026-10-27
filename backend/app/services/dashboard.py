@@ -5,6 +5,7 @@ from datetime import UTC, date, datetime, time, timedelta
 from sqlalchemy import Select, and_, func, or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.models.booking import Booking, BookingStatus
 from app.models.call import CONNECTED_OUTCOMES, CallLog
 from app.models.lead import Lead, LeadActivity, LeadStatus
 from app.models.marketing import Expense
@@ -180,10 +181,16 @@ async def _business(
     )
     deal_value = func.coalesce(Lead.estimated_value, Lead.budget_max, Lead.budget_min)
     # Revenue is computed in whole rupees per lead, then summed (no fractional paise)
-    commission = func.round(deal_value * Project.commission_pct / 100)
+    # A recorded booking's commission wins; otherwise estimate it from the deal value
+    commission = func.coalesce(
+        Booking.commission_expected, func.round(deal_value * Project.commission_pct / 100)
+    )
     booked = (
         select(Lead.id, commission.label("commission"))
         .outerjoin(Project, Project.id == Lead.project_id)
+        .outerjoin(
+            Booking, and_(Booking.lead_id == Lead.id, Booking.status == BookingStatus.booked)
+        )
         .where(
             live,
             Lead.status == LeadStatus.booked,

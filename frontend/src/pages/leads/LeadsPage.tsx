@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Link } from "react-router";
+import { Link, useLocation } from "react-router";
 import { ArrowRightLeft, CalendarPlus, Phone, Plus, Search, SlidersHorizontal, StickyNote } from "lucide-react";
 import { StatusBadge } from "../../components/leads/LeadBits";
 import { NoteDialog, StatusDialog } from "../../components/leads/LeadDialogs";
@@ -86,6 +86,12 @@ export function LeadsPage() {
 
   const [initial] = useState(loadState);
   const [search, setSearch] = useState(initial.search);
+  // The header search hands a query over in navigation state (never in the address bar)
+  const location = useLocation();
+  const handed = (location.state as { quickSearch?: string } | null)?.quickSearch;
+  useEffect(() => {
+    if (handed !== undefined) setSearch(handed);
+  }, [handed, location.key]);
   const [filters, setFilters] = useState<LeadFilters>(initial.filters);
   const [sortKey, setSortKey] = useState<SortKey>(initial.sortKey);
   const [page, setPage] = useState(initial.page);

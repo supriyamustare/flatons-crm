@@ -5,6 +5,7 @@ import { useAuth, useCurrentUser } from "../hooks/useAuth";
 import { mobileNavFor, navFor } from "../lib/nav";
 import type { NavItem } from "../lib/nav";
 import { useInboxCount } from "../hooks/useInbox";
+import { QuickSearch } from "./QuickSearch";
 import { ROLE_LABELS } from "../lib/types";
 import { NotificationBell } from "./NotificationBell";
 import { cx } from "./ui";
@@ -78,6 +79,7 @@ export function AppLayout() {
         </header>
 
         <main className="mx-auto w-full max-w-6xl flex-1 px-4 pt-6 pb-28 md:px-10 md:pt-10 md:pb-10">
+          {user.role !== "docs" && <QuickSearch />}
           <Outlet />
         </main>
       </div>
