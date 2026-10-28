@@ -10,7 +10,7 @@ from app.tasks import inbound as fb_task
 from tests.conftest import new_project
 
 
-async def connect(admin, kind="website", **kw):
+async def connect(admin, kind="99acres", **kw):
     body = {"name": kw.pop("name", f"{kind} connection"), "kind": kind, **kw}
     r = await admin.post("/api/integrations", json=body)
     assert r.status_code == 201, r.text
@@ -50,14 +50,14 @@ async def test_website_enquiry_becomes_unassigned_lead_in_inbox(login_as, client
         "Anita Desai",
         "+919876543210",
         "anita@example.com",
-        "website",
+        "99acres",
     )
     assert (
         lead.assigned_to_id is None and lead.created_by_id is None and lead.project_id == project.id
     )
     assert lead.remarks == "Want a 2 BHK"
     created = await db.scalar(select(LeadActivity).where(LeadActivity.lead_id == lead.id))
-    assert created.type == "created" and created.details["via"] == "website connection"
+    assert created.type == "created" and created.details["via"] == "99acres connection"
     inbox = (await admin.get("/api/inbox")).json()
     assert inbox["count"] == 1 and inbox["items"][0]["name"] == "Anita Desai"
     assert inbox["items"][0]["message"] == "Want a 2 BHK"
@@ -324,7 +324,7 @@ async def test_setup_is_admin_only_and_secret_rotates(login_as, client):
     mgr, _ = await login_as(Role.manager)
     assert (await mgr.get("/api/integrations")).status_code == 403
     assert (
-        await mgr.post("/api/integrations", json={"name": "x", "kind": "website"})
+        await mgr.post("/api/integrations", json={"name": "x", "kind": "99acres"})
     ).status_code == 403
     admin, _ = await login_as(Role.admin)
     assert (

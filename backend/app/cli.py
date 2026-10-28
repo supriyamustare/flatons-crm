@@ -79,7 +79,19 @@ def main() -> None:
     p.add_argument("--allow-production", action="store_true")
     p = sub.add_parser("remove-demo", help="Remove all demo data")
     p.add_argument("--allow-production", action="store_true")
+    sub.add_parser(
+        "load-projects", help="Create Habitat and Optimids from app/data/projects_seed.json"
+    )
     args = parser.parse_args()
+
+    if args.command == "load-projects":
+        from app.cli_projects import load_projects
+
+        counts = asyncio.run(_with_session(load_projects))
+        print(
+            "Projects loaded:", ", ".join(f"{v} {k.replace('_', ' ')}" for k, v in counts.items())
+        )
+        return
 
     if args.command == "seed-demo":
         _guard_production(args.allow_production)

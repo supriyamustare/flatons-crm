@@ -1,9 +1,23 @@
 from datetime import date, datetime
 from typing import Annotated, Any, Literal
 
-from pydantic import BaseModel, ConfigDict, Field, StringConstraints, model_validator
+from pydantic import (
+    BaseModel,
+    ConfigDict,
+    Field,
+    StringConstraints,
+    field_validator,
+    model_validator,
+)
 
-from app.models.lead import BuyingTimeline, Configuration, LeadSource, LeadStatus, Purpose
+from app.models.lead import (
+    ACTIVE_SOURCES,
+    BuyingTimeline,
+    Configuration,
+    LeadSource,
+    LeadStatus,
+    Purpose,
+)
 from app.schemas.common import Email, LongText, Mobile, PlainText
 from app.schemas.project import ProjectBrief
 from app.schemas.user import UserBrief
@@ -49,6 +63,14 @@ class LeadCreate(_LeadFields):
     name: Name
     mobile: Mobile
     source: LeadSource
+
+    @field_validator("source")
+    @classmethod
+    def _active_source(cls, v: LeadSource) -> LeadSource:
+        if v not in ACTIVE_SOURCES:
+            raise ValueError(f"{v.value} is no longer used as a lead source")
+        return v
+
     # Managers/admins may assign on creation; executives always own what they create.
     assigned_to_id: int | None = None
 
@@ -128,9 +150,20 @@ class ActivityOut(BaseModel):
     created_at: datetime
 
 
+class LeadBooking(BaseModel):
+    """The lead's live booking, if any."""
+
+    id: int
+    booking_code: str
+    project: str
+    unit_no: str
+    agreed_price: int
+
+
 class LeadDetail(LeadOut):
     activities: list[ActivityOut]
     can_edit: bool
+    booking: LeadBooking | None = None
 
 
 class DuplicateOut(BaseModel):

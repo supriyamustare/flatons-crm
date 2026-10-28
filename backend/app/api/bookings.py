@@ -16,6 +16,7 @@ from app.schemas.booking import (
     BookingQuery,
     BookingTotals,
     BookingUpdate,
+    CustomerDetails,
 )
 from app.services import bookings as svc
 from app.services import leads as lead_svc
@@ -194,10 +195,17 @@ async def create_booking(
                 sales_exec = await lead_svc.get_assignable_user(db, exec_id)
             except lead_svc.LeadRuleError as exc:
                 raise HTTPException(status.HTTP_422_UNPROCESSABLE_CONTENT, str(exc)) from None
-    fields = body.model_dump(exclude={"lead_id", "unit_id", "sales_exec_id"})
+    fields = body.model_dump(exclude={"lead_id", "unit_id", "sales_exec_id", "customer"})
+    customer = body.customer.model_dump(exclude_unset=True) if body.customer else None
     try:
         booking = await svc.create(
-            db, lead=lead, unit_id=body.unit_id, actor=user, sales_exec=sales_exec, **fields
+            db,
+            lead=lead,
+            unit_id=body.unit_id,
+            actor=user,
+            sales_exec=sales_exec,
+            customer=customer,
+            **fields,
         )
     except svc.BookingRuleError as exc:
         raise _http(exc) from None
@@ -289,3 +297,35 @@ async def cancel_booking(
     )
     await db.commit()
     return await svc.to_out(db, await _booking(db, user, b.id), with_history=True)
+
+
+@router.patch("/{booking_id}/customer", response_model=BookingOut)
+async def update_customer(
+    booking_id: int, body: CustomerDetails, request: Request, user: Sales, db: DbSession
+) -> BookingOut:
+    """Customer details and payment preference: managers, admins, or whoever handled the booking."""
+    b = await _booking(db, user, booking_id)
+    if user.role not in lead_svc.MANAGERS and b.sales_exec_id != user.id:
+        raise HTTPException(
+            status.HTTP_403_FORBIDDEN,
+            "Only managers or the person handling this booking can change this",
+        )
+    if b.status != BookingStatus.booked:
+        raise HTTPException(
+            status.HTTP_422_UNPROCESSABLE_CONTENT, "Cancelled bookings can't be edited"
+        )
+    changed = svc.apply_customer(b, body.model_dump(exclude_unset=True))
+    if changed:
+        svc.event(db, b, "customer_updated", user, changed)
+        log_audit(
+            db,
+            action="booking.customer",
+            entity_type="booking",
+            entity_id=b.id,
+            actor=user,
+            details=changed,
+            request=request,
+        )
+    await db.commit()
+    await db.refresh(b)
+    return await svc.to_out(db, b, with_history=True)

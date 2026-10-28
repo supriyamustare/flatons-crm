@@ -6,7 +6,7 @@ from datetime import UTC, date, datetime, timedelta
 from sqlalchemy import Select, func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.models.booking import Booking, BookingEvent, BookingStatus
+from app.models.booking import Booking, BookingEvent, BookingStatus, PaymentPreference
 from app.models.inventory import Building, Floor, UnitStatus
 from app.models.lead import Lead, LeadStatus
 from app.models.project import Project
@@ -16,6 +16,7 @@ from app.schemas.booking import (
     BookingLead,
     BookingOut,
     BookingUnit,
+    CustomerDetails,
     MissingDetails,
 )
 from app.schemas.project import ProjectBrief
@@ -104,11 +105,49 @@ async def to_out(db: AsyncSession, b: Booking, with_history: bool = False) -> Bo
         notes=b.notes,
         sales_exec=UserBrief.model_validate(b.sales_exec) if b.sales_exec else None,
         recorded_by=UserBrief.model_validate(b.recorded_by) if b.recorded_by else None,
+        customer=customer_of(b),
         created_at=b.created_at,
         cancelled_at=b.cancelled_at,
         cancellation_reason=b.cancellation_reason,
         history=history,
     )
+
+
+CUSTOMER_FIELDS = (
+    "customer_name",
+    "applicant_name",
+    "customer_mobile",
+    "customer_email",
+    "customer_address",
+    "payment_preference",
+    "bank_name",
+    "banker_name",
+    "banker_phone",
+)
+
+
+def customer_of(b: Booking) -> CustomerDetails:
+    """The booking's customer details, falling back to the lead for name, mobile and email."""
+    d = {k: getattr(b, k) for k in CUSTOMER_FIELDS}
+    d["customer_name"] = d["customer_name"] or b.lead.name
+    d["customer_mobile"] = d["customer_mobile"] or b.lead.mobile
+    d["customer_email"] = d["customer_email"] or b.lead.email
+    return CustomerDetails.model_construct(**d)
+
+
+def apply_customer(b: Booking, details: dict) -> dict:
+    """Set customer fields; bank fields are cleared unless paying by bank loan. Returns what changed."""
+    changed = {}
+    for k in CUSTOMER_FIELDS:
+        if k in details:
+            v = details[k].strip() if isinstance(details[k], str) else details[k]
+            v = v or None
+            if getattr(b, k) != v:
+                changed[k] = {"from": str(getattr(b, k)), "to": str(v)}
+                setattr(b, k, v)
+    if b.payment_preference != PaymentPreference.bank_loan:
+        b.bank_name = b.banker_name = b.banker_phone = None
+    return changed
 
 
 def check_booking_date(d: date) -> None:
@@ -120,7 +159,14 @@ def check_booking_date(d: date) -> None:
 
 
 async def create(
-    db: AsyncSession, *, lead: Lead, unit_id: int, actor: User, sales_exec: User | None, **fields
+    db: AsyncSession,
+    *,
+    lead: Lead,
+    unit_id: int,
+    actor: User,
+    sales_exec: User | None,
+    customer: dict | None = None,
+    **fields,
 ) -> Booking:
     """Caller has checked the user may book this lead. Caller commits."""
     if lead.status in (LeadStatus.lost, LeadStatus.junk):
@@ -160,6 +206,15 @@ async def create(
         sales_exec_id=(sales_exec or actor).id,
         recorded_by_id=actor.id,
         **fields,
+    )
+    apply_customer(
+        booking,
+        {
+            "customer_name": lead.name,
+            "customer_mobile": lead.mobile,
+            "customer_email": lead.email,
+            **(customer or {}),
+        },
     )
     db.add(booking)
     await db.flush()

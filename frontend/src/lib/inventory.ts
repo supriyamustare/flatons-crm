@@ -45,6 +45,8 @@ export interface Unit {
   held_at: string | null;
   hold_expires_at: string | null;
   hold_note: string | null;
+  booking_id?: number | null;
+  rate_psf?: string | null;
 }
 
 export interface FloorRow { id: number; number: number; units: Unit[] }

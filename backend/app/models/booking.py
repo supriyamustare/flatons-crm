@@ -44,6 +44,11 @@ class PaymentMode(enum.StrEnum):
     other = "other"
 
 
+class PaymentPreference(enum.StrEnum):
+    self_funded = "self"  # customer pays from own funds
+    bank_loan = "bank"  # home loan from a bank
+
+
 class Booking(TimestampMixin, Base):
     """A flat (unit) booked for a lead. Amounts are whole rupees."""
 
@@ -99,6 +104,20 @@ class Booking(TimestampMixin, Base):
         BigInteger, nullable=False, default=0, server_default=text("0")
     )
     notes: Mapped[str | None] = mapped_column(Text)
+    # Customer details for the agreement (snapshot; defaults from the lead)
+    customer_name: Mapped[str | None] = mapped_column(String(150))
+    applicant_name: Mapped[str | None] = mapped_column(
+        String(150)
+    )  # name on the agreement / co-applicant
+    customer_mobile: Mapped[str | None] = mapped_column(String(20))
+    customer_email: Mapped[str | None] = mapped_column(String(254))
+    customer_address: Mapped[str | None] = mapped_column(String(500))
+    payment_preference: Mapped[PaymentPreference | None] = mapped_column(
+        _enum(PaymentPreference, "payment_preference")
+    )
+    bank_name: Mapped[str | None] = mapped_column(String(150))
+    banker_name: Mapped[str | None] = mapped_column(String(150))  # contact person at the bank
+    banker_phone: Mapped[str | None] = mapped_column(String(20))
     sales_exec_id: Mapped[int | None] = mapped_column(
         BigInteger, ForeignKey("users.id", ondelete="SET NULL")
     )

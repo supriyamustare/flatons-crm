@@ -459,7 +459,7 @@ async def test_campaign_rules(login_as, db):
     assert (
         await mgr.post(
             "/api/leads",
-            json={"name": "B", "mobile": "9123456780", "source": "website", "campaign_id": 999},
+            json={"name": "B", "mobile": "9123456780", "source": "99acres", "campaign_id": 999},
         )
     ).status_code == 422
     assert (

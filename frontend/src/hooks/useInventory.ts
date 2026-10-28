@@ -23,6 +23,7 @@ export function useInventory(projectId: number) {
   return useQuery({
     queryKey: ["inventory", projectId],
     queryFn: async () => (await api.get<Inventory>(`/projects/${projectId}/inventory`)).data,
+    enabled: projectId > 0, // nothing to fetch until a project is chosen
     // Someone else may hold a unit; keep the grid reasonably fresh.
     refetchInterval: 60_000,
     refetchOnWindowFocus: true,

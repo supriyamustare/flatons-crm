@@ -5,8 +5,10 @@ from fastapi import APIRouter, Depends, Query
 from app.core.deps import DbSession, require_role
 from app.models.user import Role, User
 from app.schemas.dashboard import Dashboard, DashboardQuery
+from app.schemas.insights import Insights
 from app.schemas.overview import LeadTab, Overview
 from app.services.dashboard import build_dashboard
+from app.services.insights import build_insights
 from app.services.overview import build_overview
 
 router = APIRouter(prefix="/dashboard", tags=["dashboard"])
@@ -42,3 +44,13 @@ async def overview(
     tab: Annotated[LeadTab, Query()] = "fresh",
 ) -> Overview:
     return await build_overview(db, user, person_id=person_id, tab=tab)
+
+
+@router.get("/insights", response_model=Insights)
+async def insights(
+    user: Annotated[User, Depends(require_role(Role.admin, Role.manager, Role.executive))],
+    db: DbSession,
+    person_id: Annotated[int | None, Query()] = None,
+) -> Insights:
+    """Projects, lead status, first contact, schedule, 12 months, sources and recent bookings."""
+    return await build_insights(db, user, person_id=person_id)

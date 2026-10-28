@@ -2,9 +2,11 @@ from datetime import UTC, datetime
 from typing import Annotated, Any
 
 from fastapi import APIRouter, Depends, HTTPException, Request, status
+from sqlalchemy import select
 
 from app.core.deps import CurrentUser, DbSession, require_role
-from app.models.lead import REASON_REQUIRED, Lead
+from app.models.booking import Booking, BookingStatus
+from app.models.lead import ACTIVE_SOURCES, REASON_REQUIRED, Lead
 from app.models.marketing import Campaign
 from app.models.project import Project
 from app.models.user import Role, User
@@ -12,6 +14,7 @@ from app.schemas.lead import (
     Assignment,
     DuplicateCheck,
     DuplicateOut,
+    LeadBooking,
     LeadCreate,
     LeadCreated,
     LeadDetail,
@@ -68,7 +71,23 @@ async def _detail(db: DbSession, user: User, lead: Lead) -> LeadDetail:
             **LeadOut.model_validate(lead).model_dump(),
             "activities": activities,
             "can_edit": svc.can_edit(user, lead),
+            "booking": await _live_booking(db, lead.id),
         }
+    )
+
+
+async def _live_booking(db: DbSession, lead_id: int) -> LeadBooking | None:
+    b = await db.scalar(
+        select(Booking).where(Booking.lead_id == lead_id, Booking.status == BookingStatus.booked)
+    )
+    if b is None:
+        return None
+    return LeadBooking(
+        id=b.id,
+        booking_code=f"BKG-{b.id:05d}",
+        project=b.project.name,
+        unit_no=b.unit.unit_no,
+        agreed_price=b.agreed_price,
     )
 
 
@@ -170,6 +189,12 @@ _TRACKED_VALUES = {
 async def update_lead(lead_id: int, body: LeadUpdate, user: Writer, db: DbSession) -> LeadDetail:
     lead = await _lead_for_edit(db, user, lead_id)
     changes = body.model_dump(exclude_unset=True)
+    if (
+        "source" in changes
+        and changes["source"] != lead.source
+        and changes["source"] not in ACTIVE_SOURCES
+    ):
+        raise HTTPException(status.HTTP_422_UNPROCESSABLE_CONTENT, "That source is no longer used")
     for required in ("name", "mobile", "source"):
         if required in changes and changes[required] is None:
             raise HTTPException(

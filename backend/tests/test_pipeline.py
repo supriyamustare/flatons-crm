@@ -198,8 +198,8 @@ async def test_docs_staff_have_no_pipeline(login_as):
 async def test_executive_sees_only_own_leads_even_with_filters(login_as, make_user):
     ravi, ravi_user = await login_as(Role.executive)
     kiran, _ = await login_as(Role.executive)
-    await ravi.post("/api/leads", json={"name": "A", "mobile": "9876543210", "source": "website"})
-    await kiran.post("/api/leads", json={"name": "B", "mobile": "9123456780", "source": "website"})
+    await ravi.post("/api/leads", json={"name": "A", "mobile": "9876543210", "source": "99acres"})
+    await kiran.post("/api/leads", json={"name": "B", "mobile": "9123456780", "source": "99acres"})
     board = (await ravi.get("/api/pipeline")).json()
     assert board["totals"]["open_count"] == 1
     other = (await ravi.get("/api/pipeline", params={"assigned_to_id": 999})).json()
@@ -209,7 +209,7 @@ async def test_executive_sees_only_own_leads_even_with_filters(login_as, make_us
 async def test_moving_a_card_stamps_days_in_stage_and_keeps_the_rules(login_as, db):
     c, _ = await login_as(Role.executive)
     lead = (
-        await c.post("/api/leads", json={"name": "A", "mobile": "9876543210", "source": "website"})
+        await c.post("/api/leads", json={"name": "A", "mobile": "9876543210", "source": "99acres"})
     ).json()["lead"]
     await db.execute(
         update(Lead)
@@ -239,7 +239,7 @@ async def test_automatic_status_change_from_a_visit_also_stamps(login_as, db):
     c, _ = await login_as(Role.executive)
     project = await new_project(db)
     lead = (
-        await c.post("/api/leads", json={"name": "A", "mobile": "9876543210", "source": "website"})
+        await c.post("/api/leads", json={"name": "A", "mobile": "9876543210", "source": "99acres"})
     ).json()["lead"]
     await db.execute(
         update(Lead)
@@ -261,7 +261,7 @@ async def test_per_stage_limit_and_stale_filter(login_as, db):
     c, _ = await login_as(Role.manager)
     for i in range(4):
         await c.post(
-            "/api/leads", json={"name": f"L{i}", "mobile": f"98765432{i}0", "source": "website"}
+            "/api/leads", json={"name": f"L{i}", "mobile": f"98765432{i}0", "source": "99acres"}
         )
     board = (await c.get("/api/pipeline", params={"per_stage": 2})).json()
     new_col = next(s for s in board["stages"] if s["stage"] == "new")
@@ -310,7 +310,7 @@ async def test_closed_leads_are_never_stale(login_as, db):
     for i, status in enumerate(["booked", "lost", "contacted"]):
         lead = (
             await mgr.post(
-                "/api/leads", json={"name": status, "mobile": f"98765432{i}1", "source": "website"}
+                "/api/leads", json={"name": status, "mobile": f"98765432{i}1", "source": "99acres"}
             )
         ).json()["lead"]
         ids[status] = lead["id"]

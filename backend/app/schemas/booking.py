@@ -4,7 +4,7 @@ from typing import Annotated, Any
 
 from pydantic import BaseModel, ConfigDict, Field, StringConstraints, model_validator
 
-from app.models.booking import BookingStatus, PaymentMode
+from app.models.booking import BookingStatus, PaymentMode, PaymentPreference
 from app.models.inventory import UnitType
 from app.models.lead import LeadStatus
 from app.schemas.common import LongText, PlainText
@@ -13,6 +13,35 @@ from app.schemas.user import UserBrief
 
 Rupees = Annotated[int, Field(ge=0, le=10_000_000_000)]
 Short = Annotated[PlainText, StringConstraints(max_length=150)]
+
+
+Phone = Annotated[PlainText, StringConstraints(max_length=20, pattern=r"^[0-9+()\- ]{6,20}$")]
+Email = Annotated[
+    PlainText, StringConstraints(max_length=254, pattern=r"^[^@\s<>]+@[^@\s<>]+\.[^@\s<>]+$")
+]
+
+
+class CustomerDetails(BaseModel):
+    """Who the flat is booked for, and how they will pay. Bank details only with a bank loan."""
+
+    model_config = ConfigDict(extra="forbid")
+    customer_name: Short | None = None
+    applicant_name: Short | None = None
+    customer_mobile: Phone | None = None
+    customer_email: Email | None = None
+    customer_address: Annotated[PlainText, StringConstraints(max_length=500)] | None = None
+    payment_preference: PaymentPreference | None = None
+    bank_name: Short | None = None
+    banker_name: Short | None = None
+    banker_phone: Phone | None = None
+
+    @model_validator(mode="after")
+    def _bank(self) -> "CustomerDetails":
+        if self.payment_preference != PaymentPreference.bank_loan and (
+            self.bank_name or self.banker_name or self.banker_phone
+        ):
+            raise ValueError("Bank details only apply to bank payment")
+        return self
 
 
 class BookingCreate(BaseModel):
@@ -29,6 +58,8 @@ class BookingCreate(BaseModel):
     sales_exec_id: int | None = (
         None  # managers/admins may credit someone else; default: the lead's owner
     )
+
+    customer: CustomerDetails | None = None
 
     @model_validator(mode="after")
     def _amounts(self) -> "BookingCreate":
@@ -107,6 +138,7 @@ class BookingOut(BaseModel):
     notes: str | None
     sales_exec: UserBrief | None
     recorded_by: UserBrief | None
+    customer: CustomerDetails
     created_at: datetime
     cancelled_at: datetime | None
     cancellation_reason: str | None

@@ -78,6 +78,8 @@ class UnitUpdate(_Areas):
     unit_type: UnitType | None = None
     base_price: Rupees | None = None
     current_asking_price: Rupees | None = None
+    # Rate per sq ft of saleable area; the asking price is worked out from it
+    rate_psf: Annotated[Decimal, Field(gt=0, le=1_000_000, decimal_places=2)] | None = None
     address_note: Annotated[PlainText, StringConstraints(max_length=200)] | None = None
     # Admins may set these by hand; On hold and Booked have their own flows.
     status: Literal[UnitStatus.available, UnitStatus.withdrawn, UnitStatus.sold] | None = None
@@ -126,6 +128,8 @@ class UnitOut(BaseModel):
     held_at: datetime | None
     hold_expires_at: datetime | None
     hold_note: str | None
+    booking_id: int | None = None
+    rate_psf: Decimal | None = None
 
 
 class FloorOut(BaseModel):

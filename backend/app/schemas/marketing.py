@@ -1,7 +1,14 @@
 from datetime import date, datetime
 from typing import Annotated
 
-from pydantic import BaseModel, ConfigDict, Field, StringConstraints, model_validator
+from pydantic import (
+    BaseModel,
+    ConfigDict,
+    Field,
+    StringConstraints,
+    field_validator,
+    model_validator,
+)
 
 from app.models.marketing import Channel, ExpenseCategory
 from app.schemas.common import LongText, PlainText
@@ -9,6 +16,15 @@ from app.schemas.project import ProjectBrief
 from app.schemas.user import UserBrief
 
 Rupees = Annotated[int, Field(gt=0, le=1_000_000_000)]  # up to ₹100 crore per entry
+
+
+RETIRED_CHANNELS = (Channel.website, Channel.sms_email)
+
+
+def _active_channel(v: Channel | None) -> Channel | None:
+    if v in RETIRED_CHANNELS:
+        raise ValueError(f"{v.value} is no longer used as a channel")
+    return v
 
 
 class CampaignOut(BaseModel):
@@ -25,6 +41,12 @@ class CampaignOut(BaseModel):
 
 class CampaignCreate(BaseModel):
     model_config = ConfigDict(extra="forbid")
+
+    @field_validator("channel")
+    @classmethod
+    def _channel(cls, v: Channel | None) -> Channel | None:
+        return _active_channel(v)
+
     name: Annotated[PlainText, StringConstraints(max_length=150)]
     channel: Channel
     project_id: int | None = None
@@ -41,6 +63,12 @@ class CampaignCreate(BaseModel):
 
 class CampaignUpdate(BaseModel):
     model_config = ConfigDict(extra="forbid")
+
+    @field_validator("channel")
+    @classmethod
+    def _channel(cls, v: Channel | None) -> Channel | None:
+        return _active_channel(v)
+
     name: Annotated[PlainText, StringConstraints(max_length=150)] | None = None
     channel: Channel | None = None
     project_id: int | None = None

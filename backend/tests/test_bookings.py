@@ -46,7 +46,7 @@ async def flats(db, login_as):
 
 async def new_lead(c, name="Anita Desai", mobile="9876543210"):
     return (
-        await c.post("/api/leads", json={"name": name, "mobile": mobile, "source": "website"})
+        await c.post("/api/leads", json={"name": name, "mobile": mobile, "source": "99acres"})
     ).json()["lead"]
 
 
@@ -323,3 +323,23 @@ async def test_dashboard_revenue_uses_the_real_agreed_price(login_as, db, flats)
         )
     ).business
     assert biz.leads_booked == 1 and biz.revenue == 144_000 and biz.unvalued_bookings == 0
+
+
+async def test_lead_and_unit_point_to_their_booking(login_as, db, flats):
+    project, units = flats
+    ravi, _ = await login_as(Role.executive)
+    lead = await new_lead(ravi)
+    assert (await ravi.get(f"/api/leads/{lead['id']}")).json()["booking"] is None
+    bid = (await ravi.post("/api/bookings", json=booking_body(lead["id"], units["201"]))).json()[
+        "id"
+    ]
+    detail = (await ravi.get(f"/api/leads/{lead['id']}")).json()["booking"]
+    assert detail == {
+        "id": bid,
+        "booking_code": f"BKG-{bid:05d}",
+        "project": "Green Meadows",
+        "unit_no": "201",
+        "agreed_price": 7_200_000,
+    }
+    unit = (await ravi.get(f"/api/units/{units['201']}")).json()
+    assert unit["booking_id"] == bid and unit["status"] == "booked"

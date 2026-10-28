@@ -16,6 +16,7 @@ from app.core.security import hash_password
 from app.models.call import CONNECTED_OUTCOMES, CallDirection, CallLog, CallOutcome
 from app.models.inventory import Building, Unit, UnitStatus, UnitType
 from app.models.lead import (
+    ACTIVE_SOURCES,
     BuyingTimeline,
     Configuration,
     Lead,
@@ -251,7 +252,7 @@ async def seed_demo(
             name=f"{rnd.choice(FIRST)} {rnd.choice(LAST)}",
             mobile=f"+919{rnd.randint(100000000, 999999999)}",
             city=rnd.choice(CITIES),
-            source=rnd.choice(list(LeadSource)),
+            source=rnd.choice(ACTIVE_SOURCES),
             sub_source=DEMO_TAG,
             project_id=project.id if rnd.random() > 0.2 else None,
             configuration=rnd.choice(
@@ -273,11 +274,7 @@ async def seed_demo(
             status_changed_at=created + (now - created) * rnd.uniform(0.2, 1.0),
         )
         camp = source_to_campaign.get(lead.source)
-        if (
-            camp is None
-            and lead.source in (LeadSource.website, LeadSource.social)
-            and rnd.random() < 0.5
-        ):
+        if camp is None and lead.source == LeadSource.social and rnd.random() < 0.5:
             camp = campaigns["google_ads"]
         lead.campaign_id = camp.id if camp else None
         db.add(lead)

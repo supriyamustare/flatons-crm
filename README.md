@@ -147,7 +147,17 @@ booked, Closing, Re-engage = quiet 7+ days) and This month (new, active, qualifi
 rate, win rate). Executives always get their own figures. Definitions: `Overview` in `backend/app/schemas/overview.py`.
 The header search (Ctrl/⌘+K) passes the query to Leads in navigation state, never the address bar.
 
-### Bookings (backend; screens next)
+### Dashboard insights
+
+`GET /api/dashboard/insights?person_id=`: project inventory (units sold or booked / on hold / available, price
+range of units still for sale, bookings this month), lead status split (being worked = activity in the last 7
+days, gone quiet, unassigned, booked, lost/junk), New leads with no call yet by owner, median first response
+this month, follow-ups and site visits scheduled in the next 30 days, 12 months of leads received and deals
+closed (bookings, plus leads marked Booked without a booking record), source performance over 12 months, and
+recent bookings. Definitions: `Insights` in `backend/app/schemas/insights.py`; `tests/test_insights.py` checks
+them against SQL. Charts on the dashboard are plain SVG (no chart library), with hidden tables for screen readers.
+
+### Bookings
 
 `/api/bookings`: an executive (or manager) books a unit for a lead; the unit row is locked (`SELECT … FOR UPDATE`)
 and partial unique indexes allow one live booking per unit and per lead. The unit turns Booked, the lead Booked,
@@ -155,6 +165,9 @@ managers and admins are notified. Managers/admins edit details, record commissio
 required; the unit returns to Available and the lead to Negotiation). Expected commission = agreed price × the
 project's commission %. Leads marked Booked without a booking are listed as `missing_details`. CSV export for
 managers. The dashboard's commission revenue uses a booking's expected commission where one exists.
+Screens: **Bookings** (totals, filters, "details missing", CSV for managers), each booking's page (customer,
+flat, deal, commission, history; managers edit, record commission received, cancel), **Book a flat** on a
+lead's page (only bookable flats are offered), and **View booking** on booked units in the building grid.
 
 ### Business figures (managers and admins, Team view)
 
@@ -269,6 +282,29 @@ with the official logo at the same sizes. Offline support arrives in Sprint 16.
 - **New enquiries** (managers and admins): unassigned open leads, newest first, refreshed every 15 seconds,
   with a live count in the menu. Assigning hands the lead over and notifies the person.
 - Platforms only send to **HTTPS** addresses, so live connections need the domain and certificate in place.
+
+## Habitat, cost sheets and customer details
+
+- **Real projects:** `python -m app.cli load-projects` creates **Habitat** (Avnee Estates, Kharadi, Pune; 214 units
+  from the Kharadi area statement: 14 shops and 200 co-living/convention rooms, carpet and saleable (lease) areas;
+  3.5% commission; the cost sheet template from the developer's PRINT sheet) and **Optimids** (no data yet). The data
+  is in `backend/app/data/projects_seed.json`. Safe to run again: it only adds what's missing and never changes
+  prices, held or booked units, or anything already entered.
+- **Price and area** on each unit: admins and managers enter carpet area, saleable area and rate per sq ft; the price
+  is rate x saleable area. Other unit changes stay admin-only.
+- **Cost sheet** (`backend/app/services/cost_sheet.py`): cost = rate x chargeable area; GST per stage; furnishing per sq
+  ft; stamp duty rounded up to Rs 100; registration % capped; legal and other charges; grand total. The last payment
+  stage absorbs rounding so the columns always add up. Admins edit the project template (Projects -> Cost sheet
+  settings; stages must total 100%); admins and managers can change any number for one unit (Edit cost sheet).
+  **Print cost sheet** opens `/cost-sheet/{unit}` without the menu, ready to print or save as PDF. A booked unit's
+  sheet uses the agreed price and shows the customer.
+- **Customer details** on a booking (shown in the unit's Customer section and on the booking): name, applicant name,
+  mobile, email ID, address, and payment preference: self, or bank payment with bank name, banker contact person and
+  phone (bank details only with bank payment, enforced by the database). Editable by managers, admins and the person
+  who handled the booking. A unit can be booked straight from its panel (Book this unit, with a lead search).
+- **Sources in use:** 99acres, MagicBricks, Housing.com, Meta ads (Facebook / Instagram) and Google Ads, plus offline
+  sources (walk-in, referral, channel partner, print, other). "Website" is retired for new leads and connections, and
+  website and SMS/email for new campaigns; existing records keep their original value.
 
 ## Frontend notes
 

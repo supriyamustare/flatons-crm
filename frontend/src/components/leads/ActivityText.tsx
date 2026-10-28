@@ -1,3 +1,4 @@
+import { formatRupees } from "../../lib/leads";
 import type { ReactNode } from "react";
 import { OUTCOME_LABELS, formatDuration } from "../../lib/calls";
 import type { CallOutcome } from "../../lib/calls";
@@ -23,6 +24,10 @@ export function describeActivity(a: ActivityLike): ReactNode {
       const dups = d.possible_duplicates as string[] | undefined;
       return <>Created the lead{dups?.length ? <> (possible duplicate of {dups.join(", ")})</> : null}</>;
     }
+    case "booked":
+      return <>Booked unit <b>{String(d.unit_no)}</b> at {String(d.project)} for {formatRupees(Number(d.agreed_price))}</>;
+    case "booking_cancelled":
+      return <>Cancelled booking {String(d.booking_code)} (unit {String(d.unit_no)})</>;
     case "enquiry":
       return <>Enquired again via <b>{String(d.via)}</b>{d.sub_source ? <> ({String(d.sub_source)})</> : null}</>;
     case "status_change":

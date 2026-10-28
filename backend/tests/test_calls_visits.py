@@ -25,7 +25,7 @@ def later(**kw) -> str:
 
 async def new_lead(c, name="Anita Desai", mobile="98765 43210", **extra):
     resp = await c.post(
-        "/api/leads", json={"name": name, "mobile": mobile, "source": "website", **extra}
+        "/api/leads", json={"name": name, "mobile": mobile, "source": "99acres", **extra}
     )
     assert resp.status_code == 201, resp.text
     return resp.json()["lead"]

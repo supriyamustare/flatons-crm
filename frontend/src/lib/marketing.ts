@@ -19,9 +19,9 @@ export interface ExpensePage {
   by_channel: Partial<Record<Channel, number>>;
 }
 
-export const CHANNELS: Channel[] = ["google_ads", "social", "99acres", "magicbricks", "housing", "website", "print", "event", "sms_email", "channel_partner", "other"];
+export const CHANNELS: Channel[] = ["google_ads", "social", "99acres", "magicbricks", "housing", "print", "event", "channel_partner", "other"];
 export const CHANNEL_LABELS: Record<Channel, string> = {
-  google_ads: "Google Ads", social: "Facebook / Instagram", "99acres": "99acres", magicbricks: "MagicBricks",
+  google_ads: "Google Ads", social: "Meta ads (Facebook / Instagram)", "99acres": "99acres", magicbricks: "MagicBricks",
   housing: "Housing.com", website: "Website", print: "Print / hoardings", event: "Event / expo",
   sms_email: "SMS / email", channel_partner: "Channel partner", other: "Other",
 };

@@ -227,12 +227,18 @@ async def get_unit(unit_id: int, _: CurrentUser, db: DbSession) -> UnitOut:
     return await _unit_response(db, unit)
 
 
+PRICE_AND_AREA = {"carpet_sqft", "builtup_sqft", "rate_psf", "base_price", "current_asking_price"}
+
+
 @router.patch("/units/{unit_id}", response_model=UnitOut)
 async def update_unit(
-    unit_id: int, body: UnitUpdate, request: Request, admin: Admin, db: DbSession
+    unit_id: int, body: UnitUpdate, request: Request, admin: Manager, db: DbSession
 ) -> UnitOut:
+    """Admins change anything; managers change price and area."""
     unit = await _locked_unit(db, unit_id)
     changes = body.model_dump(exclude_unset=True)
+    if admin.role != Role.admin and set(changes) - PRICE_AND_AREA:
+        raise HTTPException(status.HTTP_403_FORBIDDEN, "Managers can change price and area only")
     new_status = changes.pop("status", None)
     if new_status is not None and new_status != unit.status:
         if unit.status in (UnitStatus.on_hold, UnitStatus.booked):
@@ -246,6 +252,16 @@ async def update_unit(
         raise HTTPException(
             status.HTTP_422_UNPROCESSABLE_CONTENT, "Built-up area can't be smaller than carpet area"
         )
+    # A rate per sq ft sets the asking price: rate x saleable area (built-up, else carpet)
+    rate = changes.get("rate_psf", unit.rate_psf)
+    if (
+        rate
+        and "current_asking_price" not in changes
+        and ({"rate_psf", "carpet_sqft", "builtup_sqft"} & set(changes))
+    ):
+        area = builtup or carpet
+        if area:
+            changes["current_asking_price"] = int(round(float(rate) * float(area)))
     before = {k: str(getattr(unit, k)) for k in changes}
     for k, v in changes.items():
         setattr(unit, k, v)

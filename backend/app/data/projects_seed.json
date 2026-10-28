@@ -1,0 +1,2265 @@
+{
+ "source": "Kharadi_Area_Statement.xlsx (Area Classification) and Retail_Investor_Working_Habitat_.xlsx (PRINT, cost sheet, brokerage sheet)",
+ "projects": [
+  {
+   "name": "Habitat",
+   "developer": "Avnee Estates",
+   "location": "Kharadi, Pune",
+   "project_type": "developer",
+   "status": "under_construction",
+   "commission_pct": 3.5,
+   "description": "Co-living rooms (operator: Truliv), retail shops and convention rooms. Hospital on floors 2-8; convention centre (9th), gym / health club (10th), gym area (12th).",
+   "building": "Habitat",
+   "cost_sheet": {
+    "developer_name": "Avnee Estates",
+    "site_address": "Kharadi, Pune",
+    "rera_number": "",
+    "gst_pct": 1.0,
+    "stamp_duty_pct": 7.0,
+    "registration_pct": 1.0,
+    "registration_cap": 30000,
+    "legal_charges": 10000,
+    "furnishing_per_sqft": 413.79,
+    "stages": [
+     {
+      "name": "Booking",
+      "pct": 10
+     },
+     {
+      "name": "Registration",
+      "pct": 10
+     },
+     {
+      "name": "Plinth",
+      "pct": 10
+     },
+     {
+      "name": "1st Slab",
+      "pct": 5
+     },
+     {
+      "name": "2nd Slab",
+      "pct": 5
+     },
+     {
+      "name": "3rd Slab",
+      "pct": 5
+     },
+     {
+      "name": "4th Slab",
+      "pct": 5
+     },
+     {
+      "name": "5th Slab",
+      "pct": 5
+     },
+     {
+      "name": "6th Slab",
+      "pct": 5
+     },
+     {
+      "name": "7th Slab",
+      "pct": 5
+     },
+     {
+      "name": "8th Slab",
+      "pct": 5
+     },
+     {
+      "name": "10th Slab",
+      "pct": 5
+     },
+     {
+      "name": "11th Slab",
+      "pct": 5
+     },
+     {
+      "name": "Internal Finishing",
+      "pct": 5
+     },
+     {
+      "name": "External Finishing",
+      "pct": 5
+     },
+     {
+      "name": "Tenant Handover",
+      "pct": 5
+     },
+     {
+      "name": "OC",
+      "pct": 5
+     }
+    ],
+    "notes": [
+     "Prices are subject to change without prior notice.",
+     "Stamp Duty, Registration Fees, GST are indicative & subject to change as per Govt. Regulation.",
+     "Sale Agreement shall be registered within 30 days of Booking.",
+     "Developer will pay GST at applicable rates.",
+     "This Price list is not a legal document.",
+     "In case of booking cheque is bounced, booking will stand cancelled.",
+     "Please note that there will be charges on cancellation of booking.",
+     "Transfer or Sale of the Flat is not allowed till all the costs are paid and possession is taken.",
+     "Company reserves the right to cancel the allotment / booking in case of non-payment of dues from the customer.",
+     "Layout is subject to change based on changes in government norms.",
+     "Delayed payments will attract an interest of 12%.",
+     "One Open reserved parking will be allocated."
+    ],
+    "signatory": "Avnee representative"
+   },
+   "units": [
+    {
+     "unit_no": "G-S1",
+     "floor": 0,
+     "unit_type": "shop",
+     "carpet_sqft": 639.81,
+     "saleable_sqft": 959.72,
+     "lease_factor": 1.5,
+     "use": "Retail",
+     "source_name": "SHOP-1"
+    },
+    {
+     "unit_no": "G-S2",
+     "floor": 0,
+     "unit_type": "shop",
+     "carpet_sqft": 813.0,
+     "saleable_sqft": 1219.51,
+     "lease_factor": 1.5,
+     "use": "Retail",
+     "source_name": "SHOP-2"
+    },
+    {
+     "unit_no": "G-S3",
+     "floor": 0,
+     "unit_type": "shop",
+     "carpet_sqft": 844.97,
+     "saleable_sqft": 1267.46,
+     "lease_factor": 1.5,
+     "use": "Retail",
+     "source_name": "SHOP-3"
+    },
+    {
+     "unit_no": "G-S4",
+     "floor": 0,
+     "unit_type": "shop",
+     "carpet_sqft": 743.25,
+     "saleable_sqft": 1114.88,
+     "lease_factor": 1.5,
+     "use": "Retail",
+     "source_name": "SHOP-4"
+    },
+    {
+     "unit_no": "G-S5",
+     "floor": 0,
+     "unit_type": "shop",
+     "carpet_sqft": 967.04,
+     "saleable_sqft": 1450.56,
+     "lease_factor": 1.5,
+     "use": "Retail",
+     "source_name": "SHOP-5"
+    },
+    {
+     "unit_no": "G-S6",
+     "floor": 0,
+     "unit_type": "shop",
+     "carpet_sqft": 591.27,
+     "saleable_sqft": 886.9,
+     "lease_factor": 1.5,
+     "use": "Retail",
+     "source_name": "SHOP-6"
+    },
+    {
+     "unit_no": "G-S7",
+     "floor": 0,
+     "unit_type": "shop",
+     "carpet_sqft": 975.43,
+     "saleable_sqft": 1463.15,
+     "lease_factor": 1.5,
+     "use": "Retail",
+     "source_name": "SHOP-7"
+    },
+    {
+     "unit_no": "1-S1",
+     "floor": 1,
+     "unit_type": "shop",
+     "carpet_sqft": 976.08,
+     "saleable_sqft": 1464.12,
+     "lease_factor": 1.5,
+     "use": "Retail",
+     "source_name": "SHOP-1"
+    },
+    {
+     "unit_no": "1-S2",
+     "floor": 1,
+     "unit_type": "shop",
+     "carpet_sqft": 928.83,
+     "saleable_sqft": 1393.24,
+     "lease_factor": 1.5,
+     "use": "Retail",
+     "source_name": "SHOP-2"
+    },
+    {
+     "unit_no": "1-S3",
+     "floor": 1,
+     "unit_type": "shop",
+     "carpet_sqft": 959.07,
+     "saleable_sqft": 1438.61,
+     "lease_factor": 1.5,
+     "use": "Retail",
+     "source_name": "SHOP-3"
+    },
+    {
+     "unit_no": "1-S4",
+     "floor": 1,
+     "unit_type": "shop",
+     "carpet_sqft": 840.45,
+     "saleable_sqft": 1260.68,
+     "lease_factor": 1.5,
+     "use": "Retail",
+     "source_name": "SHOP-4"
+    },
+    {
+     "unit_no": "1-S5",
+     "floor": 1,
+     "unit_type": "shop",
+     "carpet_sqft": 1297.49,
+     "saleable_sqft": 1946.24,
+     "lease_factor": 1.5,
+     "use": "Retail",
+     "source_name": "SHOP-5"
+    },
+    {
+     "unit_no": "1-S6",
+     "floor": 1,
+     "unit_type": "shop",
+     "carpet_sqft": 661.02,
+     "saleable_sqft": 991.53,
+     "lease_factor": 1.5,
+     "use": "Retail",
+     "source_name": "SHOP-6"
+    },
+    {
+     "unit_no": "1-S7",
+     "floor": 1,
+     "unit_type": "shop",
+     "carpet_sqft": 1434.3,
+     "saleable_sqft": 2151.45,
+     "lease_factor": 1.5,
+     "use": "Retail",
+     "source_name": "SHOP-7"
+    },
+    {
+     "unit_no": "101",
+     "floor": 1,
+     "unit_type": "studio",
+     "carpet_sqft": 200.32,
+     "saleable_sqft": 290.46,
+     "lease_factor": 1.45,
+     "use": "Co-living Rooms",
+     "source_name": "ROOM-1"
+    },
+    {
+     "unit_no": "102",
+     "floor": 1,
+     "unit_type": "studio",
+     "carpet_sqft": 200.32,
+     "saleable_sqft": 290.46,
+     "lease_factor": 1.45,
+     "use": "Co-living Rooms",
+     "source_name": "ROOM-2"
+    },
+    {
+     "unit_no": "103",
+     "floor": 1,
+     "unit_type": "studio",
+     "carpet_sqft": 200.32,
+     "saleable_sqft": 290.46,
+     "lease_factor": 1.45,
+     "use": "Co-living Rooms",
+     "source_name": "ROOM-3"
+    },
+    {
+     "unit_no": "104",
+     "floor": 1,
+     "unit_type": "studio",
+     "carpet_sqft": 200.32,
+     "saleable_sqft": 290.46,
+     "lease_factor": 1.45,
+     "use": "Co-living Rooms",
+     "source_name": "ROOM-4"
+    },
+    {
+     "unit_no": "105",
+     "floor": 1,
+     "unit_type": "studio",
+     "carpet_sqft": 200.32,
+     "saleable_sqft": 290.46,
+     "lease_factor": 1.45,
+     "use": "Co-living Rooms",
+     "source_name": "ROOM-5"
+    },
+    {
+     "unit_no": "106",
+     "floor": 1,
+     "unit_type": "studio",
+     "carpet_sqft": 200.32,
+     "saleable_sqft": 290.46,
+     "lease_factor": 1.45,
+     "use": "Co-living Rooms",
+     "source_name": "ROOM-6"
+    },
+    {
+     "unit_no": "107",
+     "floor": 1,
+     "unit_type": "studio",
+     "carpet_sqft": 200.32,
+     "saleable_sqft": 290.46,
+     "lease_factor": 1.45,
+     "use": "Co-living Rooms",
+     "source_name": "ROOM-7"
+    },
+    {
+     "unit_no": "108",
+     "floor": 1,
+     "unit_type": "studio",
+     "carpet_sqft": 238.64,
+     "saleable_sqft": 346.02,
+     "lease_factor": 1.45,
+     "use": "Co-living Rooms",
+     "source_name": "ROOM-8"
+    },
+    {
+     "unit_no": "109",
+     "floor": 1,
+     "unit_type": "studio",
+     "carpet_sqft": 200.32,
+     "saleable_sqft": 290.46,
+     "lease_factor": 1.45,
+     "use": "Co-living Rooms",
+     "source_name": "ROOM-9"
+    },
+    {
+     "unit_no": "110",
+     "floor": 1,
+     "unit_type": "studio",
+     "carpet_sqft": 200.32,
+     "saleable_sqft": 290.46,
+     "lease_factor": 1.45,
+     "use": "Co-living Rooms",
+     "source_name": "ROOM-10"
+    },
+    {
+     "unit_no": "111",
+     "floor": 1,
+     "unit_type": "studio",
+     "carpet_sqft": 200.32,
+     "saleable_sqft": 290.46,
+     "lease_factor": 1.45,
+     "use": "Co-living Rooms",
+     "source_name": "ROOM-11"
+    },
+    {
+     "unit_no": "112",
+     "floor": 1,
+     "unit_type": "studio",
+     "carpet_sqft": 200.32,
+     "saleable_sqft": 290.46,
+     "lease_factor": 1.45,
+     "use": "Co-living Rooms",
+     "source_name": "ROOM-12"
+    },
+    {
+     "unit_no": "113",
+     "floor": 1,
+     "unit_type": "studio",
+     "carpet_sqft": 200.32,
+     "saleable_sqft": 290.46,
+     "lease_factor": 1.45,
+     "use": "Co-living Rooms",
+     "source_name": "ROOM-13"
+    },
+    {
+     "unit_no": "114",
+     "floor": 1,
+     "unit_type": "studio",
+     "carpet_sqft": 179.54,
+     "saleable_sqft": 260.34,
+     "lease_factor": 1.45,
+     "use": "Co-living Rooms",
+     "source_name": "ROOM-14"
+    },
+    {
+     "unit_no": "115",
+     "floor": 1,
+     "unit_type": "studio",
+     "carpet_sqft": 179.54,
+     "saleable_sqft": 260.34,
+     "lease_factor": 1.45,
+     "use": "Co-living Rooms",
+     "source_name": "ROOM-15"
+    },
+    {
+     "unit_no": "116",
+     "floor": 1,
+     "unit_type": "studio",
+     "carpet_sqft": 179.54,
+     "saleable_sqft": 260.34,
+     "lease_factor": 1.45,
+     "use": "Co-living Rooms",
+     "source_name": "ROOM-16"
+    },
+    {
+     "unit_no": "201",
+     "floor": 2,
+     "unit_type": "studio",
+     "carpet_sqft": 200.32,
+     "saleable_sqft": 290.46,
+     "lease_factor": 1.45,
+     "use": "Co-living Rooms",
+     "source_name": "ROOM-1"
+    },
+    {
+     "unit_no": "301",
+     "floor": 3,
+     "unit_type": "studio",
+     "carpet_sqft": 200.32,
+     "saleable_sqft": 290.46,
+     "lease_factor": 1.45,
+     "use": "Co-living Rooms",
+     "source_name": "ROOM-1"
+    },
+    {
+     "unit_no": "401",
+     "floor": 4,
+     "unit_type": "studio",
+     "carpet_sqft": 200.32,
+     "saleable_sqft": 290.46,
+     "lease_factor": 1.45,
+     "use": "Co-living Rooms",
+     "source_name": "ROOM-1"
+    },
+    {
+     "unit_no": "501",
+     "floor": 5,
+     "unit_type": "studio",
+     "carpet_sqft": 200.32,
+     "saleable_sqft": 290.46,
+     "lease_factor": 1.45,
+     "use": "Co-living Rooms",
+     "source_name": "ROOM-1"
+    },
+    {
+     "unit_no": "601",
+     "floor": 6,
+     "unit_type": "studio",
+     "carpet_sqft": 200.32,
+     "saleable_sqft": 290.46,
+     "lease_factor": 1.45,
+     "use": "Co-living Rooms",
+     "source_name": "ROOM-1"
+    },
+    {
+     "unit_no": "701",
+     "floor": 7,
+     "unit_type": "studio",
+     "carpet_sqft": 200.32,
+     "saleable_sqft": 290.46,
+     "lease_factor": 1.45,
+     "use": "Co-living Rooms",
+     "source_name": "ROOM-1"
+    },
+    {
+     "unit_no": "801",
+     "floor": 8,
+     "unit_type": "studio",
+     "carpet_sqft": 200.32,
+     "saleable_sqft": 290.46,
+     "lease_factor": 1.45,
+     "use": "Co-living Rooms",
+     "source_name": "ROOM-1"
+    },
+    {
+     "unit_no": "202",
+     "floor": 2,
+     "unit_type": "studio",
+     "carpet_sqft": 200.32,
+     "saleable_sqft": 290.46,
+     "lease_factor": 1.45,
+     "use": "Co-living Rooms",
+     "source_name": "ROOM-2"
+    },
+    {
+     "unit_no": "302",
+     "floor": 3,
+     "unit_type": "studio",
+     "carpet_sqft": 200.32,
+     "saleable_sqft": 290.46,
+     "lease_factor": 1.45,
+     "use": "Co-living Rooms",
+     "source_name": "ROOM-2"
+    },
+    {
+     "unit_no": "402",
+     "floor": 4,
+     "unit_type": "studio",
+     "carpet_sqft": 200.32,
+     "saleable_sqft": 290.46,
+     "lease_factor": 1.45,
+     "use": "Co-living Rooms",
+     "source_name": "ROOM-2"
+    },
+    {
+     "unit_no": "502",
+     "floor": 5,
+     "unit_type": "studio",
+     "carpet_sqft": 200.32,
+     "saleable_sqft": 290.46,
+     "lease_factor": 1.45,
+     "use": "Co-living Rooms",
+     "source_name": "ROOM-2"
+    },
+    {
+     "unit_no": "602",
+     "floor": 6,
+     "unit_type": "studio",
+     "carpet_sqft": 200.32,
+     "saleable_sqft": 290.46,
+     "lease_factor": 1.45,
+     "use": "Co-living Rooms",
+     "source_name": "ROOM-2"
+    },
+    {
+     "unit_no": "702",
+     "floor": 7,
+     "unit_type": "studio",
+     "carpet_sqft": 200.32,
+     "saleable_sqft": 290.46,
+     "lease_factor": 1.45,
+     "use": "Co-living Rooms",
+     "source_name": "ROOM-2"
+    },
+    {
+     "unit_no": "802",
+     "floor": 8,
+     "unit_type": "studio",
+     "carpet_sqft": 200.32,
+     "saleable_sqft": 290.46,
+     "lease_factor": 1.45,
+     "use": "Co-living Rooms",
+     "source_name": "ROOM-2"
+    },
+    {
+     "unit_no": "203",
+     "floor": 2,
+     "unit_type": "studio",
+     "carpet_sqft": 200.32,
+     "saleable_sqft": 290.46,
+     "lease_factor": 1.45,
+     "use": "Co-living Rooms",
+     "source_name": "ROOM-3"
+    },
+    {
+     "unit_no": "303",
+     "floor": 3,
+     "unit_type": "studio",
+     "carpet_sqft": 200.32,
+     "saleable_sqft": 290.46,
+     "lease_factor": 1.45,
+     "use": "Co-living Rooms",
+     "source_name": "ROOM-3"
+    },
+    {
+     "unit_no": "403",
+     "floor": 4,
+     "unit_type": "studio",
+     "carpet_sqft": 200.32,
+     "saleable_sqft": 290.46,
+     "lease_factor": 1.45,
+     "use": "Co-living Rooms",
+     "source_name": "ROOM-3"
+    },
+    {
+     "unit_no": "503",
+     "floor": 5,
+     "unit_type": "studio",
+     "carpet_sqft": 200.32,
+     "saleable_sqft": 290.46,
+     "lease_factor": 1.45,
+     "use": "Co-living Rooms",
+     "source_name": "ROOM-3"
+    },
+    {
+     "unit_no": "603",
+     "floor": 6,
+     "unit_type": "studio",
+     "carpet_sqft": 200.32,
+     "saleable_sqft": 290.46,
+     "lease_factor": 1.45,
+     "use": "Co-living Rooms",
+     "source_name": "ROOM-3"
+    },
+    {
+     "unit_no": "703",
+     "floor": 7,
+     "unit_type": "studio",
+     "carpet_sqft": 200.32,
+     "saleable_sqft": 290.46,
+     "lease_factor": 1.45,
+     "use": "Co-living Rooms",
+     "source_name": "ROOM-3"
+    },
+    {
+     "unit_no": "803",
+     "floor": 8,
+     "unit_type": "studio",
+     "carpet_sqft": 200.32,
+     "saleable_sqft": 290.46,
+     "lease_factor": 1.45,
+     "use": "Co-living Rooms",
+     "source_name": "ROOM-3"
+    },
+    {
+     "unit_no": "204",
+     "floor": 2,
+     "unit_type": "studio",
+     "carpet_sqft": 200.32,
+     "saleable_sqft": 290.46,
+     "lease_factor": 1.45,
+     "use": "Co-living Rooms",
+     "source_name": "ROOM-4"
+    },
+    {
+     "unit_no": "304",
+     "floor": 3,
+     "unit_type": "studio",
+     "carpet_sqft": 200.32,
+     "saleable_sqft": 290.46,
+     "lease_factor": 1.45,
+     "use": "Co-living Rooms",
+     "source_name": "ROOM-4"
+    },
+    {
+     "unit_no": "404",
+     "floor": 4,
+     "unit_type": "studio",
+     "carpet_sqft": 200.32,
+     "saleable_sqft": 290.46,
+     "lease_factor": 1.45,
+     "use": "Co-living Rooms",
+     "source_name": "ROOM-4"
+    },
+    {
+     "unit_no": "504",
+     "floor": 5,
+     "unit_type": "studio",
+     "carpet_sqft": 200.32,
+     "saleable_sqft": 290.46,
+     "lease_factor": 1.45,
+     "use": "Co-living Rooms",
+     "source_name": "ROOM-4"
+    },
+    {
+     "unit_no": "604",
+     "floor": 6,
+     "unit_type": "studio",
+     "carpet_sqft": 200.32,
+     "saleable_sqft": 290.46,
+     "lease_factor": 1.45,
+     "use": "Co-living Rooms",
+     "source_name": "ROOM-4"
+    },
+    {
+     "unit_no": "704",
+     "floor": 7,
+     "unit_type": "studio",
+     "carpet_sqft": 200.32,
+     "saleable_sqft": 290.46,
+     "lease_factor": 1.45,
+     "use": "Co-living Rooms",
+     "source_name": "ROOM-4"
+    },
+    {
+     "unit_no": "804",
+     "floor": 8,
+     "unit_type": "studio",
+     "carpet_sqft": 200.32,
+     "saleable_sqft": 290.46,
+     "lease_factor": 1.45,
+     "use": "Co-living Rooms",
+     "source_name": "ROOM-4"
+    },
+    {
+     "unit_no": "205",
+     "floor": 2,
+     "unit_type": "studio",
+     "carpet_sqft": 200.32,
+     "saleable_sqft": 290.46,
+     "lease_factor": 1.45,
+     "use": "Co-living Rooms",
+     "source_name": "ROOM-5"
+    },
+    {
+     "unit_no": "305",
+     "floor": 3,
+     "unit_type": "studio",
+     "carpet_sqft": 200.32,
+     "saleable_sqft": 290.46,
+     "lease_factor": 1.45,
+     "use": "Co-living Rooms",
+     "source_name": "ROOM-5"
+    },
+    {
+     "unit_no": "405",
+     "floor": 4,
+     "unit_type": "studio",
+     "carpet_sqft": 200.32,
+     "saleable_sqft": 290.46,
+     "lease_factor": 1.45,
+     "use": "Co-living Rooms",
+     "source_name": "ROOM-5"
+    },
+    {
+     "unit_no": "505",
+     "floor": 5,
+     "unit_type": "studio",
+     "carpet_sqft": 200.32,
+     "saleable_sqft": 290.46,
+     "lease_factor": 1.45,
+     "use": "Co-living Rooms",
+     "source_name": "ROOM-5"
+    },
+    {
+     "unit_no": "605",
+     "floor": 6,
+     "unit_type": "studio",
+     "carpet_sqft": 200.32,
+     "saleable_sqft": 290.46,
+     "lease_factor": 1.45,
+     "use": "Co-living Rooms",
+     "source_name": "ROOM-5"
+    },
+    {
+     "unit_no": "705",
+     "floor": 7,
+     "unit_type": "studio",
+     "carpet_sqft": 200.32,
+     "saleable_sqft": 290.46,
+     "lease_factor": 1.45,
+     "use": "Co-living Rooms",
+     "source_name": "ROOM-5"
+    },
+    {
+     "unit_no": "805",
+     "floor": 8,
+     "unit_type": "studio",
+     "carpet_sqft": 200.32,
+     "saleable_sqft": 290.46,
+     "lease_factor": 1.45,
+     "use": "Co-living Rooms",
+     "source_name": "ROOM-5"
+    },
+    {
+     "unit_no": "206",
+     "floor": 2,
+     "unit_type": "studio",
+     "carpet_sqft": 200.32,
+     "saleable_sqft": 290.46,
+     "lease_factor": 1.45,
+     "use": "Co-living Rooms",
+     "source_name": "ROOM-6"
+    },
+    {
+     "unit_no": "306",
+     "floor": 3,
+     "unit_type": "studio",
+     "carpet_sqft": 200.32,
+     "saleable_sqft": 290.46,
+     "lease_factor": 1.45,
+     "use": "Co-living Rooms",
+     "source_name": "ROOM-6"
+    },
+    {
+     "unit_no": "406",
+     "floor": 4,
+     "unit_type": "studio",
+     "carpet_sqft": 200.32,
+     "saleable_sqft": 290.46,
+     "lease_factor": 1.45,
+     "use": "Co-living Rooms",
+     "source_name": "ROOM-6"
+    },
+    {
+     "unit_no": "506",
+     "floor": 5,
+     "unit_type": "studio",
+     "carpet_sqft": 200.32,
+     "saleable_sqft": 290.46,
+     "lease_factor": 1.45,
+     "use": "Co-living Rooms",
+     "source_name": "ROOM-6"
+    },
+    {
+     "unit_no": "606",
+     "floor": 6,
+     "unit_type": "studio",
+     "carpet_sqft": 200.32,
+     "saleable_sqft": 290.46,
+     "lease_factor": 1.45,
+     "use": "Co-living Rooms",
+     "source_name": "ROOM-6"
+    },
+    {
+     "unit_no": "706",
+     "floor": 7,
+     "unit_type": "studio",
+     "carpet_sqft": 200.32,
+     "saleable_sqft": 290.46,
+     "lease_factor": 1.45,
+     "use": "Co-living Rooms",
+     "source_name": "ROOM-6"
+    },
+    {
+     "unit_no": "806",
+     "floor": 8,
+     "unit_type": "studio",
+     "carpet_sqft": 200.32,
+     "saleable_sqft": 290.46,
+     "lease_factor": 1.45,
+     "use": "Co-living Rooms",
+     "source_name": "ROOM-6"
+    },
+    {
+     "unit_no": "207",
+     "floor": 2,
+     "unit_type": "studio",
+     "carpet_sqft": 200.32,
+     "saleable_sqft": 290.46,
+     "lease_factor": 1.45,
+     "use": "Co-living Rooms",
+     "source_name": "ROOM-7"
+    },
+    {
+     "unit_no": "307",
+     "floor": 3,
+     "unit_type": "studio",
+     "carpet_sqft": 200.32,
+     "saleable_sqft": 290.46,
+     "lease_factor": 1.45,
+     "use": "Co-living Rooms",
+     "source_name": "ROOM-7"
+    },
+    {
+     "unit_no": "407",
+     "floor": 4,
+     "unit_type": "studio",
+     "carpet_sqft": 200.32,
+     "saleable_sqft": 290.46,
+     "lease_factor": 1.45,
+     "use": "Co-living Rooms",
+     "source_name": "ROOM-7"
+    },
+    {
+     "unit_no": "507",
+     "floor": 5,
+     "unit_type": "studio",
+     "carpet_sqft": 200.32,
+     "saleable_sqft": 290.46,
+     "lease_factor": 1.45,
+     "use": "Co-living Rooms",
+     "source_name": "ROOM-7"
+    },
+    {
+     "unit_no": "607",
+     "floor": 6,
+     "unit_type": "studio",
+     "carpet_sqft": 200.32,
+     "saleable_sqft": 290.46,
+     "lease_factor": 1.45,
+     "use": "Co-living Rooms",
+     "source_name": "ROOM-7"
+    },
+    {
+     "unit_no": "707",
+     "floor": 7,
+     "unit_type": "studio",
+     "carpet_sqft": 200.32,
+     "saleable_sqft": 290.46,
+     "lease_factor": 1.45,
+     "use": "Co-living Rooms",
+     "source_name": "ROOM-7"
+    },
+    {
+     "unit_no": "807",
+     "floor": 8,
+     "unit_type": "studio",
+     "carpet_sqft": 200.32,
+     "saleable_sqft": 290.46,
+     "lease_factor": 1.45,
+     "use": "Co-living Rooms",
+     "source_name": "ROOM-7"
+    },
+    {
+     "unit_no": "208",
+     "floor": 2,
+     "unit_type": "studio",
+     "carpet_sqft": 238.64,
+     "saleable_sqft": 346.02,
+     "lease_factor": 1.45,
+     "use": "Co-living Rooms",
+     "source_name": "ROOM-8"
+    },
+    {
+     "unit_no": "308",
+     "floor": 3,
+     "unit_type": "studio",
+     "carpet_sqft": 238.64,
+     "saleable_sqft": 346.02,
+     "lease_factor": 1.45,
+     "use": "Co-living Rooms",
+     "source_name": "ROOM-8"
+    },
+    {
+     "unit_no": "408",
+     "floor": 4,
+     "unit_type": "studio",
+     "carpet_sqft": 238.64,
+     "saleable_sqft": 346.02,
+     "lease_factor": 1.45,
+     "use": "Co-living Rooms",
+     "source_name": "ROOM-8"
+    },
+    {
+     "unit_no": "508",
+     "floor": 5,
+     "unit_type": "studio",
+     "carpet_sqft": 238.64,
+     "saleable_sqft": 346.02,
+     "lease_factor": 1.45,
+     "use": "Co-living Rooms",
+     "source_name": "ROOM-8"
+    },
+    {
+     "unit_no": "608",
+     "floor": 6,
+     "unit_type": "studio",
+     "carpet_sqft": 238.64,
+     "saleable_sqft": 346.02,
+     "lease_factor": 1.45,
+     "use": "Co-living Rooms",
+     "source_name": "ROOM-8"
+    },
+    {
+     "unit_no": "708",
+     "floor": 7,
+     "unit_type": "studio",
+     "carpet_sqft": 238.64,
+     "saleable_sqft": 346.02,
+     "lease_factor": 1.45,
+     "use": "Co-living Rooms",
+     "source_name": "ROOM-8"
+    },
+    {
+     "unit_no": "808",
+     "floor": 8,
+     "unit_type": "studio",
+     "carpet_sqft": 238.64,
+     "saleable_sqft": 346.02,
+     "lease_factor": 1.45,
+     "use": "Co-living Rooms",
+     "source_name": "ROOM-8"
+    },
+    {
+     "unit_no": "209",
+     "floor": 2,
+     "unit_type": "studio",
+     "carpet_sqft": 200.32,
+     "saleable_sqft": 290.46,
+     "lease_factor": 1.45,
+     "use": "Co-living Rooms",
+     "source_name": "ROOM-9"
+    },
+    {
+     "unit_no": "309",
+     "floor": 3,
+     "unit_type": "studio",
+     "carpet_sqft": 200.32,
+     "saleable_sqft": 290.46,
+     "lease_factor": 1.45,
+     "use": "Co-living Rooms",
+     "source_name": "ROOM-9"
+    },
+    {
+     "unit_no": "409",
+     "floor": 4,
+     "unit_type": "studio",
+     "carpet_sqft": 200.32,
+     "saleable_sqft": 290.46,
+     "lease_factor": 1.45,
+     "use": "Co-living Rooms",
+     "source_name": "ROOM-9"
+    },
+    {
+     "unit_no": "509",
+     "floor": 5,
+     "unit_type": "studio",
+     "carpet_sqft": 200.32,
+     "saleable_sqft": 290.46,
+     "lease_factor": 1.45,
+     "use": "Co-living Rooms",
+     "source_name": "ROOM-9"
+    },
+    {
+     "unit_no": "609",
+     "floor": 6,
+     "unit_type": "studio",
+     "carpet_sqft": 200.32,
+     "saleable_sqft": 290.46,
+     "lease_factor": 1.45,
+     "use": "Co-living Rooms",
+     "source_name": "ROOM-9"
+    },
+    {
+     "unit_no": "709",
+     "floor": 7,
+     "unit_type": "studio",
+     "carpet_sqft": 200.32,
+     "saleable_sqft": 290.46,
+     "lease_factor": 1.45,
+     "use": "Co-living Rooms",
+     "source_name": "ROOM-9"
+    },
+    {
+     "unit_no": "809",
+     "floor": 8,
+     "unit_type": "studio",
+     "carpet_sqft": 200.32,
+     "saleable_sqft": 290.46,
+     "lease_factor": 1.45,
+     "use": "Co-living Rooms",
+     "source_name": "ROOM-9"
+    },
+    {
+     "unit_no": "210",
+     "floor": 2,
+     "unit_type": "studio",
+     "carpet_sqft": 200.32,
+     "saleable_sqft": 290.46,
+     "lease_factor": 1.45,
+     "use": "Co-living Rooms",
+     "source_name": "ROOM-10"
+    },
+    {
+     "unit_no": "310",
+     "floor": 3,
+     "unit_type": "studio",
+     "carpet_sqft": 200.32,
+     "saleable_sqft": 290.46,
+     "lease_factor": 1.45,
+     "use": "Co-living Rooms",
+     "source_name": "ROOM-10"
+    },
+    {
+     "unit_no": "410",
+     "floor": 4,
+     "unit_type": "studio",
+     "carpet_sqft": 200.32,
+     "saleable_sqft": 290.46,
+     "lease_factor": 1.45,
+     "use": "Co-living Rooms",
+     "source_name": "ROOM-10"
+    },
+    {
+     "unit_no": "510",
+     "floor": 5,
+     "unit_type": "studio",
+     "carpet_sqft": 200.32,
+     "saleable_sqft": 290.46,
+     "lease_factor": 1.45,
+     "use": "Co-living Rooms",
+     "source_name": "ROOM-10"
+    },
+    {
+     "unit_no": "610",
+     "floor": 6,
+     "unit_type": "studio",
+     "carpet_sqft": 200.32,
+     "saleable_sqft": 290.46,
+     "lease_factor": 1.45,
+     "use": "Co-living Rooms",
+     "source_name": "ROOM-10"
+    },
+    {
+     "unit_no": "710",
+     "floor": 7,
+     "unit_type": "studio",
+     "carpet_sqft": 200.32,
+     "saleable_sqft": 290.46,
+     "lease_factor": 1.45,
+     "use": "Co-living Rooms",
+     "source_name": "ROOM-10"
+    },
+    {
+     "unit_no": "810",
+     "floor": 8,
+     "unit_type": "studio",
+     "carpet_sqft": 200.32,
+     "saleable_sqft": 290.46,
+     "lease_factor": 1.45,
+     "use": "Co-living Rooms",
+     "source_name": "ROOM-10"
+    },
+    {
+     "unit_no": "211",
+     "floor": 2,
+     "unit_type": "studio",
+     "carpet_sqft": 200.32,
+     "saleable_sqft": 290.46,
+     "lease_factor": 1.45,
+     "use": "Co-living Rooms",
+     "source_name": "ROOM-11"
+    },
+    {
+     "unit_no": "311",
+     "floor": 3,
+     "unit_type": "studio",
+     "carpet_sqft": 200.32,
+     "saleable_sqft": 290.46,
+     "lease_factor": 1.45,
+     "use": "Co-living Rooms",
+     "source_name": "ROOM-11"
+    },
+    {
+     "unit_no": "411",
+     "floor": 4,
+     "unit_type": "studio",
+     "carpet_sqft": 200.32,
+     "saleable_sqft": 290.46,
+     "lease_factor": 1.45,
+     "use": "Co-living Rooms",
+     "source_name": "ROOM-11"
+    },
+    {
+     "unit_no": "511",
+     "floor": 5,
+     "unit_type": "studio",
+     "carpet_sqft": 200.32,
+     "saleable_sqft": 290.46,
+     "lease_factor": 1.45,
+     "use": "Co-living Rooms",
+     "source_name": "ROOM-11"
+    },
+    {
+     "unit_no": "611",
+     "floor": 6,
+     "unit_type": "studio",
+     "carpet_sqft": 200.32,
+     "saleable_sqft": 290.46,
+     "lease_factor": 1.45,
+     "use": "Co-living Rooms",
+     "source_name": "ROOM-11"
+    },
+    {
+     "unit_no": "711",
+     "floor": 7,
+     "unit_type": "studio",
+     "carpet_sqft": 200.32,
+     "saleable_sqft": 290.46,
+     "lease_factor": 1.45,
+     "use": "Co-living Rooms",
+     "source_name": "ROOM-11"
+    },
+    {
+     "unit_no": "811",
+     "floor": 8,
+     "unit_type": "studio",
+     "carpet_sqft": 200.32,
+     "saleable_sqft": 290.46,
+     "lease_factor": 1.45,
+     "use": "Co-living Rooms",
+     "source_name": "ROOM-11"
+    },
+    {
+     "unit_no": "212",
+     "floor": 2,
+     "unit_type": "studio",
+     "carpet_sqft": 200.32,
+     "saleable_sqft": 290.46,
+     "lease_factor": 1.45,
+     "use": "Co-living Rooms",
+     "source_name": "ROOM-12"
+    },
+    {
+     "unit_no": "312",
+     "floor": 3,
+     "unit_type": "studio",
+     "carpet_sqft": 200.32,
+     "saleable_sqft": 290.46,
+     "lease_factor": 1.45,
+     "use": "Co-living Rooms",
+     "source_name": "ROOM-12"
+    },
+    {
+     "unit_no": "412",
+     "floor": 4,
+     "unit_type": "studio",
+     "carpet_sqft": 200.32,
+     "saleable_sqft": 290.46,
+     "lease_factor": 1.45,
+     "use": "Co-living Rooms",
+     "source_name": "ROOM-12"
+    },
+    {
+     "unit_no": "512",
+     "floor": 5,
+     "unit_type": "studio",
+     "carpet_sqft": 200.32,
+     "saleable_sqft": 290.46,
+     "lease_factor": 1.45,
+     "use": "Co-living Rooms",
+     "source_name": "ROOM-12"
+    },
+    {
+     "unit_no": "612",
+     "floor": 6,
+     "unit_type": "studio",
+     "carpet_sqft": 200.32,
+     "saleable_sqft": 290.46,
+     "lease_factor": 1.45,
+     "use": "Co-living Rooms",
+     "source_name": "ROOM-12"
+    },
+    {
+     "unit_no": "712",
+     "floor": 7,
+     "unit_type": "studio",
+     "carpet_sqft": 200.32,
+     "saleable_sqft": 290.46,
+     "lease_factor": 1.45,
+     "use": "Co-living Rooms",
+     "source_name": "ROOM-12"
+    },
+    {
+     "unit_no": "812",
+     "floor": 8,
+     "unit_type": "studio",
+     "carpet_sqft": 200.32,
+     "saleable_sqft": 290.46,
+     "lease_factor": 1.45,
+     "use": "Co-living Rooms",
+     "source_name": "ROOM-12"
+    },
+    {
+     "unit_no": "213",
+     "floor": 2,
+     "unit_type": "studio",
+     "carpet_sqft": 200.32,
+     "saleable_sqft": 290.46,
+     "lease_factor": 1.45,
+     "use": "Co-living Rooms",
+     "source_name": "ROOM-13"
+    },
+    {
+     "unit_no": "313",
+     "floor": 3,
+     "unit_type": "studio",
+     "carpet_sqft": 200.32,
+     "saleable_sqft": 290.46,
+     "lease_factor": 1.45,
+     "use": "Co-living Rooms",
+     "source_name": "ROOM-13"
+    },
+    {
+     "unit_no": "413",
+     "floor": 4,
+     "unit_type": "studio",
+     "carpet_sqft": 200.32,
+     "saleable_sqft": 290.46,
+     "lease_factor": 1.45,
+     "use": "Co-living Rooms",
+     "source_name": "ROOM-13"
+    },
+    {
+     "unit_no": "513",
+     "floor": 5,
+     "unit_type": "studio",
+     "carpet_sqft": 200.32,
+     "saleable_sqft": 290.46,
+     "lease_factor": 1.45,
+     "use": "Co-living Rooms",
+     "source_name": "ROOM-13"
+    },
+    {
+     "unit_no": "613",
+     "floor": 6,
+     "unit_type": "studio",
+     "carpet_sqft": 200.32,
+     "saleable_sqft": 290.46,
+     "lease_factor": 1.45,
+     "use": "Co-living Rooms",
+     "source_name": "ROOM-13"
+    },
+    {
+     "unit_no": "713",
+     "floor": 7,
+     "unit_type": "studio",
+     "carpet_sqft": 200.32,
+     "saleable_sqft": 290.46,
+     "lease_factor": 1.45,
+     "use": "Co-living Rooms",
+     "source_name": "ROOM-13"
+    },
+    {
+     "unit_no": "813",
+     "floor": 8,
+     "unit_type": "studio",
+     "carpet_sqft": 200.32,
+     "saleable_sqft": 290.46,
+     "lease_factor": 1.45,
+     "use": "Co-living Rooms",
+     "source_name": "ROOM-13"
+    },
+    {
+     "unit_no": "214",
+     "floor": 2,
+     "unit_type": "studio",
+     "carpet_sqft": 180.62,
+     "saleable_sqft": 261.9,
+     "lease_factor": 1.45,
+     "use": "Co-living Rooms",
+     "source_name": "ROOM-14"
+    },
+    {
+     "unit_no": "314",
+     "floor": 3,
+     "unit_type": "studio",
+     "carpet_sqft": 180.62,
+     "saleable_sqft": 261.9,
+     "lease_factor": 1.45,
+     "use": "Co-living Rooms",
+     "source_name": "ROOM-14"
+    },
+    {
+     "unit_no": "414",
+     "floor": 4,
+     "unit_type": "studio",
+     "carpet_sqft": 180.62,
+     "saleable_sqft": 261.9,
+     "lease_factor": 1.45,
+     "use": "Co-living Rooms",
+     "source_name": "ROOM-14"
+    },
+    {
+     "unit_no": "514",
+     "floor": 5,
+     "unit_type": "studio",
+     "carpet_sqft": 180.62,
+     "saleable_sqft": 261.9,
+     "lease_factor": 1.45,
+     "use": "Co-living Rooms",
+     "source_name": "ROOM-14"
+    },
+    {
+     "unit_no": "614",
+     "floor": 6,
+     "unit_type": "studio",
+     "carpet_sqft": 180.62,
+     "saleable_sqft": 261.9,
+     "lease_factor": 1.45,
+     "use": "Co-living Rooms",
+     "source_name": "ROOM-14"
+    },
+    {
+     "unit_no": "714",
+     "floor": 7,
+     "unit_type": "studio",
+     "carpet_sqft": 180.62,
+     "saleable_sqft": 261.9,
+     "lease_factor": 1.45,
+     "use": "Co-living Rooms",
+     "source_name": "ROOM-14"
+    },
+    {
+     "unit_no": "814",
+     "floor": 8,
+     "unit_type": "studio",
+     "carpet_sqft": 180.62,
+     "saleable_sqft": 261.9,
+     "lease_factor": 1.45,
+     "use": "Co-living Rooms",
+     "source_name": "ROOM-14"
+    },
+    {
+     "unit_no": "215",
+     "floor": 2,
+     "unit_type": "studio",
+     "carpet_sqft": 180.62,
+     "saleable_sqft": 261.9,
+     "lease_factor": 1.45,
+     "use": "Co-living Rooms",
+     "source_name": "ROOM-15"
+    },
+    {
+     "unit_no": "315",
+     "floor": 3,
+     "unit_type": "studio",
+     "carpet_sqft": 180.62,
+     "saleable_sqft": 261.9,
+     "lease_factor": 1.45,
+     "use": "Co-living Rooms",
+     "source_name": "ROOM-15"
+    },
+    {
+     "unit_no": "415",
+     "floor": 4,
+     "unit_type": "studio",
+     "carpet_sqft": 180.62,
+     "saleable_sqft": 261.9,
+     "lease_factor": 1.45,
+     "use": "Co-living Rooms",
+     "source_name": "ROOM-15"
+    },
+    {
+     "unit_no": "515",
+     "floor": 5,
+     "unit_type": "studio",
+     "carpet_sqft": 180.62,
+     "saleable_sqft": 261.9,
+     "lease_factor": 1.45,
+     "use": "Co-living Rooms",
+     "source_name": "ROOM-15"
+    },
+    {
+     "unit_no": "615",
+     "floor": 6,
+     "unit_type": "studio",
+     "carpet_sqft": 180.62,
+     "saleable_sqft": 261.9,
+     "lease_factor": 1.45,
+     "use": "Co-living Rooms",
+     "source_name": "ROOM-15"
+    },
+    {
+     "unit_no": "715",
+     "floor": 7,
+     "unit_type": "studio",
+     "carpet_sqft": 180.62,
+     "saleable_sqft": 261.9,
+     "lease_factor": 1.45,
+     "use": "Co-living Rooms",
+     "source_name": "ROOM-15"
+    },
+    {
+     "unit_no": "815",
+     "floor": 8,
+     "unit_type": "studio",
+     "carpet_sqft": 180.62,
+     "saleable_sqft": 261.9,
+     "lease_factor": 1.45,
+     "use": "Co-living Rooms",
+     "source_name": "ROOM-15"
+    },
+    {
+     "unit_no": "216",
+     "floor": 2,
+     "unit_type": "studio",
+     "carpet_sqft": 180.62,
+     "saleable_sqft": 261.9,
+     "lease_factor": 1.45,
+     "use": "Co-living Rooms",
+     "source_name": "ROOM-16"
+    },
+    {
+     "unit_no": "316",
+     "floor": 3,
+     "unit_type": "studio",
+     "carpet_sqft": 180.62,
+     "saleable_sqft": 261.9,
+     "lease_factor": 1.45,
+     "use": "Co-living Rooms",
+     "source_name": "ROOM-16"
+    },
+    {
+     "unit_no": "416",
+     "floor": 4,
+     "unit_type": "studio",
+     "carpet_sqft": 180.62,
+     "saleable_sqft": 261.9,
+     "lease_factor": 1.45,
+     "use": "Co-living Rooms",
+     "source_name": "ROOM-16"
+    },
+    {
+     "unit_no": "516",
+     "floor": 5,
+     "unit_type": "studio",
+     "carpet_sqft": 180.62,
+     "saleable_sqft": 261.9,
+     "lease_factor": 1.45,
+     "use": "Co-living Rooms",
+     "source_name": "ROOM-16"
+    },
+    {
+     "unit_no": "616",
+     "floor": 6,
+     "unit_type": "studio",
+     "carpet_sqft": 180.62,
+     "saleable_sqft": 261.9,
+     "lease_factor": 1.45,
+     "use": "Co-living Rooms",
+     "source_name": "ROOM-16"
+    },
+    {
+     "unit_no": "716",
+     "floor": 7,
+     "unit_type": "studio",
+     "carpet_sqft": 180.62,
+     "saleable_sqft": 261.9,
+     "lease_factor": 1.45,
+     "use": "Co-living Rooms",
+     "source_name": "ROOM-16"
+    },
+    {
+     "unit_no": "816",
+     "floor": 8,
+     "unit_type": "studio",
+     "carpet_sqft": 180.62,
+     "saleable_sqft": 261.9,
+     "lease_factor": 1.45,
+     "use": "Co-living Rooms",
+     "source_name": "ROOM-16"
+    },
+    {
+     "unit_no": "217",
+     "floor": 2,
+     "unit_type": "studio",
+     "carpet_sqft": 208.39,
+     "saleable_sqft": 302.17,
+     "lease_factor": 1.45,
+     "use": "Co-living Rooms",
+     "source_name": "ROOM-17"
+    },
+    {
+     "unit_no": "317",
+     "floor": 3,
+     "unit_type": "studio",
+     "carpet_sqft": 208.39,
+     "saleable_sqft": 302.17,
+     "lease_factor": 1.45,
+     "use": "Co-living Rooms",
+     "source_name": "ROOM-17"
+    },
+    {
+     "unit_no": "417",
+     "floor": 4,
+     "unit_type": "studio",
+     "carpet_sqft": 208.39,
+     "saleable_sqft": 302.17,
+     "lease_factor": 1.45,
+     "use": "Co-living Rooms",
+     "source_name": "ROOM-17"
+    },
+    {
+     "unit_no": "517",
+     "floor": 5,
+     "unit_type": "studio",
+     "carpet_sqft": 208.39,
+     "saleable_sqft": 302.17,
+     "lease_factor": 1.45,
+     "use": "Co-living Rooms",
+     "source_name": "ROOM-17"
+    },
+    {
+     "unit_no": "617",
+     "floor": 6,
+     "unit_type": "studio",
+     "carpet_sqft": 208.39,
+     "saleable_sqft": 302.17,
+     "lease_factor": 1.45,
+     "use": "Co-living Rooms",
+     "source_name": "ROOM-17"
+    },
+    {
+     "unit_no": "717",
+     "floor": 7,
+     "unit_type": "studio",
+     "carpet_sqft": 208.39,
+     "saleable_sqft": 302.17,
+     "lease_factor": 1.45,
+     "use": "Co-living Rooms",
+     "source_name": "ROOM-17"
+    },
+    {
+     "unit_no": "817",
+     "floor": 8,
+     "unit_type": "studio",
+     "carpet_sqft": 208.39,
+     "saleable_sqft": 302.17,
+     "lease_factor": 1.45,
+     "use": "Co-living Rooms",
+     "source_name": "ROOM-17"
+    },
+    {
+     "unit_no": "218",
+     "floor": 2,
+     "unit_type": "studio",
+     "carpet_sqft": 180.62,
+     "saleable_sqft": 261.9,
+     "lease_factor": 1.45,
+     "use": "Co-living Rooms",
+     "source_name": "ROOM-18"
+    },
+    {
+     "unit_no": "318",
+     "floor": 3,
+     "unit_type": "studio",
+     "carpet_sqft": 180.62,
+     "saleable_sqft": 261.9,
+     "lease_factor": 1.45,
+     "use": "Co-living Rooms",
+     "source_name": "ROOM-18"
+    },
+    {
+     "unit_no": "418",
+     "floor": 4,
+     "unit_type": "studio",
+     "carpet_sqft": 180.62,
+     "saleable_sqft": 261.9,
+     "lease_factor": 1.45,
+     "use": "Co-living Rooms",
+     "source_name": "ROOM-18"
+    },
+    {
+     "unit_no": "518",
+     "floor": 5,
+     "unit_type": "studio",
+     "carpet_sqft": 180.62,
+     "saleable_sqft": 261.9,
+     "lease_factor": 1.45,
+     "use": "Co-living Rooms",
+     "source_name": "ROOM-18"
+    },
+    {
+     "unit_no": "618",
+     "floor": 6,
+     "unit_type": "studio",
+     "carpet_sqft": 180.62,
+     "saleable_sqft": 261.9,
+     "lease_factor": 1.45,
+     "use": "Co-living Rooms",
+     "source_name": "ROOM-18"
+    },
+    {
+     "unit_no": "718",
+     "floor": 7,
+     "unit_type": "studio",
+     "carpet_sqft": 180.62,
+     "saleable_sqft": 261.9,
+     "lease_factor": 1.45,
+     "use": "Co-living Rooms",
+     "source_name": "ROOM-18"
+    },
+    {
+     "unit_no": "818",
+     "floor": 8,
+     "unit_type": "studio",
+     "carpet_sqft": 180.62,
+     "saleable_sqft": 261.9,
+     "lease_factor": 1.45,
+     "use": "Co-living Rooms",
+     "source_name": "ROOM-18"
+    },
+    {
+     "unit_no": "219",
+     "floor": 2,
+     "unit_type": "studio",
+     "carpet_sqft": 180.62,
+     "saleable_sqft": 261.9,
+     "lease_factor": 1.45,
+     "use": "Co-living Rooms",
+     "source_name": "ROOM-19"
+    },
+    {
+     "unit_no": "319",
+     "floor": 3,
+     "unit_type": "studio",
+     "carpet_sqft": 180.62,
+     "saleable_sqft": 261.9,
+     "lease_factor": 1.45,
+     "use": "Co-living Rooms",
+     "source_name": "ROOM-19"
+    },
+    {
+     "unit_no": "419",
+     "floor": 4,
+     "unit_type": "studio",
+     "carpet_sqft": 180.62,
+     "saleable_sqft": 261.9,
+     "lease_factor": 1.45,
+     "use": "Co-living Rooms",
+     "source_name": "ROOM-19"
+    },
+    {
+     "unit_no": "519",
+     "floor": 5,
+     "unit_type": "studio",
+     "carpet_sqft": 180.62,
+     "saleable_sqft": 261.9,
+     "lease_factor": 1.45,
+     "use": "Co-living Rooms",
+     "source_name": "ROOM-19"
+    },
+    {
+     "unit_no": "619",
+     "floor": 6,
+     "unit_type": "studio",
+     "carpet_sqft": 180.62,
+     "saleable_sqft": 261.9,
+     "lease_factor": 1.45,
+     "use": "Co-living Rooms",
+     "source_name": "ROOM-19"
+    },
+    {
+     "unit_no": "719",
+     "floor": 7,
+     "unit_type": "studio",
+     "carpet_sqft": 180.62,
+     "saleable_sqft": 261.9,
+     "lease_factor": 1.45,
+     "use": "Co-living Rooms",
+     "source_name": "ROOM-19"
+    },
+    {
+     "unit_no": "819",
+     "floor": 8,
+     "unit_type": "studio",
+     "carpet_sqft": 180.62,
+     "saleable_sqft": 261.9,
+     "lease_factor": 1.45,
+     "use": "Co-living Rooms",
+     "source_name": "ROOM-19"
+    },
+    {
+     "unit_no": "220",
+     "floor": 2,
+     "unit_type": "studio",
+     "carpet_sqft": 180.62,
+     "saleable_sqft": 261.9,
+     "lease_factor": 1.45,
+     "use": "Co-living Rooms",
+     "source_name": "ROOM-20"
+    },
+    {
+     "unit_no": "320",
+     "floor": 3,
+     "unit_type": "studio",
+     "carpet_sqft": 180.62,
+     "saleable_sqft": 261.9,
+     "lease_factor": 1.45,
+     "use": "Co-living Rooms",
+     "source_name": "ROOM-20"
+    },
+    {
+     "unit_no": "420",
+     "floor": 4,
+     "unit_type": "studio",
+     "carpet_sqft": 180.62,
+     "saleable_sqft": 261.9,
+     "lease_factor": 1.45,
+     "use": "Co-living Rooms",
+     "source_name": "ROOM-20"
+    },
+    {
+     "unit_no": "520",
+     "floor": 5,
+     "unit_type": "studio",
+     "carpet_sqft": 180.62,
+     "saleable_sqft": 261.9,
+     "lease_factor": 1.45,
+     "use": "Co-living Rooms",
+     "source_name": "ROOM-20"
+    },
+    {
+     "unit_no": "620",
+     "floor": 6,
+     "unit_type": "studio",
+     "carpet_sqft": 180.62,
+     "saleable_sqft": 261.9,
+     "lease_factor": 1.45,
+     "use": "Co-living Rooms",
+     "source_name": "ROOM-20"
+    },
+    {
+     "unit_no": "720",
+     "floor": 7,
+     "unit_type": "studio",
+     "carpet_sqft": 180.62,
+     "saleable_sqft": 261.9,
+     "lease_factor": 1.45,
+     "use": "Co-living Rooms",
+     "source_name": "ROOM-20"
+    },
+    {
+     "unit_no": "820",
+     "floor": 8,
+     "unit_type": "studio",
+     "carpet_sqft": 180.62,
+     "saleable_sqft": 261.9,
+     "lease_factor": 1.45,
+     "use": "Co-living Rooms",
+     "source_name": "ROOM-20"
+    },
+    {
+     "unit_no": "901",
+     "floor": 9,
+     "unit_type": "studio",
+     "carpet_sqft": 200.32,
+     "saleable_sqft": 290.46,
+     "lease_factor": 1.45,
+     "use": "Convention Rooms",
+     "source_name": "ROOM-1"
+    },
+    {
+     "unit_no": "902",
+     "floor": 9,
+     "unit_type": "studio",
+     "carpet_sqft": 200.32,
+     "saleable_sqft": 290.46,
+     "lease_factor": 1.45,
+     "use": "Convention Rooms",
+     "source_name": "ROOM-2"
+    },
+    {
+     "unit_no": "903",
+     "floor": 9,
+     "unit_type": "studio",
+     "carpet_sqft": 200.32,
+     "saleable_sqft": 290.46,
+     "lease_factor": 1.45,
+     "use": "Convention Rooms",
+     "source_name": "ROOM-3"
+    },
+    {
+     "unit_no": "904",
+     "floor": 9,
+     "unit_type": "studio",
+     "carpet_sqft": 200.32,
+     "saleable_sqft": 290.46,
+     "lease_factor": 1.45,
+     "use": "Convention Rooms",
+     "source_name": "ROOM-4"
+    },
+    {
+     "unit_no": "905",
+     "floor": 9,
+     "unit_type": "studio",
+     "carpet_sqft": 200.32,
+     "saleable_sqft": 290.46,
+     "lease_factor": 1.45,
+     "use": "Convention Rooms",
+     "source_name": "ROOM-5"
+    },
+    {
+     "unit_no": "906",
+     "floor": 9,
+     "unit_type": "studio",
+     "carpet_sqft": 200.32,
+     "saleable_sqft": 290.46,
+     "lease_factor": 1.45,
+     "use": "Convention Rooms",
+     "source_name": "ROOM-6"
+    },
+    {
+     "unit_no": "907",
+     "floor": 9,
+     "unit_type": "studio",
+     "carpet_sqft": 200.32,
+     "saleable_sqft": 290.46,
+     "lease_factor": 1.45,
+     "use": "Convention Rooms",
+     "source_name": "ROOM-7"
+    },
+    {
+     "unit_no": "908",
+     "floor": 9,
+     "unit_type": "studio",
+     "carpet_sqft": 239.39,
+     "saleable_sqft": 347.12,
+     "lease_factor": 1.45,
+     "use": "Convention Rooms",
+     "source_name": "ROOM-8"
+    },
+    {
+     "unit_no": "909",
+     "floor": 9,
+     "unit_type": "studio",
+     "carpet_sqft": 200.32,
+     "saleable_sqft": 290.46,
+     "lease_factor": 1.45,
+     "use": "Convention Rooms",
+     "source_name": "ROOM-9"
+    },
+    {
+     "unit_no": "910",
+     "floor": 9,
+     "unit_type": "studio",
+     "carpet_sqft": 200.32,
+     "saleable_sqft": 290.46,
+     "lease_factor": 1.45,
+     "use": "Convention Rooms",
+     "source_name": "ROOM-10"
+    },
+    {
+     "unit_no": "911",
+     "floor": 9,
+     "unit_type": "studio",
+     "carpet_sqft": 200.32,
+     "saleable_sqft": 290.46,
+     "lease_factor": 1.45,
+     "use": "Convention Rooms",
+     "source_name": "ROOM-11"
+    },
+    {
+     "unit_no": "912",
+     "floor": 9,
+     "unit_type": "studio",
+     "carpet_sqft": 200.32,
+     "saleable_sqft": 290.46,
+     "lease_factor": 1.45,
+     "use": "Convention Rooms",
+     "source_name": "ROOM-12"
+    },
+    {
+     "unit_no": "913",
+     "floor": 9,
+     "unit_type": "studio",
+     "carpet_sqft": 200.32,
+     "saleable_sqft": 290.46,
+     "lease_factor": 1.45,
+     "use": "Convention Rooms",
+     "source_name": "ROOM-13"
+    },
+    {
+     "unit_no": "914",
+     "floor": 9,
+     "unit_type": "studio",
+     "carpet_sqft": 178.79,
+     "saleable_sqft": 259.25,
+     "lease_factor": 1.45,
+     "use": "Convention Rooms",
+     "source_name": "ROOM-14"
+    },
+    {
+     "unit_no": "915",
+     "floor": 9,
+     "unit_type": "studio",
+     "carpet_sqft": 178.79,
+     "saleable_sqft": 259.25,
+     "lease_factor": 1.45,
+     "use": "Convention Rooms",
+     "source_name": "ROOM-15"
+    },
+    {
+     "unit_no": "916",
+     "floor": 9,
+     "unit_type": "studio",
+     "carpet_sqft": 178.79,
+     "saleable_sqft": 259.25,
+     "lease_factor": 1.45,
+     "use": "Convention Rooms",
+     "source_name": "ROOM-16"
+    },
+    {
+     "unit_no": "1001",
+     "floor": 10,
+     "unit_type": "studio",
+     "carpet_sqft": 200.32,
+     "saleable_sqft": 290.46,
+     "lease_factor": 1.45,
+     "use": "Convention Rooms",
+     "source_name": "ROOM-1"
+    },
+    {
+     "unit_no": "1002",
+     "floor": 10,
+     "unit_type": "studio",
+     "carpet_sqft": 200.32,
+     "saleable_sqft": 290.46,
+     "lease_factor": 1.45,
+     "use": "Convention Rooms",
+     "source_name": "ROOM-2"
+    },
+    {
+     "unit_no": "1003",
+     "floor": 10,
+     "unit_type": "studio",
+     "carpet_sqft": 200.32,
+     "saleable_sqft": 290.46,
+     "lease_factor": 1.45,
+     "use": "Convention Rooms",
+     "source_name": "ROOM-3"
+    },
+    {
+     "unit_no": "1004",
+     "floor": 10,
+     "unit_type": "studio",
+     "carpet_sqft": 200.32,
+     "saleable_sqft": 290.46,
+     "lease_factor": 1.45,
+     "use": "Convention Rooms",
+     "source_name": "ROOM-4"
+    },
+    {
+     "unit_no": "1005",
+     "floor": 10,
+     "unit_type": "studio",
+     "carpet_sqft": 200.32,
+     "saleable_sqft": 290.46,
+     "lease_factor": 1.45,
+     "use": "Convention Rooms",
+     "source_name": "ROOM-5"
+    },
+    {
+     "unit_no": "1006",
+     "floor": 10,
+     "unit_type": "studio",
+     "carpet_sqft": 200.32,
+     "saleable_sqft": 290.46,
+     "lease_factor": 1.45,
+     "use": "Convention Rooms",
+     "source_name": "ROOM-6"
+    },
+    {
+     "unit_no": "1007",
+     "floor": 10,
+     "unit_type": "studio",
+     "carpet_sqft": 193.64,
+     "saleable_sqft": 280.78,
+     "lease_factor": 1.45,
+     "use": "Convention Rooms",
+     "source_name": "ROOM-7"
+    },
+    {
+     "unit_no": "1008",
+     "floor": 10,
+     "unit_type": "studio",
+     "carpet_sqft": 159.31,
+     "saleable_sqft": 267.7,
+     "lease_factor": 1.45,
+     "use": "Convention Rooms",
+     "source_name": "ROOM-8"
+    },
+    {
+     "unit_no": "1009",
+     "floor": 10,
+     "unit_type": "studio",
+     "carpet_sqft": 159.31,
+     "saleable_sqft": 267.7,
+     "lease_factor": 1.45,
+     "use": "Convention Rooms",
+     "source_name": "ROOM-9"
+    },
+    {
+     "unit_no": "1010",
+     "floor": 10,
+     "unit_type": "studio",
+     "carpet_sqft": 159.31,
+     "saleable_sqft": 267.7,
+     "lease_factor": 1.45,
+     "use": "Convention Rooms",
+     "source_name": "ROOM-10"
+    },
+    {
+     "unit_no": "1011",
+     "floor": 10,
+     "unit_type": "studio",
+     "carpet_sqft": 159.31,
+     "saleable_sqft": 267.7,
+     "lease_factor": 1.45,
+     "use": "Convention Rooms",
+     "source_name": "ROOM-11"
+    },
+    {
+     "unit_no": "1012",
+     "floor": 10,
+     "unit_type": "studio",
+     "carpet_sqft": 141.87,
+     "saleable_sqft": 241.23,
+     "lease_factor": 1.45,
+     "use": "Convention Rooms",
+     "source_name": "ROOM-12"
+    },
+    {
+     "unit_no": "1013",
+     "floor": 10,
+     "unit_type": "studio",
+     "carpet_sqft": 141.87,
+     "saleable_sqft": 241.23,
+     "lease_factor": 1.45,
+     "use": "Convention Rooms",
+     "source_name": "ROOM-13"
+    },
+    {
+     "unit_no": "1014",
+     "floor": 10,
+     "unit_type": "studio",
+     "carpet_sqft": 141.87,
+     "saleable_sqft": 241.23,
+     "lease_factor": 1.45,
+     "use": "Convention Rooms",
+     "source_name": "ROOM-14"
+    },
+    {
+     "unit_no": "1101",
+     "floor": 11,
+     "unit_type": "studio",
+     "carpet_sqft": 200.32,
+     "saleable_sqft": 290.46,
+     "lease_factor": 1.45,
+     "use": "Convention Rooms",
+     "source_name": "ROOM-1"
+    },
+    {
+     "unit_no": "1102",
+     "floor": 11,
+     "unit_type": "studio",
+     "carpet_sqft": 200.32,
+     "saleable_sqft": 290.46,
+     "lease_factor": 1.45,
+     "use": "Convention Rooms",
+     "source_name": "ROOM-2"
+    },
+    {
+     "unit_no": "1103",
+     "floor": 11,
+     "unit_type": "studio",
+     "carpet_sqft": 200.32,
+     "saleable_sqft": 290.46,
+     "lease_factor": 1.45,
+     "use": "Convention Rooms",
+     "source_name": "ROOM-3"
+    },
+    {
+     "unit_no": "1104",
+     "floor": 11,
+     "unit_type": "studio",
+     "carpet_sqft": 200.32,
+     "saleable_sqft": 290.46,
+     "lease_factor": 1.45,
+     "use": "Convention Rooms",
+     "source_name": "ROOM-4"
+    },
+    {
+     "unit_no": "1105",
+     "floor": 11,
+     "unit_type": "studio",
+     "carpet_sqft": 200.32,
+     "saleable_sqft": 290.46,
+     "lease_factor": 1.45,
+     "use": "Convention Rooms",
+     "source_name": "ROOM-5"
+    },
+    {
+     "unit_no": "1106",
+     "floor": 11,
+     "unit_type": "studio",
+     "carpet_sqft": 200.32,
+     "saleable_sqft": 290.46,
+     "lease_factor": 1.45,
+     "use": "Convention Rooms",
+     "source_name": "ROOM-6"
+    },
+    {
+     "unit_no": "1107",
+     "floor": 11,
+     "unit_type": "studio",
+     "carpet_sqft": 193.64,
+     "saleable_sqft": 280.78,
+     "lease_factor": 1.45,
+     "use": "Convention Rooms",
+     "source_name": "ROOM-7"
+    },
+    {
+     "unit_no": "1108",
+     "floor": 11,
+     "unit_type": "studio",
+     "carpet_sqft": 160.17,
+     "saleable_sqft": 232.24,
+     "lease_factor": 1.45,
+     "use": "Convention Rooms",
+     "source_name": "ROOM-8"
+    },
+    {
+     "unit_no": "1109",
+     "floor": 11,
+     "unit_type": "studio",
+     "carpet_sqft": 160.17,
+     "saleable_sqft": 232.24,
+     "lease_factor": 1.45,
+     "use": "Convention Rooms",
+     "source_name": "ROOM-9"
+    },
+    {
+     "unit_no": "1110",
+     "floor": 11,
+     "unit_type": "studio",
+     "carpet_sqft": 160.17,
+     "saleable_sqft": 232.24,
+     "lease_factor": 1.45,
+     "use": "Convention Rooms",
+     "source_name": "ROOM-10"
+    },
+    {
+     "unit_no": "1111",
+     "floor": 11,
+     "unit_type": "studio",
+     "carpet_sqft": 160.17,
+     "saleable_sqft": 232.24,
+     "lease_factor": 1.45,
+     "use": "Convention Rooms",
+     "source_name": "ROOM-11"
+    },
+    {
+     "unit_no": "1112",
+     "floor": 11,
+     "unit_type": "studio",
+     "carpet_sqft": 141.87,
+     "saleable_sqft": 205.71,
+     "lease_factor": 1.45,
+     "use": "Convention Rooms",
+     "source_name": "ROOM-12"
+    },
+    {
+     "unit_no": "1113",
+     "floor": 11,
+     "unit_type": "studio",
+     "carpet_sqft": 141.87,
+     "saleable_sqft": 205.71,
+     "lease_factor": 1.45,
+     "use": "Convention Rooms",
+     "source_name": "ROOM-13"
+    },
+    {
+     "unit_no": "1114",
+     "floor": 11,
+     "unit_type": "studio",
+     "carpet_sqft": 141.87,
+     "saleable_sqft": 205.71,
+     "lease_factor": 1.45,
+     "use": "Convention Rooms",
+     "source_name": "ROOM-14"
+    }
+   ]
+  },
+  {
+   "name": "Optimids",
+   "developer": null,
+   "location": null,
+   "project_type": "developer",
+   "status": "pre_launch",
+   "commission_pct": null,
+   "description": "Details to be added.",
+   "building": null,
+   "cost_sheet": null,
+   "units": []
+  }
+ ]
+}

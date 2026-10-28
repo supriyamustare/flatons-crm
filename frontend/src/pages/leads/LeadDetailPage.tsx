@@ -1,7 +1,8 @@
+import { BookFlatDialog } from "../../components/bookings/BookFlatDialog";
 import { useState } from "react";
 import type { ReactNode } from "react";
 import { Link, useLocation, useNavigate, useParams } from "react-router";
-import { ArrowLeft, ArrowRightLeft, CalendarPlus, MapPin, Pencil, Phone, PhoneCall, StickyNote, Trash2, UserRoundCog } from "lucide-react";
+import { ArrowLeft, ArrowRightLeft, BadgeIndianRupee, CalendarPlus, MapPin, Pencil, Phone, PhoneCall, StickyNote, Trash2, UserRoundCog } from "lucide-react";
 import { describeActivity } from "../../components/leads/ActivityText";
 import { DuplicateBanner, StatusBadge } from "../../components/leads/LeadBits";
 import { AssignDialog, DeleteDialog, NoteDialog, StatusDialog } from "../../components/leads/LeadDialogs";
@@ -131,6 +132,7 @@ function LeadView({ lead }: { lead: LeadDetail }) {
   const navigate = useNavigate();
   const duplicates = (useLocation().state as { duplicates?: Duplicate[] } | null)?.duplicates ?? [];
   const [dialog, setDialog] = useState<DialogKind | null>(null);
+  const [booking, setBooking] = useState(false);
   const isManager = me.role === "admin" || me.role === "manager";
 
   return (
@@ -162,6 +164,9 @@ function LeadView({ lead }: { lead: LeadDetail }) {
             <Button variant="secondary" onClick={() => setDialog("visit")}><MapPin className="size-4" aria-hidden />Site visit</Button>
             <Button variant="secondary" onClick={() => setDialog("task")}><CalendarPlus className="size-4" aria-hidden />Follow-up</Button>
             <Button variant="secondary" onClick={() => setDialog("note")}><StickyNote className="size-4" aria-hidden />Add note</Button>
+            {!lead.booking && lead.status !== "lost" && lead.status !== "junk" && me.role !== "docs" && (
+              <Button onClick={() => setBooking(true)}><BadgeIndianRupee className="size-4" aria-hidden />Book a flat</Button>
+            )}
             <Link to={`/leads/${lead.id}/edit`} className="inline-flex min-h-11 items-center gap-2 rounded-lg bg-white px-4 text-sm font-medium ring-1 ring-line hover:bg-forest-50">
               <Pencil className="size-4" aria-hidden /> Edit
             </Link>
@@ -175,6 +180,12 @@ function LeadView({ lead }: { lead: LeadDetail }) {
 
       <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]">
         <div className="space-y-6">
+          {lead.booking && (
+            <Link to={`/bookings/${lead.booking.id}`} className="flex flex-wrap items-center justify-between gap-2 rounded-xl border border-gold-300 bg-gold-100/60 px-5 py-3 hover:bg-gold-100">
+              <span><b>Booked:</b> {lead.booking.project}, unit {lead.booking.unit_no} for {formatRupees(lead.booking.agreed_price)}</span>
+              <span className="text-sm font-medium text-forest-800">{lead.booking.booking_code} →</span>
+            </Link>
+          )}
           <section className="rounded-xl border border-line bg-white px-5 py-3">
             <h2 className="pt-2 pb-1 font-semibold">Contact</h2>
             <dl className="divide-y divide-line">
@@ -218,6 +229,7 @@ function LeadView({ lead }: { lead: LeadDetail }) {
       </div>
 
       {dialog === "status" && <StatusDialog lead={lead} onClose={() => setDialog(null)} />}
+      {booking && <BookFlatDialog lead={lead} onClose={() => setBooking(false)} />}
       {dialog === "note" && <NoteDialog lead={lead} onClose={() => setDialog(null)} />}
       {dialog === "call" && <LogCallDialog lead={lead} onClose={() => setDialog(null)} />}
       {dialog === "visit" && (
