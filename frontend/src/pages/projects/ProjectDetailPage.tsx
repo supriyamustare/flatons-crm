@@ -1,6 +1,7 @@
+import { ProjectCostSheetDialog } from "../../components/inventory/ProjectCostSheetDialog";
 import { useEffect, useMemo, useState } from "react";
 import { Link, useParams } from "react-router";
-import { ArrowLeft, Building2, Pencil, Plus, Rows3 } from "lucide-react";
+import { ArrowLeft, Building2, FileSpreadsheet, Pencil, Plus, Rows3 } from "lucide-react";
 import { BuildingGrid, StatusLegend } from "../../components/inventory/BuildingGrid";
 import { BuildingDialog, GenerateDialog, ProjectFormDialog, UnitFormDialog } from "../../components/inventory/InventoryDialogs";
 import { UnitPanel } from "../../components/inventory/UnitPanel";
@@ -23,6 +24,7 @@ export function ProjectDetailPage() {
   const [tab, setTab] = useState<number | null>(null);
   const [selectedId, setSelectedId] = useState<number | null>(null);
   const [dialog, setDialog] = useState<Dialog | null>(null);
+  const [costSettings, setCostSettings] = useState(false);
 
   const data = inv.data;
   const buildings = data?.buildings ?? [];
@@ -58,6 +60,7 @@ export function ProjectDetailPage() {
         {isAdmin && (
           <div className="flex flex-wrap gap-2">
             <Button variant="secondary" onClick={() => setDialog({ kind: "project" })}><Pencil className="size-4" aria-hidden />Edit</Button>
+            <Button variant="secondary" onClick={() => setCostSettings(true)}><FileSpreadsheet className="size-4" aria-hidden />Cost sheet settings</Button>
             {resale
               ? <Button onClick={() => setDialog({ kind: "add-unit" })}><Plus className="size-4" aria-hidden />Add listing</Button>
               : <Button onClick={() => setDialog({ kind: "building" })}><Building2 className="size-4" aria-hidden />Add building</Button>}
@@ -140,6 +143,7 @@ export function ProjectDetailPage() {
       {dialog?.kind === "edit-unit" && (
         <UnitFormDialog projectId={p.id} unit={dialog.unit} onClose={() => setDialog(null)} floors={resale ? undefined : []} />
       )}
+      {costSettings && <ProjectCostSheetDialog projectId={p.id} onClose={() => setCostSettings(false)} />}
     </div>
   );
 }

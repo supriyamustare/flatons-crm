@@ -2,11 +2,13 @@ import { useState } from "react";
 import { Link } from "react-router";
 import { describeActivity } from "../components/leads/ActivityText";
 import { BusinessSection, RANGES, TeamPerformance, greeting, rangeLabel } from "../components/dashboard/ManagerSections";
+import { InsightsSections } from "../components/dashboard/Insights";
 import { OverviewSections, summaryLine } from "../components/dashboard/Overview";
 import { ErrorState, PageHeader, TextInput, cx } from "../components/ui";
 import { useCurrentUser } from "../hooks/useAuth";
 import { useDashboard } from "../hooks/useDashboard";
 import type { Dashboard, DashboardQuery, RangeKey } from "../hooks/useDashboard";
+import { useInsights } from "../hooks/useInsights";
 import { useOverview } from "../hooks/useOverview";
 import type { LeadTab } from "../hooks/useOverview";
 import { errorMessage, formatDateTime } from "../lib/api";
@@ -65,6 +67,7 @@ export function DashboardPage() {
   const [to, setTo] = useState("");
 
   const overview = useOverview(isManager ? person : null, tab);
+  const insights = useInsights(isManager ? person : null);
   const customReady = range !== "custom" || Boolean(from && to && from <= to);
   const query: DashboardQuery = range === "custom" ? { range, date_from: from, date_to: to } : { range };
   // Business, team table and activity feed (managers: team-wide; executives: their own feed)
@@ -95,6 +98,11 @@ export function DashboardPage() {
       {o && (
         <div className={cx(overview.isPlaceholderData && "opacity-60 transition-opacity")}>
           <OverviewSections o={o} tab={tab} onTab={setTab} isPerson={o.scope === "person"} />
+        </div>
+      )}
+      {insights.data && (
+        <div className={cx(insights.isPlaceholderData && "opacity-60 transition-opacity")}>
+          <InsightsSections ins={insights.data} />
         </div>
       )}
 

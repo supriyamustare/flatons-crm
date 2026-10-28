@@ -42,6 +42,8 @@ class IntegrationCreate(BaseModel):
 
     @model_validator(mode="after")
     def _facebook_needs_secrets(self) -> "IntegrationCreate":
+        if self.kind == IntegrationKind.website:
+            raise ValueError("Website connections are no longer used")
         if self.kind == IntegrationKind.facebook and not (
             self.fb_app_secret and self.fb_page_token
         ):

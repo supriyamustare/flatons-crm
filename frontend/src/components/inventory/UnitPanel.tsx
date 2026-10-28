@@ -1,3 +1,4 @@
+import { CostSheetButtons, PriceAndArea, UnitCustomer } from "./UnitSections";
 import { useEffect, useState } from "react";
 import { Link } from "react-router";
 import { Lock, LockOpen, Pencil, X } from "lucide-react";
@@ -6,9 +7,9 @@ import { useCurrentUser } from "../../hooks/useAuth";
 import { useLeadSearch } from "../../hooks/useLeads";
 import { useHoldUnit, useReleaseUnit } from "../../hooks/useInventory";
 import { errorMessage, formatDateTime } from "../../lib/api";
-import { UNIT_STATUS_LABELS, UNIT_TYPE_LABELS, floorLabel, formatArea } from "../../lib/inventory";
+import { UNIT_STATUS_LABELS, UNIT_TYPE_LABELS, floorLabel } from "../../lib/inventory";
 import type { Unit } from "../../lib/inventory";
-import { EMPTY_FILTERS, formatRupees } from "../../lib/leads";
+import { EMPTY_FILTERS } from "../../lib/leads";
 
 function Row({ label, children }: { label: string; children: React.ReactNode }) {
   return (
@@ -82,7 +83,7 @@ export function UnitPanel({ unit, onClose, onEdit }: { unit: Unit; onClose: () =
   return (
     <aside role="dialog" aria-modal="false" aria-label={`Unit ${unit.unit_no}`}
       className={cx("fixed inset-x-0 bottom-0 z-40 max-h-[75dvh] overflow-y-auto rounded-t-2xl bg-white p-5 pb-[calc(5.5rem+env(safe-area-inset-bottom))] shadow-2xl ring-1 ring-line",
-        "md:inset-x-auto md:top-0 md:right-0 md:bottom-0 md:max-h-none md:w-96 md:rounded-none md:pb-5")}>
+        "md:inset-x-auto md:top-0 md:right-0 md:bottom-0 md:max-h-none md:w-[26rem] md:rounded-none md:pb-5")}>
       <div className="mb-4 flex items-start justify-between gap-3">
         <div>
           <p className="text-sm text-muted">{unit.floor_number !== null ? floorLabel(unit.floor_number) : "Resale listing"}</p>
@@ -99,12 +100,11 @@ export function UnitPanel({ unit, onClose, onEdit }: { unit: Unit; onClose: () =
 
       <dl>
         <Row label="Type">{UNIT_TYPE_LABELS[unit.unit_type]}</Row>
-        <Row label="Carpet area">{formatArea(unit.carpet_sqft)}</Row>
-        <Row label="Built-up area">{formatArea(unit.builtup_sqft)}</Row>
-        <Row label="Base price">{formatRupees(unit.base_price)}</Row>
-        <Row label="Asking price"><span className="font-medium">{formatRupees(unit.current_asking_price)}</span></Row>
         {unit.address_note && <Row label="Where">{unit.address_note}</Row>}
       </dl>
+      <PriceAndArea unit={unit} />
+      <UnitCustomer unit={unit} />
+      <CostSheetButtons unit={unit} />
 
       {held && (
         <div className={cx("mt-4 rounded-lg p-3 text-sm", unit.hold_expired ? "bg-paper" : "bg-amber-50 ring-1 ring-amber-200")}>
@@ -131,7 +131,6 @@ export function UnitPanel({ unit, onClose, onEdit }: { unit: Unit; onClose: () =
             <LockOpen className="size-4" aria-hidden />Release hold
           </Button>
         )}
-        {unit.status === "booked" && <p className="text-sm text-muted">Booking details arrive with the bookings module.</p>}
         {me.role === "admin" && (
           <Button className="w-full" variant="ghost" onClick={onEdit}><Pencil className="size-4" aria-hidden />Edit unit</Button>
         )}

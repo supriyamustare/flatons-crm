@@ -65,6 +65,24 @@ class LeadSource(enum.StrEnum):
     other = "other"
 
 
+# The only online sources in use from now on (older values stay valid on existing leads).
+ONLINE_SOURCES = (
+    LeadSource.acres_99,
+    LeadSource.magicbricks,
+    LeadSource.housing,
+    LeadSource.social,
+    LeadSource.google_ads,
+)
+OFFLINE_SOURCES = (
+    LeadSource.walk_in,
+    LeadSource.referral,
+    LeadSource.channel_partner,
+    LeadSource.print,
+    LeadSource.other,
+)
+ACTIVE_SOURCES = (*ONLINE_SOURCES, *OFFLINE_SOURCES)  # "website" is retired
+
+
 class Configuration(enum.StrEnum):
     bhk1 = "1bhk"
     bhk2 = "2bhk"

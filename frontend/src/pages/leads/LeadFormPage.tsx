@@ -1,4 +1,5 @@
 import { useState } from "react";
+import type { LeadSource } from "../../lib/leads";
 import type { FormEvent, ReactNode } from "react";
 import { Link, useNavigate, useParams } from "react-router";
 import { DuplicateBanner } from "../../components/leads/LeadBits";
@@ -9,7 +10,7 @@ import { useCampaigns } from "../../hooks/useMarketing";
 import type { LeadPayload } from "../../hooks/useLeads";
 import { errorMessage } from "../../lib/api";
 import {
-  CONFIG_LABELS, PURPOSE_LABELS, SOURCE_LABELS, SOURCES, TIMELINE_LABELS, lakhToRupees, rupeesToLakh,
+  ACTIVE_SOURCES, CONFIG_LABELS, PURPOSE_LABELS, SOURCE_LABELS, TIMELINE_LABELS, lakhToRupees, rupeesToLakh,
 } from "../../lib/leads";
 import type { Duplicate, LeadDetail } from "../../lib/leads";
 
@@ -129,7 +130,9 @@ function LeadForm({ initial, existing }: { initial: FormState; existing?: LeadDe
       <Section title="Source">
         <SelectInput label="Source" value={f.source} onChange={set("source")} required>
           <option value="" disabled>Choose a source</option>
-          {SOURCES.map((s) => <option key={s} value={s}>{SOURCE_LABELS[s]}</option>)}
+          {[...ACTIVE_SOURCES, ...(f.source && !ACTIVE_SOURCES.includes(f.source as LeadSource) ? [f.source as LeadSource] : [])].map((s) => (
+            <option key={s} value={s}>{SOURCE_LABELS[s]}{ACTIVE_SOURCES.includes(s) ? "" : " (no longer used)"}</option>
+          ))}
         </SelectInput>
         <SelectInput label="Campaign" value={f.campaign_id} onChange={set("campaign_id")} hint="Links the lead to marketing spend, for cost per lead">
           <option value="">No campaign</option>

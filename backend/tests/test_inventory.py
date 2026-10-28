@@ -292,7 +292,7 @@ async def test_manager_holds_unit_for_a_lead(login_as, db, tower):
     mgr, manager = await login_as(Role.manager)
     lead = (
         await mgr.post(
-            "/api/leads", json={"name": "Anita", "mobile": "9876543210", "source": "website"}
+            "/api/leads", json={"name": "Anita", "mobile": "9876543210", "source": "99acres"}
         )
     ).json()["lead"]
     uid = await unit_id(db, "101")
@@ -386,7 +386,7 @@ async def test_expired_holds_show_and_are_released_automatically(login_as, db, t
     mgr, _ = await login_as(Role.manager)
     lead = (
         await mgr.post(
-            "/api/leads", json={"name": "Anita", "mobile": "9876543210", "source": "website"}
+            "/api/leads", json={"name": "Anita", "mobile": "9876543210", "source": "99acres"}
         )
     ).json()["lead"]
     uid = await unit_id(db, "101")

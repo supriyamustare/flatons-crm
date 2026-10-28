@@ -188,7 +188,7 @@ async def test_remove_demo_leaves_real_data_alone(db, make_user):
             lead_code="LEAD-REAL-1",
             name="Real Customer",
             mobile="+919812345678",
-            source="website",
+            source="99acres",
             created_by_id=real_user.id,
         )
     )
@@ -285,7 +285,7 @@ async def test_business_figures_worked_example(db, make_user):
                 lead_code=f"L-{i}",
                 name=name,
                 mobile=f"+91987654321{i}",
-                source="website",
+                source="99acres",
                 status=status,
                 project_id=proj,
                 estimated_value=value,
@@ -382,7 +382,7 @@ async def test_team_performance_worked_example(db, make_user):
                 lead_code=f"T-{i}",
                 name=f"Lead {i}",
                 mobile=f"+91987654320{i}",
-                source="website",
+                source="99acres",
                 status=st,
                 assigned_to_id=asha.id,
                 created_by_id=admin.id,

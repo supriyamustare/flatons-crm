@@ -51,6 +51,7 @@ export interface Activity {
 }
 
 export interface LeadDetail extends Lead {
+  booking?: { id: number; booking_code: string; project: string; unit_no: string; agreed_price: number } | null;
   activities: Activity[];
   can_edit: boolean;
 }
@@ -105,7 +106,7 @@ export const SOURCE_LABELS: Record<LeadSource, string> = {
   "99acres": "99acres",
   magicbricks: "MagicBricks",
   housing: "Housing.com",
-  social: "Facebook / Instagram",
+  social: "Meta ads (Facebook / Instagram)",
   google_ads: "Google Ads",
   walk_in: "Walk-in",
   referral: "Referral",
@@ -114,6 +115,8 @@ export const SOURCE_LABELS: Record<LeadSource, string> = {
   other: "Other",
 };
 export const SOURCES = Object.keys(SOURCE_LABELS) as LeadSource[];
+/** Offered for new leads: the five online platforms in use, plus offline sources. Others stay on old leads. */
+export const ACTIVE_SOURCES: LeadSource[] = ["99acres", "magicbricks", "housing", "social", "google_ads", "walk_in", "referral", "channel_partner", "print", "other"];
 
 export const CONFIG_LABELS: Record<Configuration, string> = {
   "1bhk": "1 BHK", "2bhk": "2 BHK", "3bhk": "3 BHK", "4bhk": "4 BHK",

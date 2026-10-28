@@ -14,10 +14,10 @@ interface Connection {
 }
 interface InboundEvent { id: number; received_at: string; external_id: string | null; status: string; lead_id: number | null; error: string | null; payload: Record<string, unknown> }
 
-const KINDS: Kind[] = ["website", "99acres", "magicbricks", "housing", "facebook", "google_ads"];
+const KINDS: Kind[] = ["99acres", "magicbricks", "housing", "facebook", "google_ads"];
 const KIND_LABELS: Record<Kind, string> = {
   website: "Website enquiry form", "99acres": "99acres", magicbricks: "MagicBricks", housing: "Housing.com",
-  facebook: "Facebook / Instagram lead ads", google_ads: "Google Ads lead form",
+  facebook: "Meta ads (Facebook / Instagram)", google_ads: "Google Ads lead form",
 };
 const STATUS_TONE: Record<string, "neutral" | "gold" | "muted"> = { created: "neutral", merged: "gold", test: "muted", duplicate: "muted", pending: "gold", rejected: "muted", failed: "muted" };
 const STATUS_LABELS: Record<string, string> = {
@@ -107,7 +107,7 @@ function NewConnectionDialog({ onClose, onCreated }: { onClose: () => void; onCr
   const qc = useQueryClient();
   const campaigns = useCampaigns();
   const projects = useProjects();
-  const [kind, setKind] = useState<Kind>("website");
+  const [kind, setKind] = useState<Kind>("99acres");
   const [name, setName] = useState("");
   const [campaign, setCampaign] = useState("");
   const [project, setProject] = useState("");

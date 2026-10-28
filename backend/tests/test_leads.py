@@ -223,7 +223,7 @@ async def test_filters_and_pagination(login_as, make_user, db):
         await create(
             c,
             mobile=f"900000001{i}",
-            source="walk_in" if i % 2 else "website",
+            source="walk_in" if i % 2 else "99acres",
             project_id=project.id if i < 2 else None,
             assigned_to_id=executive.id if i == 0 else None,
         )

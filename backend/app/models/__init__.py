@@ -2,7 +2,7 @@
 
 from app.models.audit import AuditLog
 from app.models.base import Base
-from app.models.booking import Booking, BookingEvent, BookingStatus, PaymentMode
+from app.models.booking import Booking, BookingEvent, BookingStatus, PaymentMode, PaymentPreference
 from app.models.call import CONNECTED_OUTCOMES, CallDirection, CallLog, CallOutcome
 from app.models.integration import InboundEvent, InboundStatus, Integration, IntegrationKind
 from app.models.inventory import Building, Floor, Unit, UnitStatus, UnitType
@@ -29,6 +29,7 @@ __all__ = [
     "BookingEvent",
     "BookingStatus",
     "PaymentMode",
+    "PaymentPreference",
     "InboundEvent",
     "InboundStatus",
     "Integration",

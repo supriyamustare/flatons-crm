@@ -1,6 +1,7 @@
 import enum
 from datetime import datetime
 from decimal import Decimal
+from typing import Any
 
 from sqlalchemy import (
     BigInteger,
@@ -16,6 +17,7 @@ from sqlalchemy import (
     UniqueConstraint,
     text,
 )
+from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.models.base import Base, TimestampMixin
@@ -87,6 +89,7 @@ class Unit(TimestampMixin, Base):
             name="builtup_at_least_carpet",
         ),
         CheckConstraint("base_price IS NULL OR base_price >= 0", name="base_price_not_negative"),
+        CheckConstraint("rate_psf IS NULL OR rate_psf > 0", name="rate_psf_positive"),
         CheckConstraint(
             "current_asking_price IS NULL OR current_asking_price >= 0", name="asking_not_negative"
         ),
@@ -116,6 +119,10 @@ class Unit(TimestampMixin, Base):
     carpet_sqft: Mapped[Decimal | None] = mapped_column(Numeric(8, 2))
     builtup_sqft: Mapped[Decimal | None] = mapped_column(Numeric(8, 2))
     base_price: Mapped[int | None] = mapped_column(BigInteger)  # rupees
+    # Rate per sq ft of saleable (built-up) area; when set, the asking price follows from it
+    rate_psf: Mapped[Decimal | None] = mapped_column(Numeric(10, 2))
+    # Per-unit changes to the project's cost sheet (e.g. a different furnishing rate)
+    cost_sheet: Mapped[dict[str, Any] | None] = mapped_column(JSONB)
     current_asking_price: Mapped[int | None] = mapped_column(BigInteger)  # rupees
     # For resale units: where it is, e.g. "Wing B, 7th floor"
     address_note: Mapped[str | None] = mapped_column(String(200))

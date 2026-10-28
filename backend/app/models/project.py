@@ -1,5 +1,6 @@
 import enum
 from decimal import Decimal
+from typing import Any
 
 from sqlalchemy import (
     BigInteger,
@@ -13,6 +14,7 @@ from sqlalchemy import (
     Text,
     text,
 )
+from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.models.base import Base, TimestampMixin
@@ -77,5 +79,7 @@ class Project(TimestampMixin, Base):
     description: Mapped[str | None] = mapped_column(Text)
     # Flatons' commission (or brokerage) as a % of the deal value, for estimated revenue
     commission_pct: Mapped[Decimal | None] = mapped_column(Numeric(5, 2))
+    # Cost sheet template: developer, charges, payment stages, notes (services/cost_sheet.py)
+    cost_sheet: Mapped[dict[str, Any] | None] = mapped_column(JSONB)
 
     developer: Mapped[Developer | None] = relationship(lazy="selectin")
