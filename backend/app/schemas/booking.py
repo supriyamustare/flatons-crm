@@ -7,6 +7,7 @@ from pydantic import BaseModel, ConfigDict, Field, StringConstraints, model_vali
 from app.models.booking import BookingStatus, PaymentMode, PaymentPreference
 from app.models.inventory import UnitType
 from app.models.lead import LeadStatus
+from app.schemas.channel_partner import PartnerBrief
 from app.schemas.common import LongText, PlainText
 from app.schemas.project import ProjectBrief
 from app.schemas.user import UserBrief
@@ -132,6 +133,7 @@ class BookingOut(BaseModel):
     payment_mode: PaymentMode | None
     payment_reference: str | None
     channel_partner: str | None
+    partner: PartnerBrief | None = None
     commission_pct: Decimal | None
     commission_expected: int | None
     commission_received: int

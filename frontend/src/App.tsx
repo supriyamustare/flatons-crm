@@ -14,6 +14,8 @@ import { NotFoundPage } from "./pages/NotFoundPage";
 // Pages load on first visit, so phones download less up front.
 const AccountPage = lazy(() => import("./pages/AccountPage").then((m) => ({ default: m.AccountPage })));
 const CallsPage = lazy(() => import("./pages/CallsPage").then((m) => ({ default: m.CallsPage })));
+const ChannelPartnersPage = lazy(() => import("./pages/ChannelPartnersPage").then((m) => ({ default: m.ChannelPartnersPage })));
+const ChannelPartnerDetailPage = lazy(() => import("./pages/ChannelPartnersPage").then((m) => ({ default: m.ChannelPartnerDetailPage })));
 const CostSheetPage = lazy(() => import("./pages/CostSheetPage").then((m) => ({ default: m.CostSheetPage })));
 const BookingsPage = lazy(() => import("./pages/BookingsPage").then((m) => ({ default: m.BookingsPage })));
 const BookingDetailPage = lazy(() => import("./pages/BookingDetailPage").then((m) => ({ default: m.BookingDetailPage })));
@@ -63,6 +65,8 @@ export function AppRoutes() {
           <Route element={<RequireRole roles={["admin", "manager", "executive"]} />}>
             <Route path="follow-ups" element={<FollowUpsPage />} />
             <Route path="pipeline" element={<PipelinePage />} />
+            <Route path="channel-partners" element={<ChannelPartnersPage />} />
+            <Route path="channel-partners/:partnerId" element={<ChannelPartnerDetailPage />} />
             <Route path="reports" element={<ReportsPage />} />
             <Route path="visits" element={<VisitsPage />} />
             <Route path="calls" element={<CallsPage />} />

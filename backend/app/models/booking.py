@@ -98,6 +98,9 @@ class Booking(TimestampMixin, Base):
     payment_mode: Mapped[PaymentMode | None] = mapped_column(_enum(PaymentMode, "payment_mode"))
     payment_reference: Mapped[str | None] = mapped_column(String(100))
     channel_partner: Mapped[str | None] = mapped_column(String(150))
+    channel_partner_id: Mapped[int | None] = mapped_column(
+        BigInteger, ForeignKey("channel_partners.id", ondelete="SET NULL"), index=True
+    )
     # Flatons' commission: expected is worked out from the project's % (editable); received is entered later
     commission_expected: Mapped[int | None] = mapped_column(BigInteger)
     commission_received: Mapped[int] = mapped_column(

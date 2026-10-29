@@ -19,6 +19,7 @@ from app.schemas.booking import (
     CustomerDetails,
     MissingDetails,
 )
+from app.schemas.channel_partner import PartnerBrief
 from app.schemas.project import ProjectBrief
 from app.schemas.user import UserBrief
 from app.services import inventory as inv
@@ -106,6 +107,7 @@ async def to_out(db: AsyncSession, b: Booking, with_history: bool = False) -> Bo
         sales_exec=UserBrief.model_validate(b.sales_exec) if b.sales_exec else None,
         recorded_by=UserBrief.model_validate(b.recorded_by) if b.recorded_by else None,
         customer=customer_of(b),
+        partner=partner_of(b),
         created_at=b.created_at,
         cancelled_at=b.cancelled_at,
         cancellation_reason=b.cancellation_reason,
@@ -124,6 +126,12 @@ CUSTOMER_FIELDS = (
     "banker_name",
     "banker_phone",
 )
+
+
+def partner_of(b: Booking) -> PartnerBrief | None:
+    """The channel partner who brought this booking's customer, if any."""
+    p = b.lead.channel_partner if b.channel_partner_id else None
+    return PartnerBrief.model_validate(p) if p else None
 
 
 def customer_of(b: Booking) -> CustomerDetails:
@@ -207,6 +215,7 @@ async def create(
         recorded_by_id=actor.id,
         **fields,
     )
+    booking.channel_partner_id = lead.channel_partner_id
     apply_customer(
         booking,
         {

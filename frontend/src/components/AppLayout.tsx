@@ -19,12 +19,12 @@ export function AppLayout() {
     <div className="min-h-dvh md:flex">
       {/* Desktop sidebar */}
       <aside className="sticky top-0 hidden h-dvh w-64 shrink-0 flex-col bg-forest-900 text-forest-100 md:flex">
-        <div className="flex shrink-0 items-center justify-between py-4 pr-3 pl-6">
+        <div className="flex shrink-0 items-center justify-between py-3 pr-3 pl-6">
           <Wordmark />
           <NotificationBell align="left" />
         </div>
         {/* The list scrolls inside the dark panel if the screen is short, so items never fall off it */}
-        <nav aria-label="Main" className="sidebar-scroll min-h-0 flex-1 space-y-0.5 overflow-y-auto px-3 pb-3">
+        <nav aria-label="Main" className="sidebar-scroll min-h-0 flex-1 space-y-px overflow-y-auto px-3 pb-2">
           {items.filter((i) => i.to !== "/account").map(({ to, label, icon: Icon, badge }) => (
             <NavLink
               key={to}
@@ -157,9 +157,9 @@ function AccountBlock({ light = false }: { light?: boolean }) {
   const { logout } = useAuth();
   const initials = user.full_name.split(" ").map((p) => p[0]).slice(0, 2).join("").toUpperCase();
   return (
-    <section aria-label="My account" className={cx("shrink-0", light ? "rounded-xl bg-forest-50 p-2" : "border-t border-forest-800 p-3")}>
+    <section aria-label="My account" className={cx("shrink-0", light ? "rounded-xl bg-forest-50 p-2" : "border-t border-forest-800 px-3 py-2")}>
       <NavLink to="/account" className={({ isActive }) => cx(
-        "flex items-center gap-3 rounded-lg p-2 transition-colors",
+        "flex items-center gap-3 rounded-lg px-2 py-1.5 transition-colors",
         light ? "hover:bg-white" : isActive ? "bg-forest-800" : "hover:bg-forest-800/60")}>
         <span aria-hidden className={cx("grid size-9 shrink-0 place-items-center rounded-full text-sm font-semibold",
           light ? "bg-forest-900 text-white" : "bg-gold-500 text-forest-950")}>{initials}</span>
@@ -169,7 +169,7 @@ function AccountBlock({ light = false }: { light?: boolean }) {
         </span>
       </NavLink>
       <button type="button" onClick={() => void logout()}
-        className={cx("mt-1 flex min-h-10 w-full items-center gap-2 rounded-lg px-3 text-sm transition-colors",
+        className={cx("flex min-h-9 w-full items-center gap-2 rounded-lg px-3 text-sm transition-colors",
           light ? "text-ink hover:bg-white" : "text-forest-100/90 hover:bg-forest-800/60 hover:text-white")}>
         <LogOut className="size-4" aria-hidden />
         Sign out

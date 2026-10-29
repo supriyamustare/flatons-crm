@@ -6,7 +6,8 @@ from sqlalchemy import select
 
 from app.core.deps import CurrentUser, DbSession, require_role
 from app.models.booking import Booking, BookingStatus
-from app.models.lead import ACTIVE_SOURCES, REASON_REQUIRED, Lead
+from app.models.channel_partner import ChannelPartner
+from app.models.lead import ACTIVE_SOURCES, REASON_REQUIRED, Lead, LeadSource
 from app.models.marketing import Campaign
 from app.models.project import Project
 from app.models.user import Role, User
@@ -56,6 +57,22 @@ async def _check_project(db: DbSession, project_id: int | None) -> None:
         project = await db.get(Project, project_id)
         if project is None or not project.is_active:
             raise HTTPException(status.HTTP_422_UNPROCESSABLE_CONTENT, "Choose an active project")
+
+
+async def _check_partner(db: DbSession, partner_id: int | None, source) -> None:
+    if partner_id is None:
+        return
+    if source != LeadSource.channel_partner:
+        raise HTTPException(
+            status.HTTP_422_UNPROCESSABLE_CONTENT,
+            "A channel partner can only be set when the source is Channel partner",
+        )
+    partner = await db.get(ChannelPartner, partner_id)
+    if partner is None or not partner.is_active:
+        raise HTTPException(
+            status.HTTP_422_UNPROCESSABLE_CONTENT,
+            "That channel partner doesn't exist or is inactive",
+        )
 
 
 async def _check_campaign(db: DbSession, campaign_id: int | None) -> None:
@@ -116,6 +133,7 @@ async def create_lead(
 ) -> LeadCreated:
     await _check_project(db, body.project_id)
     await _check_campaign(db, body.campaign_id)
+    await _check_partner(db, body.channel_partner_id, body.source)
 
     assignee_id: int | None = user.id if user.role == Role.executive else body.assigned_to_id
     if assignee_id is not None and assignee_id != user.id:
@@ -182,6 +200,7 @@ _TRACKED_VALUES = {
     "city",
     "project_id",
     "campaign_id",
+    "channel_partner_id",
 }
 
 
@@ -202,6 +221,15 @@ async def update_lead(lead_id: int, body: LeadUpdate, user: Writer, db: DbSessio
             )
     if "project_id" in changes:
         await _check_project(db, changes["project_id"])
+    new_source = changes.get("source", lead.source)
+    if "channel_partner_id" in changes or "source" in changes:
+        partner_id = changes.get("channel_partner_id", lead.channel_partner_id)
+        if new_source != LeadSource.channel_partner and "channel_partner_id" not in changes:
+            changes["channel_partner_id"] = (
+                None  # leaving the channel partner source clears the partner
+            )
+        else:
+            await _check_partner(db, partner_id, new_source)
     if "campaign_id" in changes:
         await _check_campaign(db, changes["campaign_id"])
 

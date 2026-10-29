@@ -200,6 +200,7 @@ function LeadView({ lead }: { lead: LeadDetail }) {
             <dl className="divide-y divide-line">
               <Row label="Project">{lead.project?.name}</Row>
               <Row label="Campaign">{lead.campaign?.name}</Row>
+              {lead.channel_partner && <Row label="Channel partner"><Link to={`/channel-partners/${lead.channel_partner.id}`} className="text-forest-800 underline">{lead.channel_partner.name}{lead.channel_partner.company_name ? ` (${lead.channel_partner.company_name})` : ""}</Link></Row>}
               <Row label="Configuration">{lead.configuration ? CONFIG_LABELS[lead.configuration] : null}</Row>
               <Row label="Budget">{formatBudget(lead.budget_min, lead.budget_max)}</Row>
               <Row label="Purpose">{lead.purpose ? PURPOSE_LABELS[lead.purpose] : null}</Row>

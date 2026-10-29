@@ -306,6 +306,17 @@ with the official logo at the same sizes. Offline support arrives in Sprint 16.
   sources (walk-in, referral, channel partner, print, other). "Website" is retired for new leads and connections, and
   website and SMS/email for new campaigns; existing records keep their original value.
 
+## Channel partners
+
+- **Channel partners** (left menu): name, company name, contact (mobile, email) and RERA number. Everyone in sales
+  can add partners; managers and admins edit or mark them inactive. Mobile and RERA numbers are unique (database
+  indexes); RERA numbers are stored in capitals.
+- A lead whose source is **Channel partner** can name the partner who brought it (only with that source; switching
+  the lead to another source clears it). A booking takes the partner from its lead.
+- Each partner's page has two sub-tabs: **Partner details** and **Customers** (every customer they brought, with
+  status, project, owner and, once booked, the booking, unit and price). Executives see only their own customers.
+- API: `/api/channel-partners` (list with `q` = name, company or RERA), `/{id}`, `/{id}/customers`.
+
 ## Frontend notes
 
 - Design tokens (forest green, gold, paper, ink) live in `frontend/src/index.css` under `@theme`.

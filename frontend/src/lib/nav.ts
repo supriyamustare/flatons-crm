@@ -1,6 +1,5 @@
 import {
-  BarChart3, BadgeIndianRupee, Building2, Inbox, PlugZap, CalendarCheck, Columns3, Contact, LayoutDashboard, MapPin, Megaphone, Phone, UserRound, Users,
-  type LucideIcon,
+  BadgeIndianRupee, BarChart3, Building2, CalendarCheck, Columns3, Contact, Handshake, Inbox, LayoutDashboard, MapPin, Megaphone, Phone, PlugZap, UserRound, Users, type LucideIcon,
 } from "lucide-react";
 import type { Role } from "./types";
 
@@ -26,6 +25,7 @@ export const NAV_ITEMS: NavItem[] = [
   { to: "/follow-ups", label: "Follow-ups", icon: CalendarCheck, roles: SALES, mobile: true },
   { to: "/pipeline", label: "Pipeline", icon: Columns3, roles: SALES },
   { to: "/bookings", label: "Bookings", icon: BadgeIndianRupee },
+  { to: "/channel-partners", label: "Channel partners", icon: Handshake, roles: SALES },
   { to: "/visits", label: "Site visits", icon: MapPin, roles: SALES, mobile: true },
   { to: "/calls", label: "Calls", icon: Phone, roles: SALES },
   { to: "/reports", label: "Reports", icon: BarChart3, roles: SALES },
