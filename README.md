@@ -306,6 +306,17 @@ with the official logo at the same sizes. Offline support arrives in Sprint 16.
   sources (walk-in, referral, channel partner, print, other). "Website" is retired for new leads and connections, and
   website and SMS/email for new campaigns; existing records keep their original value.
 
+### Agreement done and floor plans
+
+- The unit status stored as `sold` is shown everywhere as **Agreement done**. Managers and admins mark a booking's
+  agreement done (with its date, not before the booking date or in the future) from the booking page or the unit
+  panel: the unit turns Agreement done; **Undo** turns it back to Booked; cancelling the booking still frees the unit.
+  The dashboard's project bars show Agreement done and Booked separately.
+- **Floor plans** (PDF, JPG, PNG up to 15 MB; checked by content; stored under `FILE_STORAGE_PATH/floor_plans`, served
+  only to signed-in staff) are uploaded on the project page by admins and managers, for the whole project, one floor,
+  or one unit type. A unit's panel shows the plans for its floor and its type, or the project-wide plans if there
+  are none more specific.
+
 ## Channel partners
 
 - **Channel partners** (left menu): name, company name, contact (mobile, email) and RERA number. Everyone in sales

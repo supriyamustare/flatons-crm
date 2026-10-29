@@ -42,7 +42,7 @@ class UnitStatus(enum.StrEnum):
     available = "available"
     on_hold = "on_hold"
     booked = "booked"  # set by the bookings module (Sprint 11)
-    sold = "sold"
+    sold = "sold"  # shown as "Agreement done": the sale agreement is signed
     withdrawn = "withdrawn"
 
 

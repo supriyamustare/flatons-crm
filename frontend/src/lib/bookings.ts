@@ -15,7 +15,7 @@ export interface Booking {
   project: { id: number; name: string };
   unit: { id: number; unit_no: string; unit_type: UnitType; building: string | null; floor_number: number | null;
     carpet_sqft: string | null; builtup_sqft: string | null; address_note: string | null };
-  booking_date: string; agreed_price: number; booking_amount: number; balance: number;
+  booking_date: string; agreement_date: string | null; agreed_price: number; booking_amount: number; balance: number;
   payment_mode: PaymentMode | null; payment_reference: string | null; channel_partner: string | null;
   commission_pct: string | null; commission_expected: number | null; commission_received: number; notes: string | null;
   sales_exec: UserBrief | null; recorded_by: UserBrief | null; customer: CustomerDetails;
@@ -40,5 +40,5 @@ export const PAYMENT_LABELS: Record<PaymentMode, string> = {
   cheque: "Cheque", bank_transfer: "Bank transfer (NEFT / RTGS / IMPS)", upi: "UPI", card: "Card", cash: "Cash", other: "Other",
 };
 export const HISTORY_LABELS: Record<string, string> = {
-  created: "Booking recorded", customer_updated: "Customer details updated", edited: "Details changed", commission_received: "Commission received updated", cancelled: "Booking cancelled",
+  created: "Booking recorded", customer_updated: "Customer details updated", agreement_done: "Agreement done", agreement_undone: "Agreement undone", edited: "Details changed", commission_received: "Commission received updated", cancelled: "Booking cancelled",
 };

@@ -95,6 +95,8 @@ class Booking(TimestampMixin, Base):
     booking_date: Mapped[date] = mapped_column(Date, nullable=False)
     agreed_price: Mapped[int] = mapped_column(BigInteger, nullable=False)
     booking_amount: Mapped[int] = mapped_column(BigInteger, nullable=False, default=0)
+    # When the sale agreement was signed (the unit then shows as Agreement done)
+    agreement_date: Mapped[date | None] = mapped_column(Date)
     payment_mode: Mapped[PaymentMode | None] = mapped_column(_enum(PaymentMode, "payment_mode"))
     payment_reference: Mapped[str | None] = mapped_column(String(100))
     channel_partner: Mapped[str | None] = mapped_column(String(150))

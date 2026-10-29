@@ -4,6 +4,7 @@ import { Link } from "react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { FileSpreadsheet, Pencil, Printer, UserPlus } from "lucide-react";
 import { Alert, Button, Modal, TextInput } from "../ui";
+import { AgreementSection } from "../bookings/AgreementSection";
 import { BookFlatDialog } from "../bookings/BookFlatDialog";
 import { CustomerFields, PREFERENCE_LABELS, customerPayload, emptyCustomer } from "../bookings/CustomerFields";
 import type { CustomerForm } from "../bookings/CustomerFields";
@@ -158,6 +159,7 @@ export function UnitCustomer({ unit }: { unit: Unit }) {
           {b && <dd className="pt-1"><Link to={`/bookings/${b.id}`} className="text-sm font-medium text-forest-800 underline">View booking {b.booking_code}</Link></dd>}
         </dl>
       )}
+      {b && b.status === "booked" && <AgreementSection booking={b} compact />}
       {editing && b && c && <CustomerDialog bookingId={b.id} initial={emptyCustomer(c)} onClose={() => setEditing(false)} />}
     </section>
   );

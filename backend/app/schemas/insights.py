@@ -9,7 +9,7 @@ from app.schemas.user import UserBrief
 
 
 class ProjectStock(BaseModel):
-    """sold = units Sold or Booked; blocked = On hold; available = Available (Withdrawn left out)."""
+    """sold = agreement_done + booked; blocked = On hold; available = Available (Withdrawn left out)."""
 
     id: int
     name: str
@@ -19,6 +19,8 @@ class ProjectStock(BaseModel):
     price_min: int | None  # asking price, else base price, of units still for sale
     price_max: int | None
     sold: int
+    agreement_done: int = 0
+    booked: int = 0
     blocked: int
     available: int
     total: int

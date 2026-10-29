@@ -1,3 +1,4 @@
+import { UnitFloorPlans } from "./FloorPlans";
 import { CostSheetButtons, PriceAndArea, UnitCustomer } from "./UnitSections";
 import { useEffect, useState } from "react";
 import { Link } from "react-router";
@@ -104,6 +105,7 @@ export function UnitPanel({ unit, onClose, onEdit }: { unit: Unit; onClose: () =
       </dl>
       <PriceAndArea unit={unit} />
       <UnitCustomer unit={unit} />
+      <UnitFloorPlans unitId={unit.id} />
       <CostSheetButtons unit={unit} />
 
       {held && (

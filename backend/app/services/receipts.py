@@ -21,39 +21,42 @@ class ReceiptError(ValueError):
     pass
 
 
-def receipts_dir() -> Path:
-    d = Path(get_settings().file_storage_path) / "receipts"
+def receipts_dir(folder: str = "receipts") -> Path:
+    d = Path(get_settings().file_storage_path) / folder
     d.mkdir(parents=True, exist_ok=True)
     return d
 
 
-async def save_receipt(upload: UploadFile) -> tuple[str, str, str]:
+async def save_receipt(
+    upload: UploadFile, folder: str = "receipts", max_mb: int = 10, what: str = "Receipts"
+) -> tuple[str, str, str]:
     """Returns (stored file name, original name, MIME type). Raises ReceiptError."""
-    data = await upload.read(MAX_BYTES + 1)
-    if len(data) > MAX_BYTES:
-        raise ReceiptError("Receipts can be at most 10 MB")
+    limit = max_mb * 1024 * 1024
+    data = await upload.read(limit + 1)
+    if len(data) > limit:
+        raise ReceiptError(f"{what} can be at most {max_mb} MB")
     if not data:
         raise ReceiptError("That file is empty")
     kind = next((v for sig, v in SIGNATURES.items() if data.startswith(sig)), None)
     if kind is None:
-        raise ReceiptError("Receipts must be a PDF, JPG or PNG file")
+        raise ReceiptError(f"{what} must be a PDF, JPG or PNG file")
     mime, ext = kind
     stored = f"{uuid.uuid4().hex}.{ext}"
-    (receipts_dir() / stored).write_bytes(data)
+    (receipts_dir(folder) / stored).write_bytes(data)
     original = Path(upload.filename or f"receipt.{ext}").name[:150]
     return stored, original, mime
 
 
-def receipt_file(stored: str) -> Path:
-    path = (receipts_dir() / stored).resolve()
-    if path.parent != receipts_dir().resolve():  # never follow odd paths out of the folder
+def receipt_file(stored: str, folder: str = "receipts") -> Path:
+    path = (receipts_dir(folder) / stored).resolve()
+    if path.parent != receipts_dir(folder).resolve():  # never follow odd paths out of the folder
         raise ReceiptError("Invalid receipt")
     return path
 
 
-def delete_receipt(stored: str | None) -> None:
+def delete_receipt(stored: str | None, folder: str = "receipts") -> None:
     if stored:
         try:
-            receipt_file(stored).unlink(missing_ok=True)
+            receipt_file(stored, folder).unlink(missing_ok=True)
         except ReceiptError:
             pass

@@ -15,7 +15,7 @@ function Availability({ c }: { c: UnitCounts }) {
     { n: c.available, cls: "bg-emerald-400", label: "available" },
     { n: c.on_hold, cls: "bg-amber-400", label: "on hold" },
     { n: c.booked, cls: "bg-gold-500", label: "booked" },
-    { n: c.sold, cls: "bg-stone-400", label: "sold" },
+    { n: c.sold, cls: "bg-stone-400", label: "agreement done" },
   ];
   return (
     <div>

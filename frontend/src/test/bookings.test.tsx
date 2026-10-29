@@ -27,7 +27,7 @@ const booking: Booking = {
   lead: { id: 5, lead_code: "L-5", name: "Anita Desai", mobile: "+919876543210", email: null, city: "Baner" },
   project: { id: 1, name: "Green Meadows" },
   unit: { id: 201, unit_no: "201", unit_type: "2bhk", building: "A Wing", floor_number: 2, carpet_sqft: "680", builtup_sqft: "890", address_note: null },
-  booking_date: "2026-10-27", agreed_price: 7_200_000, booking_amount: 200_000, balance: 7_000_000, payment_mode: "cheque", payment_reference: "CHQ 4512",
+  booking_date: "2026-10-27", agreement_date: null, agreed_price: 7_200_000, booking_amount: 200_000, balance: 7_000_000, payment_mode: "cheque", payment_reference: "CHQ 4512",
   channel_partner: null, commission_pct: "2.00", commission_expected: 144_000, commission_received: 0, notes: null, sales_exec: ravi, recorded_by: ravi,
   customer: { customer_name: "Anita Desai", applicant_name: "Anita & Rohan Desai", customer_mobile: "+919876543210", customer_email: null,
     customer_address: "Baner, Pune", payment_preference: "bank", bank_name: "HDFC Bank", banker_name: "Suresh Iyer", banker_phone: "9822011111" },
@@ -122,7 +122,7 @@ describe("bookings list and detail", () => {
 describe("dashboard insights", () => {
   const ins: Insights = {
     projects: [{ id: 1, name: "Green Meadows", location: "Baner", project_type: "developer", unit_types: ["2bhk", "3bhk"], price_min: 6_500_000,
-      price_max: 9_500_000, sold: 13, blocked: 9, available: 78, total: 100, sold_pct: 13, bookings_this_month: 2, booked_value_this_month: 15_000_000 }],
+      price_max: 9_500_000, sold: 13, agreement_done: 4, booked: 9, blocked: 9, available: 78, total: 100, sold_pct: 13, bookings_this_month: 2, booked_value_this_month: 15_000_000 }],
     lead_status: [{ key: "working", count: 40 }, { key: "quiet", count: 30 }, { key: "unassigned", count: 5 }, { key: "booked", count: 5 }, { key: "dead", count: 20 }],
     total_leads: 100, waiting_by_owner: [{ user: ravi, count: 4 }, { user: null, count: 2 }],
     scheduled_30d: [{ key: "site_visit", count: 4 }, { key: "call", count: 12 }],
@@ -135,8 +135,8 @@ describe("dashboard insights", () => {
   it("shows projects, lead status, first contact, months, sources and recent bookings", async () => {
     const { get } = mockApi(makeUser("manager"), { get: { "/dashboard/insights": ins } });
     renderApp("/");
-    expect(await screen.findByRole("img", { name: "Green Meadows: 13 sold, 9 on hold, 78 available of 100" })).toBeInTheDocument();
-    expect(screen.getByText("13% sold")).toBeInTheDocument();
+    expect(await screen.findByRole("img", { name: "Green Meadows: 4 agreement done, 9 booked, 9 on hold, 78 available of 100" })).toBeInTheDocument();
+    expect(screen.getByText("13% booked")).toBeInTheDocument();
     expect(screen.getByRole("region", { name: "Lead status" })).toHaveTextContent("Gone quiet30");
     expect(screen.getByText(/Median first response this month:/)).toHaveTextContent("1 h 15 min · 80% called within a day");
     expect(screen.getByText(/^Peak 90 in Sept?$/)).toBeInTheDocument(); // Indian English writes "Sept"

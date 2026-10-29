@@ -127,6 +127,7 @@ class BookingOut(BaseModel):
     project: ProjectBrief
     unit: BookingUnit
     booking_date: date
+    agreement_date: date | None = None
     agreed_price: int
     booking_amount: int
     balance: int  # agreed price - booking amount (payment demands come in Phase 3)

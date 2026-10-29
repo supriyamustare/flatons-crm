@@ -63,11 +63,11 @@ export const UNIT_TYPE_LABELS: Record<UnitType, string> = {
 };
 export const UNIT_STATUSES: UnitStatus[] = ["available", "on_hold", "booked", "sold", "withdrawn"];
 export const UNIT_STATUS_LABELS: Record<UnitStatus, string> = {
-  available: "Available", on_hold: "On hold", booked: "Booked", sold: "Sold", withdrawn: "Withdrawn",
+  available: "Available", on_hold: "On hold", booked: "Booked", sold: "Agreement done", withdrawn: "Withdrawn",
 };
 
 /** Grid cell styles. Colour plus a second cue (pattern, border, strike) so status never
- *  depends on colour alone. Available=green, Booked=gold, On hold=amber, Sold=grey, Withdrawn=struck. */
+ *  depends on colour alone. Available=green, Booked=gold, On hold=amber, Agreement done=grey, Withdrawn=struck. */
 export const UNIT_CELL: Record<UnitStatus, string> = {
   available: "bg-emerald-100 text-emerald-950 ring-emerald-300 hover:bg-emerald-200",
   booked: "bg-gold-500 text-forest-950 ring-gold-600 font-semibold",
@@ -78,7 +78,7 @@ export const UNIT_CELL: Record<UnitStatus, string> = {
 
 /** Short status mark shown in each cell for non-colour reading. */
 export const UNIT_MARK: Record<UnitStatus, string> = {
-  available: "", on_hold: "H", booked: "B", sold: "S", withdrawn: "",
+  available: "", on_hold: "H", booked: "B", sold: "A", withdrawn: "",
 };
 
 export function floorLabel(n: number): string {
