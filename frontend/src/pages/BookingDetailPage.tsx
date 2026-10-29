@@ -145,7 +145,9 @@ export function BookingDetailPage() {
         <Card title="People and commission">
           <Row label="Handled by">{b.sales_exec?.full_name}</Row>
           <Row label="Recorded by">{b.recorded_by?.full_name}</Row>
-          <Row label="Channel partner">{b.channel_partner}</Row>
+          <Row label="Channel partner">{b.partner
+            ? <Link to={`/channel-partners/${b.partner.id}`} className="text-forest-800 underline">{b.partner.name}{b.partner.company_name ? ` (${b.partner.company_name})` : ""}</Link>
+            : b.channel_partner}</Row>
           <Row label="Commission expected">{b.commission_expected !== null ? `${formatRupees(b.commission_expected)}${b.commission_pct ? ` (${Number(b.commission_pct)}%)` : ""}` : "Project has no commission % set"}</Row>
           <Row label="Commission received">{formatRupees(b.commission_received)}</Row>
         </Card>

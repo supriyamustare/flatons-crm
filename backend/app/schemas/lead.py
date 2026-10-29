@@ -18,6 +18,7 @@ from app.models.lead import (
     LeadStatus,
     Purpose,
 )
+from app.schemas.channel_partner import PartnerBrief
 from app.schemas.common import Email, LongText, Mobile, PlainText
 from app.schemas.project import ProjectBrief
 from app.schemas.user import UserBrief
@@ -43,6 +44,7 @@ class _LeadFields(BaseModel):
     sub_source: ShortText | None = None
     project_id: int | None = None
     campaign_id: int | None = None
+    channel_partner_id: int | None = None
     configuration: Configuration | None = None
     budget_min: Rupees | None = None
     budget_max: Rupees | None = None
@@ -123,6 +125,7 @@ class LeadOut(BaseModel):
     sub_source: str | None
     project: ProjectBrief | None
     campaign: CampaignBrief | None = None
+    channel_partner: PartnerBrief | None = None
     configuration: Configuration | None
     budget_min: int | None
     budget_max: int | None

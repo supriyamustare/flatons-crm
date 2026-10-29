@@ -4,6 +4,7 @@ from app.models.audit import AuditLog
 from app.models.base import Base
 from app.models.booking import Booking, BookingEvent, BookingStatus, PaymentMode, PaymentPreference
 from app.models.call import CONNECTED_OUTCOMES, CallDirection, CallLog, CallOutcome
+from app.models.channel_partner import ChannelPartner
 from app.models.integration import InboundEvent, InboundStatus, Integration, IntegrationKind
 from app.models.inventory import Building, Floor, Unit, UnitStatus, UnitType
 from app.models.lead import (
@@ -25,6 +26,7 @@ from app.models.user import Role, User
 from app.models.visit import InterestLevel, SiteVisit, VisitSource, VisitStatus
 
 __all__ = [
+    "ChannelPartner",
     "Booking",
     "BookingEvent",
     "BookingStatus",

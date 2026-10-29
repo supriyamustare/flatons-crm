@@ -155,6 +155,10 @@ class Lead(TimestampMixin, Base):
     lost_reason: Mapped[str | None] = mapped_column(String(255))
     estimated_value: Mapped[int | None] = mapped_column(BigInteger)  # rupees
     # Marketing campaign this lead came from (for cost per lead)
+    # The channel partner who brought this customer (source = channel partner)
+    channel_partner_id: Mapped[int | None] = mapped_column(
+        BigInteger, ForeignKey("channel_partners.id", ondelete="SET NULL"), index=True
+    )
     campaign_id: Mapped[int | None] = mapped_column(
         BigInteger, ForeignKey("campaigns.id", ondelete="SET NULL"), index=True
     )
@@ -172,6 +176,9 @@ class Lead(TimestampMixin, Base):
     created_by: Mapped[User | None] = relationship(foreign_keys=[created_by_id], lazy="selectin")
     project: Mapped[Project | None] = relationship(lazy="selectin")
     campaign: Mapped["Campaign | None"] = relationship("Campaign", lazy="selectin")  # noqa: F821
+    channel_partner: Mapped["ChannelPartner | None"] = relationship(  # noqa: F821
+        "ChannelPartner", lazy="selectin"
+    )
 
 
 class LeadActivity(Base):

@@ -18,7 +18,8 @@ export interface Booking {
   booking_date: string; agreed_price: number; booking_amount: number; balance: number;
   payment_mode: PaymentMode | null; payment_reference: string | null; channel_partner: string | null;
   commission_pct: string | null; commission_expected: number | null; commission_received: number; notes: string | null;
-  sales_exec: UserBrief | null; recorded_by: UserBrief | null; customer: CustomerDetails; created_at: string;
+  sales_exec: UserBrief | null; recorded_by: UserBrief | null; customer: CustomerDetails;
+  partner?: { id: number; name: string; company_name: string | null } | null; created_at: string;
   cancelled_at: string | null; cancellation_reason: string | null;
   history: { at: string; action: string; actor: UserBrief | null; details: Record<string, unknown> | null }[];
 }

@@ -25,6 +25,7 @@ export interface Lead {
   sub_source: string | null;
   project: ProjectBrief | null;
   campaign?: ProjectBrief | null;
+  channel_partner?: { id: number; name: string; company_name: string | null } | null;
   configuration: Configuration | null;
   budget_min: number | null;
   budget_max: number | null;

@@ -11,6 +11,7 @@ from app.api import (
     auth,
     bookings,
     calls,
+    channel_partners,
     cost_sheets,
     dashboard,
     health,
@@ -77,4 +78,5 @@ app.include_router(integrations.router, prefix="/api")
 app.include_router(inbound.router, prefix="/api")
 app.include_router(bookings.router, prefix="/api")
 app.include_router(cost_sheets.router, prefix="/api")
+app.include_router(channel_partners.router, prefix="/api")
 app.include_router(leads.router, prefix="/api")

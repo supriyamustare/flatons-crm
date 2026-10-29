@@ -14,6 +14,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.security import hash_password
 from app.models.call import CONNECTED_OUTCOMES, CallDirection, CallLog, CallOutcome
+from app.models.channel_partner import ChannelPartner
 from app.models.inventory import Building, Unit, UnitStatus, UnitType
 from app.models.lead import (
     ACTIVE_SOURCES,
@@ -237,6 +238,27 @@ async def seed_demo(
         "visits": 0,
     }
     counts["campaigns"] = len(campaigns)
+    # Channel partners (marked "Demo partner"), linked to leads that came through a partner
+    partners = []
+    for i, (name, company) in enumerate(
+        [
+            ("Amit Shah", "Square Realty"),
+            ("Neha Joshi", "Prime Homes Advisory"),
+            ("Rohit Kulkarni", "Pune Property Hub"),
+        ]
+    ):
+        cp = ChannelPartner(
+            name=f"Demo partner: {name}",
+            company_name=company,
+            mobile=f"+9170000000{i:02d}",
+            email=f"partner{i}{DEMO_DOMAIN}",
+            rera_number=f"A5210000{i:04d}",
+            created_by_id=manager.id,
+        )
+        db.add(cp)
+        partners.append(cp)
+    await db.flush()
+    counts["channel_partners"] = len(partners)
     counts["units"] = unit_count
     statuses = list(STATUS_WEIGHTS)
     weights = list(STATUS_WEIGHTS.values())
@@ -277,6 +299,8 @@ async def seed_demo(
         if camp is None and lead.source == LeadSource.social and rnd.random() < 0.5:
             camp = campaigns["google_ads"]
         lead.campaign_id = camp.id if camp else None
+        if lead.source == LeadSource.channel_partner:
+            lead.channel_partner_id = rnd.choice(partners).id
         db.add(lead)
         await db.flush()
         db.add(
@@ -422,6 +446,9 @@ async def remove_demo(db: AsyncSession) -> dict[str, int]:
     }
     await db.execute(delete(LeadActivity).where(LeadActivity.lead_id.in_(lead_ids)))
     removed["leads"] = (await db.execute(delete(Lead).where(Lead.sub_source == DEMO_TAG))).rowcount
+    removed["channel_partners"] = (
+        await db.execute(delete(ChannelPartner).where(ChannelPartner.name.like("Demo partner:%")))
+    ).rowcount
     demo_campaigns = select(Campaign.id).where(Campaign.name.like(f"{PROJECT_PREFIX}%"))
     await db.execute(delete(Expense).where(Expense.campaign_id.in_(demo_campaigns)))
     removed["campaigns"] = (
