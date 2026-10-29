@@ -1,4 +1,4 @@
-export function Wordmark({ className = "" }: { className?: string }) {
+export function Wordmark({ className = "", compact = false }: { className?: string; compact?: boolean }) {
   return (
     <span className={`flex items-center gap-2.5 ${className}`}>
       <span
@@ -7,7 +7,7 @@ export function Wordmark({ className = "" }: { className?: string }) {
       >
         F
       </span>
-      <span className="font-display text-xl tracking-tight text-gold-300">Flatons</span>
+      {compact ? <span className="sr-only">Flatons</span> : <span className="font-display text-xl tracking-tight text-gold-300">Flatons</span>}
     </span>
   );
 }
