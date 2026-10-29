@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { NavLink, Outlet, useLocation } from "react-router";
-import { Ellipsis, LogOut, X } from "lucide-react";
+import { Ellipsis, LogOut, PanelLeftClose, PanelLeftOpen, X } from "lucide-react";
 import { useAuth, useCurrentUser } from "../hooks/useAuth";
 import { mobileNavFor, navFor } from "../lib/nav";
 import type { NavItem } from "../lib/nav";
@@ -11,28 +11,53 @@ import { NotificationBell } from "./NotificationBell";
 import { cx } from "./ui";
 import { Wordmark } from "./Wordmark";
 
+const SIDEBAR_KEY = "flatons.sidebar.collapsed";
+
+/** Collapsed or expanded left menu, remembered in this browser. */
+function useSidebarCollapsed(): [boolean, () => void] {
+  const [collapsed, setCollapsed] = useState(() => {
+    try { return localStorage.getItem(SIDEBAR_KEY) === "1"; } catch { return false; }
+  });
+  const toggle = () => setCollapsed((c) => {
+    try { localStorage.setItem(SIDEBAR_KEY, c ? "0" : "1"); } catch { /* storage unavailable: just don't remember */ }
+    return !c;
+  });
+  return [collapsed, toggle];
+}
+
 export function AppLayout() {
   const user = useCurrentUser();
+  const [collapsed, toggle] = useSidebarCollapsed();
   const items = navFor(user.role);
 
   return (
     <div className="min-h-dvh md:flex">
       {/* Desktop sidebar */}
-      <aside className="sticky top-0 hidden h-dvh w-64 shrink-0 flex-col bg-forest-900 text-forest-100 md:flex">
-        <div className="flex shrink-0 items-center justify-between py-3 pr-3 pl-6">
-          <Wordmark />
-          <NotificationBell align="left" />
+      <aside id="main-sidebar" className={cx("sticky top-0 hidden h-dvh shrink-0 flex-col bg-forest-900 text-forest-100 transition-[width] duration-200 md:flex",
+        collapsed ? "w-[4.5rem]" : "w-64")}>
+        <div className={cx("flex shrink-0 items-center", collapsed ? "flex-col gap-0.5 px-2 py-2" : "justify-between py-3 pr-2 pl-6")}>
+          {!collapsed && <Wordmark />}
+          <div className={cx("flex items-center", collapsed && "flex-col gap-0.5")}>
+            <NotificationBell align="left" />
+            <button type="button" onClick={toggle} aria-expanded={!collapsed} aria-controls="main-sidebar"
+              aria-label={collapsed ? "Expand menu" : "Collapse menu"} title={collapsed ? "Expand menu" : "Collapse menu"}
+              className="grid size-9 place-items-center rounded-lg text-forest-100/80 hover:bg-forest-800/60 hover:text-white">
+              {collapsed ? <PanelLeftOpen className="size-5" aria-hidden /> : <PanelLeftClose className="size-5" aria-hidden />}
+            </button>
+          </div>
         </div>
         {/* The list scrolls inside the dark panel if the screen is short, so items never fall off it */}
-        <nav aria-label="Main" className="sidebar-scroll min-h-0 flex-1 space-y-px overflow-y-auto px-3 pb-2">
+        <nav aria-label="Main" className={cx("sidebar-scroll min-h-0 flex-1 space-y-px overflow-y-auto pb-2", collapsed ? "px-2" : "px-3")}>
           {items.filter((i) => i.to !== "/account").map(({ to, label, icon: Icon, badge }) => (
             <NavLink
               key={to}
               to={to}
               end={to === "/"}
+              title={collapsed ? label : undefined}
               className={({ isActive }) =>
                 cx(
-                  "flex min-h-9 items-center gap-3 rounded-lg px-3 text-sm transition-colors",
+                  "relative flex min-h-9 items-center gap-3 rounded-lg text-sm transition-colors",
+                  collapsed ? "justify-center px-0" : "px-3",
                   isActive
                     ? "bg-forest-800 text-gold-300 shadow-[inset_3px_0_0_var(--color-gold-500)]"
                     : "text-forest-100/90 hover:bg-forest-800/60 hover:text-white",
@@ -40,12 +65,12 @@ export function AppLayout() {
               }
             >
               <Icon className="size-[18px] shrink-0" aria-hidden />
-              {label}
-              <NavBadge kind={badge} />
+              <span className={collapsed ? "sr-only" : undefined}>{label}</span>
+              <NavBadge kind={badge} corner={collapsed} />
             </NavLink>
           ))}
         </nav>
-        <AccountBlock />
+        <AccountBlock compact={collapsed} />
       </aside>
 
       <div className="flex min-w-0 flex-1 flex-col">
@@ -59,7 +84,7 @@ export function AppLayout() {
           </div>
         </header>
 
-        <main className="mx-auto w-full max-w-6xl flex-1 px-4 pt-6 pb-28 md:px-10 md:pt-10 md:pb-10">
+        <main className={cx("mx-auto w-full flex-1 px-4 pt-6 pb-28 md:px-10 md:pt-10 md:pb-10", collapsed ? "max-w-7xl" : "max-w-6xl")}>
           {user.role !== "docs" && <QuickSearch />}
           <Outlet />
         </main>
@@ -137,13 +162,14 @@ function MobileNav() {
 
 
 /** Live count beside a menu item (e.g. new enquiries waiting). Hidden at zero. */
-function NavBadge({ kind, compact = false }: { kind?: NavItem["badge"]; compact?: boolean }) {
+function NavBadge({ kind, compact = false, corner = false }: { kind?: NavItem["badge"]; compact?: boolean; corner?: boolean }) {
   const user = useCurrentUser();
   const count = useInboxCount(kind === "inbox" && (user.role === "admin" || user.role === "manager"));
   const n = count.data ?? 0;
   if (!kind || n === 0) return null;
   return (
-    <span className={cx("rounded-full bg-gold-500 px-1.5 text-xs font-semibold text-forest-950", compact ? "absolute top-1.5 ml-7 min-w-5 text-center text-[10px]" : "ml-auto")}>
+    <span className={cx("rounded-full bg-gold-500 px-1.5 text-xs font-semibold text-forest-950",
+      compact ? "absolute top-1.5 ml-7 min-w-5 text-center text-[10px]" : corner ? "absolute -top-0.5 right-1 min-w-4 px-1 text-center text-[10px]" : "ml-auto")}>
       <span aria-hidden>{n > 99 ? "99+" : n}</span>
       <span className="sr-only">{`, ${n} waiting`}</span>
     </span>
@@ -152,10 +178,24 @@ function NavBadge({ kind, compact = false }: { kind?: NavItem["badge"]; compact?
 
 
 /** "My account": who is signed in, a link to the account page, and Sign out, together in one place. */
-function AccountBlock({ light = false }: { light?: boolean }) {
+function AccountBlock({ light = false, compact = false }: { light?: boolean; compact?: boolean }) {
   const user = useCurrentUser();
   const { logout } = useAuth();
   const initials = user.full_name.split(" ").map((p) => p[0]).slice(0, 2).join("").toUpperCase();
+  if (compact) {
+    return (
+      <section aria-label="My account" className="flex shrink-0 flex-col items-center gap-0.5 border-t border-forest-800 py-1.5">
+        <NavLink to="/account" title={`${user.full_name}: My account`} aria-label={`${user.full_name}, My account · ${ROLE_LABELS[user.role]}`}
+          className="grid size-9 place-items-center rounded-full bg-gold-500 text-sm font-semibold text-forest-950 ring-offset-2 ring-offset-forest-900 hover:ring-2 hover:ring-gold-300">
+          {initials}
+        </NavLink>
+        <button type="button" onClick={() => void logout()} aria-label="Sign out" title="Sign out"
+          className="grid size-9 place-items-center rounded-lg text-forest-100/90 hover:bg-forest-800/60 hover:text-white">
+          <LogOut className="size-4" aria-hidden />
+        </button>
+      </section>
+    );
+  }
   return (
     <section aria-label="My account" className={cx("shrink-0", light ? "rounded-xl bg-forest-50 p-2" : "border-t border-forest-800 px-3 py-2")}>
       <NavLink to="/account" className={({ isActive }) => cx(

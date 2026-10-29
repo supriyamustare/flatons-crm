@@ -319,6 +319,12 @@ with the official logo at the same sizes. Offline support arrives in Sprint 16.
 
 ## Frontend notes
 
+- **Left menu (desktop):** the arrow button beside the logo collapses the menu to icons only (names show on hover and
+  stay available to screen readers) and expands it again. The choice is remembered in the browser
+  (`localStorage` key `flatons.sidebar.collapsed`); when collapsed the page content may grow a little wider. On short
+  screens the menu scrolls inside the dark panel. Phones use the bottom bar instead.
+
+
 - Design tokens (forest green, gold, paper, ink) live in `frontend/src/index.css` under `@theme`.
   Tailwind v4 reads them from CSS, so there is no `tailwind.config.ts`; use them as `bg-forest-900`,
   `text-gold-500`, etc.
