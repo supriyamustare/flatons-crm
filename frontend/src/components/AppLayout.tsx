@@ -13,50 +13,39 @@ import { Wordmark } from "./Wordmark";
 
 export function AppLayout() {
   const user = useCurrentUser();
-  const { logout } = useAuth();
   const items = navFor(user.role);
 
   return (
     <div className="min-h-dvh md:flex">
       {/* Desktop sidebar */}
       <aside className="sticky top-0 hidden h-dvh w-64 shrink-0 flex-col bg-forest-900 text-forest-100 md:flex">
-        <div className="flex items-center justify-between pt-6 pr-3 pb-7 pl-6">
+        <div className="flex shrink-0 items-center justify-between py-4 pr-3 pl-6">
           <Wordmark />
           <NotificationBell align="left" />
         </div>
-        <nav aria-label="Main" className="flex-1 space-y-1 px-3">
-          {items.map(({ to, label, icon: Icon, badge }) => (
+        {/* The list scrolls inside the dark panel if the screen is short, so items never fall off it */}
+        <nav aria-label="Main" className="sidebar-scroll min-h-0 flex-1 space-y-0.5 overflow-y-auto px-3 pb-3">
+          {items.filter((i) => i.to !== "/account").map(({ to, label, icon: Icon, badge }) => (
             <NavLink
               key={to}
               to={to}
               end={to === "/"}
               className={({ isActive }) =>
                 cx(
-                  "flex min-h-11 items-center gap-3 rounded-lg px-3 text-sm transition-colors",
+                  "flex min-h-9 items-center gap-3 rounded-lg px-3 text-sm transition-colors",
                   isActive
                     ? "bg-forest-800 text-gold-300 shadow-[inset_3px_0_0_var(--color-gold-500)]"
-                    : "text-forest-100/80 hover:bg-forest-800/60 hover:text-white",
+                    : "text-forest-100/90 hover:bg-forest-800/60 hover:text-white",
                 )
               }
             >
-              <Icon className="size-[18px]" aria-hidden />
+              <Icon className="size-[18px] shrink-0" aria-hidden />
               {label}
               <NavBadge kind={badge} />
             </NavLink>
           ))}
         </nav>
-        <div className="border-t border-forest-800 px-4 py-4">
-          <p className="truncate text-sm font-medium text-white">{user.full_name}</p>
-          <p className="text-xs text-forest-100/70">{ROLE_LABELS[user.role]}</p>
-          <button
-            type="button"
-            onClick={() => void logout()}
-            className="mt-3 flex min-h-10 w-full items-center gap-2 rounded-lg px-2 text-sm text-forest-100/80 hover:bg-forest-800/60 hover:text-white"
-          >
-            <LogOut className="size-4" aria-hidden />
-            Sign out
-          </button>
-        </div>
+        <AccountBlock />
       </aside>
 
       <div className="flex min-w-0 flex-1 flex-col">
@@ -67,14 +56,6 @@ export function AppLayout() {
           </div>
           <div className="flex items-center gap-1">
             <NotificationBell />
-            <button
-            type="button"
-            onClick={() => void logout()}
-            className="flex min-h-11 items-center gap-1.5 rounded-lg px-2 text-sm text-forest-100/80"
-          >
-            <LogOut className="size-4" aria-hidden />
-            Sign out
-          </button>
           </div>
         </header>
 
@@ -94,7 +75,6 @@ export function AppLayout() {
 /** Phone bottom bar. Items that don't fit live in a "More" sheet. */
 function MobileNav() {
   const user = useCurrentUser();
-  const { logout } = useAuth();
   const { bar, more } = mobileNavFor(user.role);
   const [open, setOpen] = useState(false);
   const location = useLocation();
@@ -115,14 +95,14 @@ function MobileNav() {
         <div className="fixed inset-0 z-40 md:hidden" role="dialog" aria-modal="true" aria-label="More">
           <div className="absolute inset-0 bg-forest-950/50" onClick={() => setOpen(false)} aria-hidden />
           <div className="absolute inset-x-0 bottom-0 rounded-t-2xl bg-white p-3 pb-[calc(5rem+env(safe-area-inset-bottom))] shadow-xl">
-            <div className="flex items-center justify-between px-2 pb-2">
-              <p className="text-sm text-muted">{user.full_name}</p>
+            <div className="flex items-center justify-end px-2 pb-1">
               <button type="button" onClick={() => setOpen(false)} aria-label="Close" className="grid size-11 place-items-center rounded-lg text-muted">
                 <X className="size-5" />
               </button>
             </div>
-            <ul>
-              {more.map(({ to, label, icon: Icon }) => (
+            <AccountBlock light />
+            <ul className="mt-2">
+              {more.filter((i) => i.to !== "/account").map(({ to, label, icon: Icon }) => (
                 <li key={to}>
                   <NavLink to={to} className={({ isActive }) => cx(
                     "flex min-h-12 items-center gap-3 rounded-lg px-3 text-base",
@@ -132,12 +112,6 @@ function MobileNav() {
                   </NavLink>
                 </li>
               ))}
-              <li>
-                <button type="button" onClick={() => void logout()} className="flex min-h-12 w-full items-center gap-3 rounded-lg px-3 text-base text-ink">
-                  <LogOut className="size-5 text-forest-800" aria-hidden />
-                  Sign out
-                </button>
-              </li>
             </ul>
           </div>
         </div>
@@ -173,5 +147,33 @@ function NavBadge({ kind, compact = false }: { kind?: NavItem["badge"]; compact?
       <span aria-hidden>{n > 99 ? "99+" : n}</span>
       <span className="sr-only">{`, ${n} waiting`}</span>
     </span>
+  );
+}
+
+
+/** "My account": who is signed in, a link to the account page, and Sign out, together in one place. */
+function AccountBlock({ light = false }: { light?: boolean }) {
+  const user = useCurrentUser();
+  const { logout } = useAuth();
+  const initials = user.full_name.split(" ").map((p) => p[0]).slice(0, 2).join("").toUpperCase();
+  return (
+    <section aria-label="My account" className={cx("shrink-0", light ? "rounded-xl bg-forest-50 p-2" : "border-t border-forest-800 p-3")}>
+      <NavLink to="/account" className={({ isActive }) => cx(
+        "flex items-center gap-3 rounded-lg p-2 transition-colors",
+        light ? "hover:bg-white" : isActive ? "bg-forest-800" : "hover:bg-forest-800/60")}>
+        <span aria-hidden className={cx("grid size-9 shrink-0 place-items-center rounded-full text-sm font-semibold",
+          light ? "bg-forest-900 text-white" : "bg-gold-500 text-forest-950")}>{initials}</span>
+        <span className="min-w-0">
+          <span className={cx("block truncate text-sm font-medium", light ? "text-forest-900" : "text-white")}>{user.full_name}</span>
+          <span className={cx("block text-xs", light ? "text-muted" : "text-forest-100/75")}>My account · {ROLE_LABELS[user.role]}</span>
+        </span>
+      </NavLink>
+      <button type="button" onClick={() => void logout()}
+        className={cx("mt-1 flex min-h-10 w-full items-center gap-2 rounded-lg px-3 text-sm transition-colors",
+          light ? "text-ink hover:bg-white" : "text-forest-100/90 hover:bg-forest-800/60 hover:text-white")}>
+        <LogOut className="size-4" aria-hidden />
+        Sign out
+      </button>
+    </section>
   );
 }
