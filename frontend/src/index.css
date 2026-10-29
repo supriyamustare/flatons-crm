@@ -47,3 +47,9 @@
     background-image: repeating-linear-gradient(135deg, rgb(180 83 9 / 0.18) 0 4px, transparent 4px 9px);
   }
 }
+
+/* Sidebar list: a slim scrollbar that suits the dark panel (only appears on short screens) */
+.sidebar-scroll {
+  scrollbar-width: thin;
+  scrollbar-color: rgb(255 255 255 / 0.25) transparent;
+}
