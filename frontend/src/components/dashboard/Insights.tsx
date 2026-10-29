@@ -27,7 +27,7 @@ function ProjectInventory({ projects }: { projects: Insights["projects"] }) {
   const range = (p: Insights["projects"][number]) =>
     p.price_min === null ? null : p.price_min === p.price_max ? formatRupees(p.price_min) : `${formatRupees(p.price_min)} – ${formatRupees(p.price_max!)}`;
   return (
-    <Panel title="Project inventory" subtitle="Units sold, on hold and available" action={<Link to="/projects" className="text-sm font-medium text-forest-800 hover:underline">All projects →</Link>}>
+    <Panel title="Project inventory" subtitle="Agreement done, booked, on hold and available" action={<Link to="/projects" className="text-sm font-medium text-forest-800 hover:underline">All projects →</Link>}>
       {withStock.length === 0 && <p className="text-sm text-muted">No inventory added yet. Add buildings and units under Projects.</p>}
       <ul className="space-y-3">
         {withStock.map((p) => {
@@ -48,17 +48,19 @@ function ProjectInventory({ projects }: { projects: Insights["projects"] }) {
                 </div>
               </div>
               <div className="mt-2 flex h-2.5 overflow-hidden rounded-full bg-paper" role="img"
-                aria-label={`${p.name}: ${p.sold} sold, ${p.blocked} on hold, ${p.available} available of ${p.total}`}>
-                <span className="bg-forest-700" style={{ width: w(p.sold) }} />
+                aria-label={`${p.name}: ${p.agreement_done} agreement done, ${p.booked} booked, ${p.blocked} on hold, ${p.available} available of ${p.total}`}>
+                <span className="bg-forest-900" style={{ width: w(p.agreement_done) }} />
+                <span className="bg-forest-600" style={{ width: w(p.booked) }} />
                 <span className="bg-gold-500" style={{ width: w(p.blocked) }} />
               </div>
               <div className="mt-1.5 flex flex-wrap items-center justify-between gap-2 text-xs">
                 <span className="flex flex-wrap gap-3">
-                  <span><span className="mr-1 inline-block size-2 rounded-full bg-forest-700" aria-hidden />Sold <b>{n(p.sold)}</b></span>
+                  <span><span className="mr-1 inline-block size-2 rounded-full bg-forest-900" aria-hidden />Agreement done <b>{n(p.agreement_done)}</b></span>
+                  <span><span className="mr-1 inline-block size-2 rounded-full bg-forest-600" aria-hidden />Booked <b>{n(p.booked)}</b></span>
                   <span><span className="mr-1 inline-block size-2 rounded-full bg-gold-500" aria-hidden />On hold <b>{n(p.blocked)}</b></span>
                   <span><span className="mr-1 inline-block size-2 rounded-full bg-line" aria-hidden />Available <b>{n(p.available)}</b></span>
                 </span>
-                <span className="rounded-full bg-forest-50 px-2 py-0.5 font-semibold text-forest-800">{p.sold_pct ?? 0}% sold</span>
+                <span className="rounded-full bg-forest-50 px-2 py-0.5 font-semibold text-forest-800">{p.sold_pct ?? 0}% booked</span>
               </div>
             </li>
           );

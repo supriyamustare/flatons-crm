@@ -243,7 +243,7 @@ export function UnitFormDialog({ projectId, unit, floors, onClose }: {
               <SelectInput label="Status" value={status} onChange={(e) => setStatus(e.target.value as UnitInput["status"])}>
                 <option value="available">Available</option>
                 <option value="withdrawn">Withdrawn (not for sale)</option>
-                <option value="sold">Sold</option>
+                <option value="sold">Agreement done</option>
               </SelectInput>
             )
         )}

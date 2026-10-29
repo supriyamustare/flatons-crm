@@ -1,3 +1,4 @@
+import { ProjectFloorPlans } from "../../components/inventory/FloorPlans";
 import { ProjectCostSheetDialog } from "../../components/inventory/ProjectCostSheetDialog";
 import { useEffect, useMemo, useState } from "react";
 import { Link, useParams } from "react-router";
@@ -143,6 +144,7 @@ export function ProjectDetailPage() {
       {dialog?.kind === "edit-unit" && (
         <UnitFormDialog projectId={p.id} unit={dialog.unit} onClose={() => setDialog(null)} floors={resale ? undefined : []} />
       )}
+      <ProjectFloorPlans projectId={p.id} floors={(p.project_type === "developer" ? (inv.data?.buildings ?? []).flatMap((bl) => bl.floors.map((f) => ({ id: f.id, label: `${bl.name}: ${floorLabel(f.number)}` }))) : [])} />
       {costSettings && <ProjectCostSheetDialog projectId={p.id} onClose={() => setCostSettings(false)} />}
     </div>
   );

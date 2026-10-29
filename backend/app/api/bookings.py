@@ -1,9 +1,11 @@
 import csv
 import io
+from datetime import date
 from typing import Annotated
 
 from fastapi import APIRouter, Depends, HTTPException, Query, Request, status
 from fastapi.responses import Response
+from pydantic import BaseModel, ConfigDict
 
 from app.core.deps import DbSession, require_role
 from app.models.booking import Booking, BookingStatus
@@ -326,6 +328,58 @@ async def update_customer(
             details=changed,
             request=request,
         )
+    await db.commit()
+    await db.refresh(b)
+    return await svc.to_out(db, b, with_history=True)
+
+
+class AgreementIn(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+    agreement_date: date
+
+
+@router.post("/{booking_id}/agreement", response_model=BookingOut)
+async def mark_agreement(
+    booking_id: int, body: AgreementIn, request: Request, user: Manager, db: DbSession
+) -> BookingOut:
+    """Sale agreement signed: the unit becomes Agreement done (managers and admins)."""
+    b = await _booking(db, user, booking_id)
+    try:
+        await svc.mark_agreement(db, b, actor=user, agreement_date=body.agreement_date)
+    except svc.BookingRuleError as exc:
+        raise _http(exc) from None
+    log_audit(
+        db,
+        action="booking.agreement",
+        entity_type="booking",
+        entity_id=b.id,
+        actor=user,
+        details={"agreement_date": body.agreement_date.isoformat()},
+        request=request,
+    )
+    await db.commit()
+    await db.refresh(b)
+    return await svc.to_out(db, b, with_history=True)
+
+
+@router.delete("/{booking_id}/agreement", response_model=BookingOut)
+async def undo_agreement(
+    booking_id: int, request: Request, user: Manager, db: DbSession
+) -> BookingOut:
+    """Marked by mistake: the unit goes back to Booked."""
+    b = await _booking(db, user, booking_id)
+    try:
+        await svc.undo_agreement(db, b, actor=user)
+    except svc.BookingRuleError as exc:
+        raise _http(exc) from None
+    log_audit(
+        db,
+        action="booking.agreement_undone",
+        entity_type="booking",
+        entity_id=b.id,
+        actor=user,
+        request=request,
+    )
     await db.commit()
     await db.refresh(b)
     return await svc.to_out(db, b, with_history=True)

@@ -6,7 +6,7 @@ import type { UserBrief } from "../lib/types";
 
 export interface Insights {
   projects: { id: number; name: string; location: string | null; project_type: string; unit_types: UnitType[]; price_min: number | null;
-    price_max: number | null; sold: number; blocked: number; available: number; total: number; sold_pct: number | null;
+    price_max: number | null; sold: number; agreement_done: number; booked: number; blocked: number; available: number; total: number; sold_pct: number | null;
     bookings_this_month: number; booked_value_this_month: number }[];
   lead_status: { key: "working" | "quiet" | "unassigned" | "booked" | "dead"; count: number }[];
   total_leads: number;

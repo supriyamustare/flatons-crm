@@ -94,6 +94,7 @@ async def to_out(db: AsyncSession, b: Booking, with_history: bool = False) -> Bo
             address_note=unit.address_note,
         ),
         booking_date=b.booking_date,
+        agreement_date=b.agreement_date,
         agreed_price=b.agreed_price,
         booking_amount=b.booking_amount,
         balance=b.agreed_price - b.booking_amount,
@@ -360,3 +361,54 @@ async def totals(db: AsyncSession, stmt: Select) -> tuple[int, int, int, int, in
         )
     ).one()
     return tuple(int(x) for x in row)
+
+
+async def mark_agreement(
+    db: AsyncSession, booking: Booking, *, actor: User, agreement_date: date
+) -> None:
+    """Sale agreement signed: the unit shows as Agreement done."""
+    if booking.status != BookingStatus.booked:
+        raise BookingRuleError("Only a live booking can have its agreement marked")
+    if agreement_date < booking.booking_date:
+        raise BookingRuleError("The agreement date can't be before the booking date")
+    if agreement_date > datetime.now(UTC).astimezone(IST).date():
+        raise BookingRuleError("The agreement date can't be in the future")
+    unit = await inv.lock_unit(db, booking.unit_id)
+    was = booking.agreement_date
+    booking.agreement_date = agreement_date
+    if unit is not None and unit.booking_id == booking.id:
+        unit.status = UnitStatus.sold
+    if was is None:
+        add_activity(
+            db,
+            booking.lead,
+            actor=actor,
+            type="agreement_done",
+            details={
+                "booking_code": code(booking),
+                "unit_no": booking.unit.unit_no,
+                "agreement_date": agreement_date.isoformat(),
+            },
+        )
+    event(
+        db,
+        booking,
+        "agreement_done",
+        actor,
+        {"agreement_date": agreement_date.isoformat(), "was": was.isoformat() if was else None},
+    )
+
+
+async def undo_agreement(db: AsyncSession, booking: Booking, *, actor: User) -> None:
+    if booking.agreement_date is None:
+        raise BookingRuleError("This booking has no agreement marked")
+    unit = await inv.lock_unit(db, booking.unit_id)
+    was = booking.agreement_date
+    booking.agreement_date = None
+    if (
+        unit is not None
+        and unit.booking_id == booking.id
+        and booking.status == BookingStatus.booked
+    ):
+        unit.status = UnitStatus.booked
+    event(db, booking, "agreement_undone", actor, {"was": was.isoformat()})

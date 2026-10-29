@@ -54,6 +54,7 @@ async def build_insights(
 
     # ---- projects (company-wide inventory)
     sold = func.count().filter(Unit.status.in_([UnitStatus.sold, UnitStatus.booked]))
+    agreed = func.count().filter(Unit.status == UnitStatus.sold)
     blocked = func.count().filter(Unit.status == UnitStatus.on_hold)
     avail = func.count().filter(Unit.status == UnitStatus.available)
     price = func.coalesce(Unit.current_asking_price, Unit.base_price)
@@ -64,6 +65,7 @@ async def build_insights(
             select(
                 Unit.project_id,
                 sold,
+                agreed,
                 blocked,
                 avail,
                 func.min(price).filter(for_sale),
@@ -88,7 +90,7 @@ async def build_insights(
     for p in await db.scalars(
         select(Project).where(Project.is_active.is_(True)).order_by(Project.name)
     ):
-        s, b, a, lo, hi, types = stock.get(p.id, (0, 0, 0, None, None, []))
+        s, agreed_n, b, a, lo, hi, types = stock.get(p.id, (0, 0, 0, 0, None, None, []))
         total = s + b + a
         nb, val = month_bookings.get(p.id, (0, 0))
         projects.append(
@@ -101,6 +103,8 @@ async def build_insights(
                 price_min=lo,
                 price_max=hi,
                 sold=s,
+                agreement_done=agreed_n,
+                booked=s - agreed_n,
                 blocked=b,
                 available=a,
                 total=total,
