@@ -9,7 +9,7 @@ from pydantic import BaseModel, ConfigDict
 
 from app.core.deps import DbSession, require_role
 from app.models.booking import Booking, BookingStatus
-from app.models.user import Role, User
+from app.models.user import POSTSALES_ROLES, Role, User
 from app.schemas.booking import (
     BookingCancel,
     BookingCreate,
@@ -25,7 +25,11 @@ from app.services import leads as lead_svc
 from app.services.audit import log_audit
 
 router = APIRouter(prefix="/bookings", tags=["bookings"])
-Viewer = Annotated[User, Depends(require_role(Role.admin, Role.manager, Role.executive, Role.docs))]
+# Post-sales staff read bookings too (no editing)
+Viewer = Annotated[
+    User,
+    Depends(require_role(Role.admin, Role.manager, Role.executive, Role.docs, *POSTSALES_ROLES)),
+]
 Sales = Annotated[User, Depends(require_role(Role.admin, Role.manager, Role.executive))]
 Manager = Annotated[User, Depends(require_role(Role.admin, Role.manager))]
 

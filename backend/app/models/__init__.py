@@ -21,12 +21,37 @@ from app.models.lead import (
 from app.models.marketing import Campaign, Channel, Expense, ExpenseCategory
 from app.models.notification import Notification
 from app.models.pipeline import DEFAULT_PROBABILITIES, PipelineStage
+from app.models.postsales import (
+    CaseEvent,
+    CaseStatus,
+    CoApplicant,
+    CustomerProfile,
+    KycDocType,
+    KycDocument,
+    KycStatus,
+    OnboardingStatus,
+    OwnershipType,
+    PostSalesCase,
+)
 from app.models.project import Developer, Project, ProjectStatus, ProjectType
+from app.models.project_legal import ProjectBank, ProjectLegal
 from app.models.task import FollowUpTask, TaskStatus, TaskType
 from app.models.user import Role, User
 from app.models.visit import InterestLevel, SiteVisit, VisitSource, VisitStatus
 
 __all__ = [
+    "CaseEvent",
+    "CaseStatus",
+    "CoApplicant",
+    "CustomerProfile",
+    "KycDocType",
+    "KycDocument",
+    "KycStatus",
+    "OnboardingStatus",
+    "OwnershipType",
+    "PostSalesCase",
+    "ProjectBank",
+    "ProjectLegal",
     "FloorPlan",
     "ChannelPartner",
     "Booking",

@@ -20,7 +20,7 @@ export function httpError(status: number, detail: unknown) {
 type Handler = unknown | Error | ((body: unknown) => unknown);
 
 /** Route GET/POST calls by URL. Values may be data, an Error to throw, or a function of the body. */
-export function mockApi(me: User | null, routes: { get?: Record<string, Handler>; post?: Record<string, Handler>; patch?: Record<string, Handler> } = {}) {
+export function mockApi(me: User | null, routes: { get?: Record<string, Handler>; post?: Record<string, Handler>; patch?: Record<string, Handler>; put?: Record<string, Handler> } = {}) {
   const respond = async (table: Record<string, Handler> | undefined, url: string, body?: unknown) => {
     const handler = table?.[url];
     if (handler === undefined) throw new Error(`Unexpected request to ${url}`);
@@ -43,5 +43,8 @@ export function mockApi(me: User | null, routes: { get?: Record<string, Handler>
   const patch = vi.spyOn(api, "patch").mockImplementation(async (url: string, body?: unknown) =>
     respond(routes.patch, url, body),
   );
-  return { get, post, patch };
+  const put = vi.spyOn(api, "put").mockImplementation(async (url: string, body?: unknown) =>
+    respond(routes.put, url, body),
+  );
+  return { get, post, patch, put };
 }

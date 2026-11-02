@@ -317,6 +317,30 @@ with the official logo at the same sizes. Offline support arrives in Sprint 16.
   or one unit type. A unit's panel shows the plans for its floor and its type, or the project-wide plans if there
   are none more specific.
 
+## Post-sales (Phase 1, sprint 1): handover, customer master and KYC
+
+- **Roles** (`app/models/user.py`): besides admin, manager, executive and docs, there are post-sales roles:
+  `postsales_exec`, `crm_manager`, `finance`, `finance_approver`, `legal`, `project_manager`, `site`, `service`,
+  `after_sales`, `management`, `auditor`. Post-sales roles never see pre-sales leads (API and pages); sales see only a
+  booking's post-sales status, never KYC or the customer master. KYC files: admin, CRM manager, post-sales executive,
+  legal and auditor only; every view is logged.
+- **Case per booking** (`postsales_cases`, PSC-00001): created when a booking is recorded (existing live bookings got
+  one in the migration). Post-sales accepts the handover (required: customer name, mobile, unit, agreed price,
+  payment plan) or returns it to sales with a reason; sales resends after fixing. Cancelling the booking cancels
+  the case.
+- **Customer master** (`customer_profiles`, `co_applicants`): ownership type, legal name, PAN, DOB, co-applicants
+  with ownership shares (joint: must total 100%), nominee, addresses, language, contact preferences, consents
+  (timestamped). Changing identity details after approval sends onboarding back to review.
+- **KYC** (`kyc_documents`, files under `FILE_STORAGE_PATH/kyc`): requirements per applicant (PAN, identity,
+  address, photo; entity documents for companies, firms, HUFs, trusts). Files checked by content, SHA-256
+  fingerprinted, duplicates refused, replacements keep history. The uploader can't verify their own document
+  (admins excepted). Onboarding: Not started -> Documents pending -> Under review <-> Clarification required ->
+  Approved (OTP verification arrives with the customer portal). Every decision is in `case_events` and the audit log.
+- **Project legal and bank details** (admins): legal name, RERA, registered address, signatory, GSTIN, CIN (optional);
+  bank account number encrypted (Fernet), shown masked, reveal logged. `GET /api/projects/{id}/doc-readiness` lists
+  what's missing; document generation will call `services/doc_readiness.require_ready`.
+- Note: PostgreSQL can't remove enum values, so downgrading leaves the added `user_role` values in place (unused).
+
 ## Channel partners
 
 - **Channel partners** (left menu): name, company name, contact (mobile, email) and RERA number. Everyone in sales

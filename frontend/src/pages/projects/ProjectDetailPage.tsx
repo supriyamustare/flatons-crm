@@ -1,8 +1,9 @@
+import { LegalBankDialog, ReadinessBanner } from "../../components/inventory/LegalBankDialog";
 import { ProjectFloorPlans } from "../../components/inventory/FloorPlans";
 import { ProjectCostSheetDialog } from "../../components/inventory/ProjectCostSheetDialog";
 import { useEffect, useMemo, useState } from "react";
 import { Link, useParams } from "react-router";
-import { ArrowLeft, Building2, FileSpreadsheet, Pencil, Plus, Rows3 } from "lucide-react";
+import { ArrowLeft, Building2, FileSpreadsheet, Landmark, Pencil, Plus, Rows3 } from "lucide-react";
 import { BuildingGrid, StatusLegend } from "../../components/inventory/BuildingGrid";
 import { BuildingDialog, GenerateDialog, ProjectFormDialog, UnitFormDialog } from "../../components/inventory/InventoryDialogs";
 import { UnitPanel } from "../../components/inventory/UnitPanel";
@@ -26,6 +27,7 @@ export function ProjectDetailPage() {
   const [selectedId, setSelectedId] = useState<number | null>(null);
   const [dialog, setDialog] = useState<Dialog | null>(null);
   const [costSettings, setCostSettings] = useState(false);
+  const [legalOpen, setLegalOpen] = useState(false);
 
   const data = inv.data;
   const buildings = data?.buildings ?? [];
@@ -62,6 +64,7 @@ export function ProjectDetailPage() {
           <div className="flex flex-wrap gap-2">
             <Button variant="secondary" onClick={() => setDialog({ kind: "project" })}><Pencil className="size-4" aria-hidden />Edit</Button>
             <Button variant="secondary" onClick={() => setCostSettings(true)}><FileSpreadsheet className="size-4" aria-hidden />Cost sheet settings</Button>
+            <Button variant="secondary" onClick={() => setLegalOpen(true)}><Landmark className="size-4" aria-hidden />Legal &amp; bank details</Button>
             {resale
               ? <Button onClick={() => setDialog({ kind: "add-unit" })}><Plus className="size-4" aria-hidden />Add listing</Button>
               : <Button onClick={() => setDialog({ kind: "building" })}><Building2 className="size-4" aria-hidden />Add building</Button>}
@@ -69,6 +72,7 @@ export function ProjectDetailPage() {
         )}
       </div>
       {p.description && <p className="mb-5 max-w-3xl text-sm whitespace-pre-wrap">{p.description}</p>}
+      {["admin", "manager", "docs"].includes(me.role) && <ReadinessBanner projectId={p.id} isAdmin={isAdmin} onOpen={() => setLegalOpen(true)} />}
 
       <div className="sticky top-14 z-20 -mx-4 mb-4 bg-paper/95 px-4 py-2 backdrop-blur md:top-0">
         <StatusLegend counts={counts} />
@@ -145,6 +149,7 @@ export function ProjectDetailPage() {
         <UnitFormDialog projectId={p.id} unit={dialog.unit} onClose={() => setDialog(null)} floors={resale ? undefined : []} />
       )}
       <ProjectFloorPlans projectId={p.id} floors={(p.project_type === "developer" ? (inv.data?.buildings ?? []).flatMap((bl) => bl.floors.map((f) => ({ id: f.id, label: `${bl.name}: ${floorLabel(f.number)}` }))) : [])} />
+      {legalOpen && <LegalBankDialog projectId={p.id} onClose={() => setLegalOpen(false)} />}
       {costSettings && <ProjectCostSheetDialog projectId={p.id} onClose={() => setCostSettings(false)} />}
     </div>
   );

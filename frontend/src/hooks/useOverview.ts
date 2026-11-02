@@ -20,11 +20,12 @@ export interface Overview {
   people: UserBrief[];
 }
 
-export function useOverview(personId: number | null, tab: LeadTab) {
+export function useOverview(personId: number | null, tab: LeadTab, enabled = true) {
   return useQuery({
     queryKey: ["dashboard", "overview", personId, tab],
     queryFn: async () => (await api.get<Overview>("/dashboard/overview", { params: { person_id: personId ?? undefined, tab } })).data,
     placeholderData: keepPreviousData,
+    enabled,
     refetchInterval: 60_000,
   });
 }
