@@ -1,7 +1,8 @@
 import {
-  BadgeIndianRupee, BarChart3, Building2, CalendarCheck, Columns3, Contact, Handshake, Inbox, LayoutDashboard, MapPin, Megaphone, Phone, PlugZap, UserRound, Users, type LucideIcon,
+  BadgeIndianRupee, BarChart3, Building2, CalendarCheck, ClipboardCheck, Columns3, Contact, Handshake, Inbox, LayoutDashboard, MapPin, Megaphone, Phone, PlugZap, UserRound, Users, type LucideIcon,
 } from "lucide-react";
 import type { Role } from "./types";
+import { LEAD_READERS, POSTSALES_ROLES } from "./types";
 
 export interface NavItem {
   to: string;
@@ -10,7 +11,8 @@ export interface NavItem {
   /** Roles that can see this item. Omit for everyone. */
   roles?: Role[];
   /** In the phone bottom bar. Everything else goes under "More" on phones. */
-  mobile?: boolean;
+  /** In the phone's bottom bar: for everyone (true) or only for these roles. */
+  mobile?: boolean | Role[];
   /** Shows a live count next to the item. */
   badge?: "inbox";
 }
@@ -20,7 +22,8 @@ const SALES: Role[] = ["admin", "manager", "executive"];
 // New modules are added here as each sprint ships.
 export const NAV_ITEMS: NavItem[] = [
   { to: "/", label: "Dashboard", icon: LayoutDashboard, mobile: true },
-  { to: "/leads", label: "Leads", icon: Contact, mobile: true },
+  { to: "/post-sales", label: "Post-sales", icon: ClipboardCheck, roles: POSTSALES_ROLES, mobile: POSTSALES_ROLES.filter((r) => r !== "admin") },
+  { to: "/leads", label: "Leads", icon: Contact, roles: LEAD_READERS, mobile: true },
   { to: "/inbox", label: "Enquiries", icon: Inbox, roles: ["admin", "manager"], mobile: true, badge: "inbox" },
   { to: "/follow-ups", label: "Follow-ups", icon: CalendarCheck, roles: SALES, mobile: true },
   { to: "/pipeline", label: "Pipeline", icon: Columns3, roles: SALES },
@@ -43,5 +46,6 @@ export function navFor(role: Role): NavItem[] {
 /** Phone bottom bar: the main items, with the rest grouped under "More". */
 export function mobileNavFor(role: Role): { bar: NavItem[]; more: NavItem[] } {
   const items = navFor(role);
-  return { bar: items.filter((i) => i.mobile), more: items.filter((i) => !i.mobile) };
+  const inBar = (i: NavItem) => i.mobile === true || (Array.isArray(i.mobile) && i.mobile.includes(role));
+  return { bar: items.filter(inBar), more: items.filter((i) => !inBar(i)) };
 }

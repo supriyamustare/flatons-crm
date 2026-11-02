@@ -12,6 +12,8 @@ import { cx } from "./ui";
 import { Wordmark } from "./Wordmark";
 
 const SIDEBAR_KEY = "flatons.sidebar.collapsed";
+/** Lead search and "Add lead" are sales tools. */
+const SALES_SEARCH = ["admin", "manager", "executive"];
 
 /** Collapsed or expanded left menu, remembered in this browser. */
 function useSidebarCollapsed(): [boolean, () => void] {
@@ -85,7 +87,7 @@ export function AppLayout() {
         </header>
 
         <main className={cx("mx-auto w-full flex-1 px-4 pt-6 pb-28 md:px-10 md:pt-10 md:pb-10", collapsed ? "max-w-7xl" : "max-w-6xl")}>
-          {user.role !== "docs" && <QuickSearch />}
+          {SALES_SEARCH.includes(user.role) && <QuickSearch />}
           <Outlet />
         </main>
       </div>

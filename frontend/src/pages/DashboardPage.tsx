@@ -12,7 +12,8 @@ import { useInsights } from "../hooks/useInsights";
 import { useOverview } from "../hooks/useOverview";
 import type { LeadTab } from "../hooks/useOverview";
 import { errorMessage, formatDateTime } from "../lib/api";
-import { ROLE_LABELS } from "../lib/types";
+import { ROLE_LABELS, isPostSalesOnly } from "../lib/types";
+import { PostSalesHome } from "./postsales/PostSalesPage";
 
 const initials = (name: string) => name.split(" ").map((p) => p[0]).slice(0, 2).join("").toUpperCase();
 
@@ -59,20 +60,21 @@ export function DashboardPage() {
   const me = useCurrentUser();
   const firstName = me.full_name.split(" ")[0];
   const isManager = me.role === "admin" || me.role === "manager";
-  const isSales = me.role !== "docs";
+  const isSales = me.role !== "docs" && !isPostSalesOnly(me.role);
   const [person, setPerson] = useState<number | null>(null);
   const [tab, setTab] = useState<LeadTab>("fresh");
   const [range, setRange] = useState<RangeKey>("30d");
   const [from, setFrom] = useState("");
   const [to, setTo] = useState("");
 
-  const overview = useOverview(isManager ? person : null, tab);
-  const insights = useInsights(isManager ? person : null);
+  const overview = useOverview(isManager ? person : null, tab, isSales);
+  const insights = useInsights(isManager ? person : null, isSales);
   const customReady = range !== "custom" || Boolean(from && to && from <= to);
   const query: DashboardQuery = range === "custom" ? { range, date_from: from, date_to: to } : { range };
   // Business, team table and activity feed (managers: team-wide; executives: their own feed)
   const dash = useDashboard(isManager ? "team" : "mine", isManager ? query : { range: "7d" }, isSales && customReady);
 
+  if (isPostSalesOnly(me.role)) return <PostSalesHome name={firstName} />;
   if (!isSales) {
     return (
       <>

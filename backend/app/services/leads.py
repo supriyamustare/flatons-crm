@@ -5,7 +5,7 @@ from datetime import UTC, datetime, time, timedelta
 from typing import Any
 from zoneinfo import ZoneInfo
 
-from sqlalchemy import Select, func, or_, select
+from sqlalchemy import Select, false, func, or_, select
 from sqlalchemy.dialects.postgresql import insert
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -17,7 +17,7 @@ from app.models.lead import (
     LeadCodeCounter,
     LeadStatus,
 )
-from app.models.user import Role, User
+from app.models.user import LEAD_READERS, Role, User
 from app.schemas.lead import DuplicateOut, LeadSearch
 
 IST = ZoneInfo("Asia/Kolkata")
@@ -34,6 +34,8 @@ class LeadRuleError(ValueError):
 def visible_leads(user: User) -> Select[tuple[Lead]]:
     """Leads this user may see: executives see their own; everyone else sees all."""
     stmt = select(Lead).where(Lead.deleted_at.is_(None))
+    if user.role not in LEAD_READERS:  # post-sales roles never browse pre-sales leads
+        return stmt.where(false())
     if user.role == Role.executive:
         stmt = stmt.where(Lead.assigned_to_id == user.id)
     return stmt
@@ -41,6 +43,8 @@ def visible_leads(user: User) -> Select[tuple[Lead]]:
 
 def can_view(user: User, lead: Lead) -> bool:
     if lead.deleted_at is not None:
+        return False
+    if user.role not in LEAD_READERS:
         return False
     return user.role != Role.executive or lead.assigned_to_id == user.id
 

@@ -4,13 +4,13 @@ from typing import Annotated, Any
 from fastapi import APIRouter, Depends, HTTPException, Request, status
 from sqlalchemy import select
 
-from app.core.deps import CurrentUser, DbSession, require_role
+from app.core.deps import DbSession, require_role
 from app.models.booking import Booking, BookingStatus
 from app.models.channel_partner import ChannelPartner
 from app.models.lead import ACTIVE_SOURCES, REASON_REQUIRED, Lead, LeadSource
 from app.models.marketing import Campaign
 from app.models.project import Project
-from app.models.user import Role, User
+from app.models.user import LEAD_READERS, Role, User
 from app.schemas.lead import (
     Assignment,
     DuplicateCheck,
@@ -33,6 +33,8 @@ from app.services import tasks as task_svc
 from app.services import visits as visit_svc
 from app.services.audit import log_audit
 from app.services.notifications import notify
+
+LeadReader = Annotated[User, Depends(require_role(*LEAD_READERS))]
 
 router = APIRouter(prefix="/leads", tags=["leads"])
 
@@ -109,14 +111,14 @@ async def _live_booking(db: DbSession, lead_id: int) -> LeadBooking | None:
 
 
 @router.post("/search", response_model=LeadPage)
-async def search(body: LeadSearch, user: CurrentUser, db: DbSession) -> LeadPage:
+async def search(body: LeadSearch, user: LeadReader, db: DbSession) -> LeadPage:
     items, total = await svc.search_leads(db, user, body)
     return LeadPage(items=items, total=total, page=body.page, page_size=body.page_size)
 
 
 @router.post("/duplicates", response_model=list[DuplicateOut])
 async def check_duplicates(
-    body: DuplicateCheck, user: CurrentUser, db: DbSession
+    body: DuplicateCheck, user: LeadReader, db: DbSession
 ) -> list[DuplicateOut]:
     return await svc.find_duplicates(
         db,
@@ -178,7 +180,7 @@ async def create_lead(
 
 
 @router.get("/{lead_id}", response_model=LeadDetail)
-async def get_lead(lead_id: int, user: CurrentUser, db: DbSession) -> LeadDetail:
+async def get_lead(lead_id: int, user: LeadReader, db: DbSession) -> LeadDetail:
     lead = await svc.get_visible_lead(db, user, lead_id)
     if lead is None:
         raise NOT_FOUND
@@ -369,7 +371,7 @@ async def delete_lead(lead_id: int, request: Request, user: Admin, db: DbSession
 
 
 @router.get("/{lead_id}/tasks", response_model=list[TaskOut])
-async def lead_tasks(lead_id: int, user: CurrentUser, db: DbSession) -> list[TaskOut]:
+async def lead_tasks(lead_id: int, user: LeadReader, db: DbSession) -> list[TaskOut]:
     """All follow-ups on a lead (open ones first), for the lead page."""
     lead = await svc.get_visible_lead(db, user, lead_id)
     if lead is None:
@@ -378,7 +380,7 @@ async def lead_tasks(lead_id: int, user: CurrentUser, db: DbSession) -> list[Tas
 
 
 @router.get("/{lead_id}/visits", response_model=list[VisitOut])
-async def lead_visits(lead_id: int, user: CurrentUser, db: DbSession) -> list[VisitOut]:
+async def lead_visits(lead_id: int, user: LeadReader, db: DbSession) -> list[VisitOut]:
     """All site visits for a lead (scheduled first), for the lead page."""
     lead = await svc.get_visible_lead(db, user, lead_id)
     if lead is None:

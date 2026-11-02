@@ -1,3 +1,4 @@
+import { LEAD_READERS, POSTSALES_ROLES } from "./lib/types";
 import { Suspense, lazy } from "react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Route, Routes } from "react-router";
@@ -17,6 +18,8 @@ const CallsPage = lazy(() => import("./pages/CallsPage").then((m) => ({ default:
 const ChannelPartnersPage = lazy(() => import("./pages/ChannelPartnersPage").then((m) => ({ default: m.ChannelPartnersPage })));
 const ChannelPartnerDetailPage = lazy(() => import("./pages/ChannelPartnersPage").then((m) => ({ default: m.ChannelPartnerDetailPage })));
 const CostSheetPage = lazy(() => import("./pages/CostSheetPage").then((m) => ({ default: m.CostSheetPage })));
+const PostSalesPage = lazy(() => import("./pages/postsales/PostSalesPage").then((m) => ({ default: m.PostSalesPage })));
+const CasePage = lazy(() => import("./pages/postsales/CasePage").then((m) => ({ default: m.CasePage })));
 const BookingsPage = lazy(() => import("./pages/BookingsPage").then((m) => ({ default: m.BookingsPage })));
 const BookingDetailPage = lazy(() => import("./pages/BookingDetailPage").then((m) => ({ default: m.BookingDetailPage })));
 const InboxPage = lazy(() => import("./pages/InboxPage").then((m) => ({ default: m.InboxPage })));
@@ -56,10 +59,16 @@ export function AppRoutes() {
         <Route element={<AppLayout />}>
           <Route index element={<DashboardPage />} />
           <Route path="account" element={<AccountPage />} />
+          <Route element={<RequireRole roles={POSTSALES_ROLES} />}>
+            <Route path="post-sales" element={<PostSalesPage />} />
+            <Route path="post-sales/:caseId" element={<CasePage />} />
+          </Route>
           <Route path="bookings" element={<BookingsPage />} />
           <Route path="bookings/:bookingId" element={<BookingDetailPage />} />
-          <Route path="leads" element={<LeadsPage />} />
-          <Route path="leads/:id" element={<LeadDetailPage />} />
+          <Route element={<RequireRole roles={LEAD_READERS} />}>
+            <Route path="leads" element={<LeadsPage />} />
+            <Route path="leads/:id" element={<LeadDetailPage />} />
+          </Route>
           <Route path="projects" element={<ProjectsPage />} />
           <Route path="projects/:id" element={<ProjectDetailPage />} />
           <Route element={<RequireRole roles={["admin", "manager", "executive"]} />}>

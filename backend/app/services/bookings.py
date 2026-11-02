@@ -262,6 +262,9 @@ async def create(
             "booking_amount": booking.booking_amount,
         },
     )
+    from app.services.postsales import create_for_booking
+
+    await create_for_booking(db, booking, actor)
     managers = await db.scalars(
         select(User.id).where(
             User.is_active.is_(True), User.role.in_(list(MANAGERS)), User.id != actor.id
@@ -294,6 +297,11 @@ async def cancel(db: AsyncSession, booking: Booking, *, actor: User, reason: str
     lead = booking.lead
     if lead.status == LeadStatus.booked:
         lead.status = LeadStatus.negotiation
+    from app.models.postsales import CaseStatus, PostSalesCase
+
+    case = await db.scalar(select(PostSalesCase).where(PostSalesCase.booking_id == booking.id))
+    if case is not None:
+        case.status = CaseStatus.cancelled
     add_activity(
         db,
         lead,

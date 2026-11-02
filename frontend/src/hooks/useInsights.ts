@@ -20,11 +20,12 @@ export interface Insights {
     booking_date: string; sales_exec: UserBrief | null }[];
 }
 
-export function useInsights(personId: number | null) {
+export function useInsights(personId: number | null, enabled = true) {
   return useQuery({
     queryKey: ["dashboard", "insights", personId],
     queryFn: async () => (await api.get<Insights>("/dashboard/insights", { params: { person_id: personId ?? undefined } })).data,
     placeholderData: keepPreviousData,
+    enabled,
     refetchInterval: 120_000,
   });
 }

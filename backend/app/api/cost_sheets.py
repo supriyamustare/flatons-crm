@@ -16,6 +16,7 @@ from app.core.deps import DbSession, require_role
 from app.models.booking import Booking, BookingStatus
 from app.models.inventory import Building, Floor, Unit, UnitStatus
 from app.models.project import Project
+from app.models.project_legal import ProjectLegal
 from app.models.user import Role, User
 from app.schemas.common import PlainText
 from app.services import cost_sheet as cs
@@ -130,9 +131,16 @@ async def build(db: DbSession, unit: Unit) -> cs.CostSheet:
     price = unit.current_asking_price or unit.base_price
     if customer:
         rate, price = None, customer["agreed_price"]
+    # The official developer name and RERA number (Legal details) win over the cost sheet's own
+    legal = await db.get(ProjectLegal, project.id)
+    template = dict(project.cost_sheet or {})
+    if legal and legal.developer_legal_name:
+        template["developer_name"] = legal.developer_legal_name
+    if legal and legal.rera_number:
+        template["rera_number"] = legal.rera_number
     return cs.compute(
         project_name=project.name,
-        template=project.cost_sheet,
+        template=template,
         overrides=unit.cost_sheet,
         unit_no=unit.unit_no,
         unit_label=label,

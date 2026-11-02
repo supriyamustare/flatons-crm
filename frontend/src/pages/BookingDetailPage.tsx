@@ -1,3 +1,4 @@
+import { PostSalesStatus } from "../components/bookings/PostSalesStatus";
 import { AgreementSection } from "../components/bookings/AgreementSection";
 import { PREFERENCE_LABELS } from "../components/bookings/CustomerFields";
 import { useState } from "react";
@@ -154,6 +155,7 @@ export function BookingDetailPage() {
         </Card>
       </div>
       {b.status === "booked" && <AgreementSection booking={b} />}
+      <PostSalesStatus bookingId={b.id} salesExecId={b.sales_exec?.id ?? null} />
       {b.notes && <section className="mt-4 rounded-xl bg-white p-5 ring-1 ring-line"><h2 className="mb-2 font-semibold">Notes</h2><p className="text-sm whitespace-pre-wrap">{b.notes}</p></section>}
       <section className="mt-4 rounded-xl bg-white p-5 ring-1 ring-line" aria-labelledby="hist-h">
         <h2 id="hist-h" className="mb-3 font-semibold">History</h2>
