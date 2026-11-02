@@ -16,12 +16,12 @@ beforeEach(() => {
 });
 
 describe("navigation by role", () => {
-  it("shows Users and Projects only to admins, Leads to everyone", () => {
+  it("shows Users only to admins; Leads and Projects (inventory) to everyone", () => {
     expect(navFor("admin").map((i) => i.label)).toEqual(expect.arrayContaining(["Users", "Projects", "Leads"]));
     for (const role of ["manager", "executive", "docs"] as Role[]) {
       const labels = navFor(role).map((i) => i.label);
       expect(labels).not.toContain("Users");
-      expect(labels).not.toContain("Projects");
+      expect(labels).toContain("Projects");
       expect(labels).toContain("Leads");
     }
   });

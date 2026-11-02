@@ -8,6 +8,13 @@ from app.schemas.common import Email, LongText, Mobile, PlainText
 from app.schemas.project import ProjectBrief
 from app.schemas.user import UserBrief
 
+
+class CampaignBrief(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+    id: int
+    name: str
+
+
 Name = Annotated[PlainText, StringConstraints(max_length=150)]
 ShortText = Annotated[PlainText, StringConstraints(max_length=150)]
 Rupees = Annotated[int, Field(ge=0, le=10_000_000_000)]  # up to ₹1,000 crore
@@ -21,6 +28,7 @@ class _LeadFields(BaseModel):
     city: ShortText | None = None
     sub_source: ShortText | None = None
     project_id: int | None = None
+    campaign_id: int | None = None
     configuration: Configuration | None = None
     budget_min: Rupees | None = None
     budget_max: Rupees | None = None
@@ -92,6 +100,7 @@ class LeadOut(BaseModel):
     source: LeadSource
     sub_source: str | None
     project: ProjectBrief | None
+    campaign: CampaignBrief | None = None
     configuration: Configuration | None
     budget_min: int | None
     budget_max: int | None

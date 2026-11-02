@@ -10,7 +10,10 @@ os.environ.setdefault(
 )
 os.environ["DATABASE_URL"] = os.environ["TEST_DATABASE_URL"]
 os.environ.setdefault("SECRET_KEY", "test-secret-key-that-is-long-enough-1234567890")
-os.environ["BCRYPT_ROUNDS"] = "4"  # fast hashing in tests only
+os.environ["BCRYPT_ROUNDS"] = "4"
+os.environ.setdefault(
+    "FILE_STORAGE_PATH", __import__("tempfile").mkdtemp(prefix="crm-test-files-")
+)  # fast hashing in tests only
 
 from collections.abc import AsyncIterator, Awaitable, Callable  # noqa: E402
 
@@ -23,7 +26,7 @@ from sqlalchemy.pool import NullPool  # noqa: E402
 from app.core.db import SessionLocal, engine  # noqa: E402
 from app.core.security import hash_password  # noqa: E402
 from app.main import app  # noqa: E402
-from app.models import Base, Role, User  # noqa: E402
+from app.models import DEFAULT_PROBABILITIES, Base, Role, User  # noqa: E402
 
 TEST_PASSWORD = "correct-horse-battery"
 
@@ -59,6 +62,13 @@ async def _clean_tables() -> None:
     async with engine.begin() as conn:
         tables = ", ".join(t.name for t in reversed(Base.metadata.sorted_tables))
         await conn.execute(text(f"TRUNCATE {tables} RESTART IDENTITY CASCADE"))
+        # Reference data that the migrations insert; tests build the schema from the models.
+        await conn.execute(
+            text(
+                "INSERT INTO pipeline_stages (stage, probability_pct) VALUES "
+                + ", ".join(f"('{st.value}', {pct})" for st, pct in DEFAULT_PROBABILITIES.items())
+            )
+        )
 
 
 @pytest.fixture
@@ -114,3 +124,23 @@ async def login_as(make_user) -> AsyncIterator[Callable[..., Awaitable[tuple[Asy
     yield _login
     for c in clients:
         await c.aclose()
+
+
+async def new_project(db: AsyncSession, name: str = "Flatons Heights", *, resale: bool = False):
+    """A valid project: developer projects get a developer (the database requires it)."""
+    from app.models import Developer, Project, ProjectType
+
+    developer = None
+    if not resale:
+        developer = Developer(name=f"{name} Developers")
+        db.add(developer)
+        await db.flush()
+    project = Project(
+        name=name,
+        project_type=ProjectType.resale if resale else ProjectType.developer,
+        developer_id=developer.id if developer else None,
+    )
+    db.add(project)
+    await db.commit()
+    await db.refresh(project)
+    return project

@@ -3,8 +3,9 @@ import re
 import pytest
 from sqlalchemy import select
 
-from app.models import AuditLog, Lead, Project, Role
+from app.models import AuditLog, Lead, Role
 from app.schemas.common import normalize_mobile
+from tests.conftest import new_project
 
 BASE = {"name": "Anita Desai", "mobile": "98765 43210", "source": "99acres"}
 
@@ -216,8 +217,7 @@ async def test_search_by_name_phone_and_lead_code(login_as):
 async def test_filters_and_pagination(login_as, make_user, db):
     c, _ = await login_as(Role.manager)
     executive = await make_user(Role.executive)
-    project = Project(name="Green Meadows")
-    db.add(project)
+    project = await new_project(db, "Green Meadows")
     await db.commit()
     for i in range(5):
         await create(
@@ -410,10 +410,18 @@ async def test_projects_admin_manages_everyone_reads(login_as):
     admin, _ = await login_as(Role.admin)
     exec_c, _ = await login_as(Role.executive)
 
-    created = await admin.post("/api/projects", json={"name": "Green Meadows"})
+    created = await admin.post(
+        "/api/projects", json={"name": "Green Meadows", "developer_name": "Skyline Developers"}
+    )
     assert created.status_code == 201
-    assert (await admin.post("/api/projects", json={"name": "green meadows"})).status_code == 409
-    assert (await exec_c.post("/api/projects", json={"name": "X"})).status_code == 403
+    assert (
+        await admin.post(
+            "/api/projects", json={"name": "green meadows", "developer_name": "Skyline Developers"}
+        )
+    ).status_code == 409
+    assert (
+        await exec_c.post("/api/projects", json={"name": "X", "project_type": "resale"})
+    ).status_code == 403
     assert [p["name"] for p in (await exec_c.get("/api/projects")).json()] == ["Green Meadows"]
 
     pid = created.json()["id"]

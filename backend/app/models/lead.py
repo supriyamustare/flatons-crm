@@ -1,5 +1,5 @@
 import enum
-from datetime import date, datetime
+from datetime import UTC, date, datetime
 from typing import Any
 
 from sqlalchemy import (
@@ -13,11 +13,13 @@ from sqlalchemy import (
     Integer,
     String,
     Text,
+    event,
     func,
     text,
 )
 from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.orm import Mapped, mapped_column, relationship
+from sqlalchemy.orm.base import NO_VALUE
 
 from app.models.base import Base, TimestampMixin
 from app.models.project import Project
@@ -128,8 +130,16 @@ class Lead(TimestampMixin, Base):
     status: Mapped[LeadStatus] = mapped_column(
         _pg_enum(LeadStatus, "lead_status"), nullable=False, default=LeadStatus.new
     )
+    # When the lead entered its current status; maintained automatically (see below).
+    status_changed_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), server_default=func.now(), nullable=False
+    )
     lost_reason: Mapped[str | None] = mapped_column(String(255))
     estimated_value: Mapped[int | None] = mapped_column(BigInteger)  # rupees
+    # Marketing campaign this lead came from (for cost per lead)
+    campaign_id: Mapped[int | None] = mapped_column(
+        BigInteger, ForeignKey("campaigns.id", ondelete="SET NULL"), index=True
+    )
     remarks: Mapped[str | None] = mapped_column(Text)
 
     created_by_id: Mapped[int | None] = mapped_column(
@@ -143,6 +153,7 @@ class Lead(TimestampMixin, Base):
     assigned_to: Mapped[User | None] = relationship(foreign_keys=[assigned_to_id], lazy="selectin")
     created_by: Mapped[User | None] = relationship(foreign_keys=[created_by_id], lazy="selectin")
     project: Mapped[Project | None] = relationship(lazy="selectin")
+    campaign: Mapped["Campaign | None"] = relationship("Campaign", lazy="selectin")  # noqa: F821
 
 
 class LeadActivity(Base):
@@ -176,3 +187,12 @@ class LeadCodeCounter(Base):
 
     day: Mapped[date] = mapped_column(Date, primary_key=True)
     last_value: Mapped[int] = mapped_column(Integer, nullable=False)
+
+
+@event.listens_for(Lead.status, "set")
+def _stamp_status_change(target: Lead, value, oldvalue, initiator) -> None:
+    """Whenever a lead's status actually changes, by hand, by a site visit or later by a booking,
+    record when. Pipeline "days in stage" depends on this, so it lives here rather than in each
+    place that changes the status."""
+    if oldvalue is not NO_VALUE and value != oldvalue:
+        target.status_changed_at = datetime.now(UTC)
