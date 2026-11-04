@@ -1,3 +1,4 @@
+import { useToast } from "../Toast";
 import { useEffect, useState } from "react";
 import type { FormEvent } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
@@ -29,6 +30,7 @@ export function ReadinessBanner({ projectId, isAdmin, onOpen }: { projectId: num
 
 export function LegalBankDialog({ projectId, onClose }: { projectId: number; onClose: () => void }) {
   const qc = useQueryClient();
+  const toast = useToast();
   const [tab, setTab] = useState<"legal" | "bank">("legal");
   const legal = useQuery({ queryKey: ["legal", projectId], queryFn: async () => (await api.get<Legal>(`/projects/${projectId}/legal`)).data });
   const bank = useQuery({ queryKey: ["bank", projectId], queryFn: async () => (await api.get<Bank>(`/projects/${projectId}/bank`)).data });
@@ -41,9 +43,10 @@ export function LegalBankDialog({ projectId, onClose }: { projectId: number; onC
   }, [legal.data, l]);
   useEffect(() => { if (bank.data) setB((x) => ({ ...x, bank_name: bank.data.bank_name ?? "", account_holder_name: bank.data.account_holder_name ?? "", ifsc: bank.data.ifsc ?? "", branch: bank.data.branch ?? "" })); }, [bank.data]);
   const done = () => { for (const k of [["legal"], ["bank"], ["readiness"], ["cost-sheet"]]) void qc.invalidateQueries({ queryKey: k }); };
-  const saveLegal = useMutation({ mutationFn: async (body: Record<string, string | null>) => (await api.put(`/projects/${projectId}/legal`, body)).data, onSuccess: done });
+  const saveLegal = useMutation({ mutationFn: async (body: Record<string, string | null>) => (await api.put(`/projects/${projectId}/legal`, body)).data,
+    onSuccess: () => { done(); toast("Legal details saved"); onClose(); } });
   const saveBank = useMutation({ mutationFn: async (body: Record<string, string | null>) => (await api.put(`/projects/${projectId}/bank`, body)).data,
-    onSuccess: () => { done(); setB((x) => ({ ...x, account_number: "" })); } });
+    onSuccess: () => { done(); toast("Bank details saved"); onClose(); } });
   const reveal = useMutation({ mutationFn: async () => (await api.get<Bank>(`/projects/${projectId}/bank`, { params: { reveal: true } })).data, onSuccess: (d) => setRevealed(d.account_number) });
   const v = (x: string) => x.trim() || null;
   return (
@@ -55,7 +58,6 @@ export function LegalBankDialog({ projectId, onClose }: { projectId: number; onC
       {tab === "legal" && l && (
         <form className="space-y-3" onSubmit={(e: FormEvent) => { e.preventDefault(); saveLegal.mutate(Object.fromEntries(Object.entries(l).map(([k, x]) => [k, v(x)]))); }}>
           {saveLegal.isError && <Alert>{errorMessage(saveLegal.error)}</Alert>}
-          {saveLegal.isSuccess && <p role="status" className="text-sm text-forest-800">Saved.</p>}
           <TextInput label="Developer’s legal name" value={l.developer_legal_name} onChange={(e) => setL({ ...l, developer_legal_name: e.target.value })} maxLength={200} />
           <TextInput label="RERA registration number" value={l.rera_number} onChange={(e) => setL({ ...l, rera_number: e.target.value })} maxLength={50} />
           <TextArea label="Registered address" value={l.registered_address} onChange={(e) => setL({ ...l, registered_address: e.target.value })} rows={2} />
@@ -72,7 +74,6 @@ export function LegalBankDialog({ projectId, onClose }: { projectId: number; onC
         <form className="space-y-3" onSubmit={(e: FormEvent) => { e.preventDefault(); saveBank.mutate({ bank_name: v(b.bank_name), account_holder_name: v(b.account_holder_name),
           ifsc: v(b.ifsc), branch: v(b.branch), ...(b.account_number.trim() ? { account_number: b.account_number.trim() } : {}) }); }}>
           {saveBank.isError && <Alert>{errorMessage(saveBank.error)}</Alert>}
-          {saveBank.isSuccess && <p role="status" className="text-sm text-forest-800">Saved.</p>}
           <TextInput label="Bank name" value={b.bank_name} onChange={(e) => setB({ ...b, bank_name: e.target.value })} maxLength={150} />
           <TextInput label="Account holder name" value={b.account_holder_name} onChange={(e) => setB({ ...b, account_holder_name: e.target.value })} maxLength={200} />
           <TextInput label="Account number" inputMode="numeric" value={b.account_number} onChange={(e) => setB({ ...b, account_number: e.target.value })}

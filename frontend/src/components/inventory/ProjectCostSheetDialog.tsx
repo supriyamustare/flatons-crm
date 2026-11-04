@@ -1,3 +1,4 @@
+import { useToast } from "../Toast";
 import { useEffect, useState } from "react";
 import type { FormEvent } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
@@ -14,13 +15,14 @@ interface Template {
 /** Admin: the project's cost sheet: details, charges, payment stages and notes. */
 export function ProjectCostSheetDialog({ projectId, onClose }: { projectId: number; onClose: () => void }) {
   const qc = useQueryClient();
+  const toast = useToast();
   const tpl = useQuery({ queryKey: ["cost-template", projectId], queryFn: async () => (await api.get<Template>(`/projects/${projectId}/cost-sheet`)).data });
   const [t, setT] = useState<Template | null>(null);
   const [notes, setNotes] = useState("");
   useEffect(() => { if (tpl.data && !t) { setT(tpl.data); setNotes(tpl.data.notes.join("\n")); } }, [tpl.data, t]);
   const save = useMutation({
     mutationFn: async (body: Template) => (await api.put<Template>(`/projects/${projectId}/cost-sheet`, body)).data,
-    onSuccess: () => { void qc.invalidateQueries({ queryKey: ["cost-template", projectId] }); void qc.invalidateQueries({ queryKey: ["cost-sheet"] }); onClose(); },
+    onSuccess: () => { void qc.invalidateQueries({ queryKey: ["cost-template", projectId] }); void qc.invalidateQueries({ queryKey: ["cost-sheet"] }); toast("Cost sheet settings saved"); onClose(); },
   });
   if (!t) return <Modal title="Cost sheet settings" onClose={onClose}><p className="text-sm text-muted">Loading…</p></Modal>;
   const total = Math.round(t.stages.reduce((a, s) => a + (Number(s.pct) || 0), 0) * 100) / 100;

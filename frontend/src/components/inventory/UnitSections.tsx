@@ -1,3 +1,4 @@
+import { useToast } from "../Toast";
 import { useEffect, useState } from "react";
 import type { FormEvent } from "react";
 import { Link } from "react-router";
@@ -41,6 +42,7 @@ export function PriceAndArea({ unit }: { unit: Unit }) {
   const me = useCurrentUser();
   const canEdit = me.role === "admin" || me.role === "manager";
   const refresh = useInvalidateUnit();
+  const toast = useToast();
   const [editing, setEditing] = useState(false);
   const [carpet, setCarpet] = useState(""); const [saleable, setSaleable] = useState(""); const [rate, setRate] = useState("");
   useEffect(() => {
@@ -53,7 +55,7 @@ export function PriceAndArea({ unit }: { unit: Unit }) {
     mutationFn: async () => (await api.patch(`/units/${unit.id}`, {
       carpet_sqft: carpet ? num(carpet) : null, builtup_sqft: saleable ? num(saleable) : null, rate_psf: rate ? num(rate) : null,
     })).data,
-    onSuccess: () => { setEditing(false); refresh(); },
+    onSuccess: () => { setEditing(false); refresh(); toast("Price and area saved"); },
   });
   const area = num(saleable) || num(carpet);
   const total = num(rate) > 0 && area > 0 ? Math.round(num(rate) * area) : null;
@@ -95,10 +97,11 @@ export function PriceAndArea({ unit }: { unit: Unit }) {
 function CustomerDialog({ bookingId, initial, onClose }: { bookingId: number; initial: CustomerForm; onClose: () => void }) {
   const save = useUpdateCustomer();
   const refresh = useInvalidateUnit();
+  const toast = useToast();
   const [f, setF] = useState(initial);
   return (
     <Modal title="Customer and payment" onClose={onClose}>
-      <form className="space-y-4" onSubmit={(e: FormEvent) => { e.preventDefault(); save.mutate({ id: bookingId, ...customerPayload(f) }, { onSuccess: () => { refresh(); onClose(); } }); }}>
+      <form className="space-y-4" onSubmit={(e: FormEvent) => { e.preventDefault(); save.mutate({ id: bookingId, ...customerPayload(f) }, { onSuccess: () => { refresh(); toast("Customer details saved"); onClose(); } }); }}>
         {save.isError && <Alert>{errorMessage(save.error)}</Alert>}
         <CustomerFields f={f} set={(patch) => setF({ ...f, ...patch })} />
         <div className="flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
@@ -180,6 +183,7 @@ const OVERRIDE_FIELDS: { key: string; label: string; hint?: string }[] = [
 export function CostSheetEditDialog({ unit, onClose }: { unit: Unit; onClose: () => void }) {
   const sheet = useCostSheet(unit.id);
   const refresh = useInvalidateUnit();
+  const toast = useToast();
   const [values, setValues] = useState<Record<string, string> | null>(null);
   const [label, setLabel] = useState("");
   const [rate, setRate] = useState("");
@@ -192,7 +196,7 @@ export function CostSheetEditDialog({ unit, onClose }: { unit: Unit; onClose: ()
   }, [sheet.data, values, unit.rate_psf]);
   const save = useMutation({
     mutationFn: async (body: Record<string, unknown>) => (await api.put<CostSheet>(`/units/${unit.id}/cost-sheet`, body)).data,
-    onSuccess: () => { refresh(); onClose(); },
+    onSuccess: () => { refresh(); toast(`Cost sheet saved for unit ${unit.unit_no}`); onClose(); },
   });
   const project = sheet.data;
   const submit = (e: FormEvent) => {

@@ -1,3 +1,4 @@
+import { useToast } from "../components/Toast";
 import { useEffect, useState } from "react";
 import type { FormEvent } from "react";
 import { Link, useNavigate, useParams } from "react-router";
@@ -11,6 +12,7 @@ import { STATUS_LABELS, formatMobile, formatRupees } from "../lib/leads";
 
 function PartnerDialog({ partner, onClose, onSaved }: { partner?: ChannelPartner; onClose: () => void; onSaved?: (p: ChannelPartner) => void }) {
   const save = useSavePartner();
+  const toast = useToast();
   const [f, setF] = useState({
     name: partner?.name ?? "", company_name: partner?.company_name ?? "", mobile: partner?.mobile ?? "", email: partner?.email ?? "",
     rera_number: partner?.rera_number ?? "", notes: partner?.notes ?? "",
@@ -22,7 +24,7 @@ function PartnerDialog({ partner, onClose, onSaved }: { partner?: ChannelPartner
       <form className="space-y-4" noValidate onSubmit={(e: FormEvent) => {
         e.preventDefault();
         save.mutate({ id: partner?.id, name: f.name.trim(), company_name: v(f.company_name), mobile: f.mobile.trim(), email: v(f.email),
-          rera_number: v(f.rera_number), notes: v(f.notes) }, { onSuccess: (p) => { onSaved?.(p); onClose(); } });
+          rera_number: v(f.rera_number), notes: v(f.notes) }, { onSuccess: (p) => { toast(partner ? "Channel partner saved" : `${p.name} added`); onSaved?.(p); onClose(); } });
       }}>
         {save.isError && <Alert>{errorMessage(save.error)}</Alert>}
         <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">

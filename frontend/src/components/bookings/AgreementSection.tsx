@@ -1,3 +1,4 @@
+import { useToast } from "../Toast";
 import { useState } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { FileSignature } from "lucide-react";
@@ -13,6 +14,7 @@ const day = (d: string) => new Date(d + "T00:00:00").toLocaleDateString("en-IN",
 export function AgreementSection({ booking, compact = false }: { booking: Booking; compact?: boolean }) {
   const me = useCurrentUser();
   const qc = useQueryClient();
+  const toast = useToast();
   const canEdit = (me.role === "admin" || me.role === "manager") && booking.status === "booked";
   const [open, setOpen] = useState(false);
   const [date, setDate] = useState(today());
@@ -21,7 +23,7 @@ export function AgreementSection({ booking, compact = false }: { booking: Bookin
     for (const k of [["bookings"], ["inventory"], ["projects"], ["dashboard"], ["cost-sheet"]]) void qc.invalidateQueries({ queryKey: k });
   };
   const mark = useMutation({ mutationFn: async () => (await api.post<Booking>(`/bookings/${booking.id}/agreement`, { agreement_date: date })).data,
-    onSuccess: (b) => { refresh(b); setOpen(false); } });
+    onSuccess: (b) => { refresh(b); setOpen(false); toast(`Agreement marked done for unit ${b.unit.unit_no}`); } });
   const undo = useMutation({ mutationFn: async () => (await api.delete<Booking>(`/bookings/${booking.id}/agreement`)).data, onSuccess: refresh });
   const done = booking.agreement_date;
   return (

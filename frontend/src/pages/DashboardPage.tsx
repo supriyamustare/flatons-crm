@@ -13,7 +13,7 @@ import { useOverview } from "../hooks/useOverview";
 import type { LeadTab } from "../hooks/useOverview";
 import { errorMessage, formatDateTime } from "../lib/api";
 import { ROLE_LABELS, isPostSalesOnly } from "../lib/types";
-import { PostSalesHome } from "./postsales/PostSalesPage";
+import { PostSalesHome } from "../components/postsales/CaseBits";
 
 const initials = (name: string) => name.split(" ").map((p) => p[0]).slice(0, 2).join("").toUpperCase();
 

@@ -4,6 +4,7 @@ import { MemoryRouter } from "react-router";
 import { AppRoutes, createQueryClient } from "../App";
 import type { ReactNode } from "react";
 import { AuthProvider, useAuth } from "../hooks/useAuth";
+import { ToastProvider } from "../components/Toast";
 
 /** Render the whole app at a given URL, with a fresh cache. */
 export function renderApp(path = "/") {
@@ -12,9 +13,11 @@ export function renderApp(path = "/") {
   return render(
     <QueryClientProvider client={client}>
       <AuthProvider>
-        <MemoryRouter initialEntries={[path]}>
-          <AppRoutes />
-        </MemoryRouter>
+        <ToastProvider>
+          <MemoryRouter initialEntries={[path]}>
+            <AppRoutes />
+          </MemoryRouter>
+        </ToastProvider>
       </AuthProvider>
     </QueryClientProvider>,
   );
@@ -31,7 +34,9 @@ export function renderWithProviders(ui: ReactNode) {
   return render(
     <QueryClientProvider client={client}>
       <AuthProvider>
-        <MemoryRouter><WhenSignedIn>{ui}</WhenSignedIn></MemoryRouter>
+        <ToastProvider>
+          <MemoryRouter><WhenSignedIn>{ui}</WhenSignedIn></MemoryRouter>
+        </ToastProvider>
       </AuthProvider>
     </QueryClientProvider>,
   );

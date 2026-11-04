@@ -1,3 +1,4 @@
+import { useToast } from "../Toast";
 import { useState } from "react";
 import type { FormEvent } from "react";
 import { FileText, Plus, Trash2 } from "lucide-react";
@@ -30,6 +31,7 @@ function PlanCard({ plan, onDelete }: { plan: FloorPlan; onDelete?: () => void }
 
 function UploadDialog({ projectId, floors, onClose }: { projectId: number; floors: { id: number; label: string }[]; onClose: () => void }) {
   const upload = useUploadFloorPlan(projectId);
+  const toast = useToast();
   const [title, setTitle] = useState("");
   const [scope, setScope] = useState("project");
   const [file, setFile] = useState<File | null>(null);
@@ -39,7 +41,7 @@ function UploadDialog({ projectId, floors, onClose }: { projectId: number; floor
     if (!file) return;
     const [kind, value] = scope.split(":");
     upload.mutate({ title: title.trim(), file, floor_id: kind === "floor" ? Number(value) : undefined, unit_type: kind === "type" ? (value as UnitType) : undefined },
-      { onSuccess: onClose });
+      { onSuccess: () => { toast("Floor plan uploaded"); onClose(); } });
   };
   return (
     <Modal title="Upload floor plan" onClose={onClose}>
