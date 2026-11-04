@@ -135,3 +135,50 @@ describe("error messages", () => {
     expect(errorMessage(err)).toBe("GSTIN must be 15 characters (this one has 11)");
   });
 });
+
+
+describe("saving closes the window and confirms", () => {
+  const bank = { bank_name: null, account_holder_name: null, account_number_masked: null, account_number: null, ifsc: null, branch: null, updated_at: null };
+  const legal = { developer_legal_name: null, rera_number: null, registered_address: null, signatory_name: null, signatory_designation: null, gstin: null, cin: null };
+
+  it("legal details: the window closes and a notification appears", async () => {
+    const { LegalBankDialog } = await import("../components/inventory/LegalBankDialog");
+    const { renderWithProviders } = await import("./render");
+    mockApi(makeUser("admin"), { get: { "/projects/1/legal": legal, "/projects/1/bank": bank }, put: { "/projects/1/legal": legal } });
+    const onClose = vi.fn();
+    renderWithProviders(<LegalBankDialog projectId={1} onClose={onClose} />);
+    await userEvent.type(await screen.findByLabelText("Developer’s legal name"), "Avnee Estates LLP");
+    await userEvent.click(screen.getByRole("button", { name: "Save legal details" }));
+    await waitFor(() => expect(onClose).toHaveBeenCalled());
+    expect(screen.getByRole("status", { name: "Notifications" })).toHaveTextContent("Legal details saved");
+  });
+
+  it("if saving fails, the window stays open with the reason", async () => {
+    const { LegalBankDialog } = await import("../components/inventory/LegalBankDialog");
+    const { renderWithProviders } = await import("./render");
+    const { AxiosError } = await import("axios");
+    const fail = () => { throw new AxiosError("422", "ERR", undefined, undefined, { status: 422, statusText: "", headers: {}, config: {} as never,
+      data: { detail: [{ loc: ["body", "gstin"], msg: "Value error, GSTIN must be 15 characters (this one has 3)" }] } }); };
+    mockApi(makeUser("admin"), { get: { "/projects/1/legal": legal, "/projects/1/bank": bank }, put: { "/projects/1/legal": fail } });
+    const onClose = vi.fn();
+    renderWithProviders(<LegalBankDialog projectId={1} onClose={onClose} />);
+    await userEvent.type(await screen.findByLabelText("GSTIN"), "27A");
+    await userEvent.click(screen.getByRole("button", { name: "Save legal details" }));
+    expect(await screen.findByText("GSTIN must be 15 characters (this one has 3)")).toBeInTheDocument();
+    expect(onClose).not.toHaveBeenCalled();
+    expect(screen.getByRole("status", { name: "Notifications" })).not.toHaveTextContent("saved");
+  });
+
+  it("notifications go away by themselves", async () => {
+    vi.useFakeTimers({ shouldAdvanceTime: true });
+    const { ToastProvider, useToast } = await import("../components/Toast");
+    const { render, act } = await import("@testing-library/react");
+    function Btn() { const toast = useToast(); return <button onClick={() => toast("Bank details saved")}>go</button>; }
+    render(<ToastProvider><Btn /></ToastProvider>);
+    await userEvent.click(screen.getByRole("button", { name: "go" }));
+    expect(screen.getByRole("status", { name: "Notifications" })).toHaveTextContent("Bank details saved");
+    await act(async () => { vi.advanceTimersByTime(4100); });
+    expect(screen.getByRole("status", { name: "Notifications" })).not.toHaveTextContent("Bank details saved");
+    vi.useRealTimers();
+  });
+});

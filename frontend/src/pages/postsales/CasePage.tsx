@@ -1,3 +1,4 @@
+import { useToast } from "../../components/Toast";
 import { useEffect, useState } from "react";
 import type { FormEvent } from "react";
 import { Link, useParams } from "react-router";
@@ -8,7 +9,7 @@ import { DOC_LABELS, OWNERSHIP_LABELS, kycFileUrl, useCase, useCaseAction } from
 import type { CaseDetail, KycDocType, OwnershipType, Requirement } from "../../hooks/usePostSales";
 import { errorMessage, formatDateTime } from "../../lib/api";
 import { formatMobile, formatRupees } from "../../lib/leads";
-import { statusBadge } from "./PostSalesPage";
+import { statusBadge } from "../../components/postsales/CaseBits";
 
 type Tab = "handover" | "customer" | "kyc" | "history";
 const ENTITY: OwnershipType[] = ["company", "partnership", "huf", "trust", "other"];
@@ -80,7 +81,7 @@ function Customer({ c, act }: { c: CaseDetail; act: ReturnType<typeof useCaseAct
   }));
   const [co, setCo] = useState<CoForm[]>(() => c.co_applicants.map((x) => ({ id: x.id, name: x.name, relation: x.relation ?? "", pan: x.pan ?? "", mobile: x.mobile ?? "",
     email: x.email ?? "", ownership_pct: x.ownership_pct ? String(Number(x.ownership_pct)) : "", date_of_birth: x.date_of_birth ?? "" })));
-  const [saved, setSaved] = useState(false);
+  const toast = useToast();
   const ro = !c.can_edit;
   const set = (k: keyof typeof f) => (e: { target: { value: string } }) => setF({ ...f, [k]: e.target.value });
   const tick = (k: keyof typeof f) => (e: { target: { checked: boolean } }) => setF({ ...f, [k]: e.target.checked });
@@ -88,7 +89,7 @@ function Customer({ c, act }: { c: CaseDetail; act: ReturnType<typeof useCaseAct
   const entity = ENTITY.includes(f.ownership_type);
   const shares = [f.ownership_pct, ...co.map((x) => x.ownership_pct)].reduce((a, b) => a + (Number(b) || 0), 0);
   const submit = (e: FormEvent) => {
-    e.preventDefault(); setSaved(false);
+    e.preventDefault();
     act.mutate({ method: "put", path: `/post-sales/cases/${c.id}/profile`, body: {
       ...f, legal_name: v(f.legal_name), entity_name: entity ? v(f.entity_name) : null, date_of_birth: f.date_of_birth || null, pan: v(f.pan),
       ownership_pct: f.ownership_pct ? Number(f.ownership_pct) : null, mobile: v(f.mobile), email: v(f.email), correspondence_address: v(f.correspondence_address),
@@ -96,7 +97,7 @@ function Customer({ c, act }: { c: CaseDetail; act: ReturnType<typeof useCaseAct
       nominee_mobile: v(f.nominee_mobile), communication_needs: null,
       co_applicants: f.ownership_type === "joint" ? co.map((x) => ({ id: x.id, name: x.name.trim(), relation: v(x.relation), pan: v(x.pan), mobile: v(x.mobile),
         email: v(x.email), ownership_pct: x.ownership_pct ? Number(x.ownership_pct) : null, date_of_birth: x.date_of_birth || null })) : [],
-    } }, { onSuccess: () => setSaved(true) });
+    } }, { onSuccess: () => toast("Customer details saved") });
   };
   return (
     <section role="tabpanel" aria-label="Customer" className="rounded-xl bg-white p-5 ring-1 ring-line">
@@ -160,7 +161,6 @@ function Customer({ c, act }: { c: CaseDetail; act: ReturnType<typeof useCaseAct
         </fieldset>
         {c.profile_problems.length > 0 && <p className="text-sm text-gold-600">Still needed before approval: {c.profile_problems.join(", ")}.</p>}
         {act.isError && <Alert>{errorMessage(act.error)}</Alert>}
-        {saved && !act.isError && <p role="status" className="text-sm text-forest-800">Saved.</p>}
         {!ro && <div className="flex justify-end"><Button type="submit" loading={act.isPending}>Save customer details</Button></div>}
       </form>
     </section>
