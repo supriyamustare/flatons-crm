@@ -71,7 +71,9 @@ export function errorMessage(err: unknown, fallback = "Something went wrong. Try
     const first = detail[0] as { loc?: unknown[]; msg?: string };
     const field = String(first.loc?.[first.loc.length - 1] ?? "");
     const msg = (first.msg ?? "is invalid").replace(/^Value error, /, "");
-    return FIELD_LABELS[field] ? `${FIELD_LABELS[field]}: ${msg}` : msg;
+    const label = FIELD_LABELS[field];
+    // Our own messages already name the field ("GSTIN must be ..."); don't say it twice
+    return label && !msg.toLowerCase().startsWith(label.toLowerCase()) ? `${label}: ${msg}` : msg;
   }
   return fallback;
 }

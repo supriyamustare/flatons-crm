@@ -62,7 +62,7 @@ export function LegalBankDialog({ projectId, onClose }: { projectId: number; onC
           <div className="grid grid-cols-2 gap-3">
             <TextInput label="Signatory name" value={l.signatory_name} onChange={(e) => setL({ ...l, signatory_name: e.target.value })} maxLength={150} />
             <TextInput label="Signatory designation" value={l.signatory_designation} onChange={(e) => setL({ ...l, signatory_designation: e.target.value })} maxLength={100} />
-            <TextInput label="GSTIN" value={l.gstin} onChange={(e) => setL({ ...l, gstin: e.target.value })} maxLength={15} placeholder="27ABCDE1234F1Z5" />
+            <TextInput label="GSTIN" value={l.gstin} onChange={(e) => setL({ ...l, gstin: e.target.value })} maxLength={20} hint="15 characters, e.g. 27AAPFU0939F1ZV" />
             <TextInput label="CIN (if a company)" value={l.cin} onChange={(e) => setL({ ...l, cin: e.target.value })} maxLength={21} />
           </div>
           <div className="flex justify-end"><Button type="submit" loading={saveLegal.isPending}>Save legal details</Button></div>

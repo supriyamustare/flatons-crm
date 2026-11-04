@@ -96,12 +96,12 @@ describe("legal & bank details", () => {
     const { put } = mockApi(makeUser("admin"), { get: { "/projects/1/legal": legal, "/projects/1/bank": { bank_name: null, account_holder_name: null,
       account_number_masked: null, account_number: null, ifsc: null, branch: null, updated_at: null } }, put: { "/projects/1/legal": legal } });
     renderWithProviders(<LegalBankDialog projectId={1} onClose={() => {}} />);
-    await userEvent.type(await screen.findByLabelText("GSTIN"), "27AABFA1234C1Z5");
+    await userEvent.type(await screen.findByLabelText("GSTIN"), "27AABFA1234C1Z9");
     await userEvent.click(screen.getByRole("button", { name: "Save legal details" }));
     await waitFor(() => expect(put).toHaveBeenCalled());
     const body = put.mock.calls[0][1] as Record<string, unknown>;
     expect(body).not.toHaveProperty("updated_at");
-    expect(body.gstin).toBe("27AABFA1234C1Z5");
+    expect(body.gstin).toBe("27AABFA1234C1Z9");
   });
 });
 
@@ -121,5 +121,17 @@ describe("header", () => {
     expect(screen.queryByRole("button", { name: /Add lead/ })).not.toBeInTheDocument();
     expect(screen.queryByRole("link", { name: /Add lead/ })).not.toBeInTheDocument();
     expect(screen.queryByPlaceholderText(/Search leads/)).not.toBeInTheDocument();
+  });
+});
+
+describe("error messages", () => {
+  it("show the server's plain message once, without the technical prefix", async () => {
+    const { errorMessage } = await import("../lib/api");
+    const { AxiosError } = await import("axios");
+    const err = new AxiosError("422", "ERR", undefined, undefined, {
+      status: 422, statusText: "", headers: {}, config: {} as never,
+      data: { detail: [{ loc: ["body", "gstin"], msg: "Value error, GSTIN must be 15 characters (this one has 11)" }] },
+    });
+    expect(errorMessage(err)).toBe("GSTIN must be 15 characters (this one has 11)");
   });
 });
