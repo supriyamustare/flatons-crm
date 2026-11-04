@@ -6,19 +6,16 @@ from pydantic import BaseModel, ConfigDict, Field, StringConstraints, field_vali
 
 from app.models.postsales import CaseStatus, KycDocType, KycStatus, OnboardingStatus, OwnershipType
 from app.schemas.common import LongText, PlainText
+from app.schemas.ids import PAN
 from app.schemas.user import UserBrief
 
 Name = Annotated[PlainText, StringConstraints(max_length=200)]
-Pan = Annotated[str, StringConstraints(pattern=r"^[A-Z]{5}[0-9]{4}[A-Z]$")]
+Pan = PAN
 Phone = Annotated[PlainText, StringConstraints(max_length=20, pattern=r"^[0-9+()\- ]{6,20}$")]
 Email = Annotated[
     PlainText, StringConstraints(max_length=254, pattern=r"^[^@\s<>]+@[^@\s<>]+\.[^@\s<>]+$")
 ]
 Pct = Annotated[Decimal, Field(gt=0, le=100, max_digits=5, decimal_places=2)]
-
-
-def _upper(v):
-    return v.strip().upper() if isinstance(v, str) and v.strip() else None
 
 
 def _blank(v):
@@ -36,7 +33,6 @@ class CoApplicantIn(BaseModel):
     ownership_pct: Pct | None = None
     id: int | None = None  # keep the same co-applicant (and their KYC) when editing
 
-    _p = field_validator("pan", mode="before")(lambda v: _upper(v))
     _b = field_validator("relation", "mobile", "email", mode="before")(lambda v: _blank(v))
 
 
@@ -65,7 +61,6 @@ class ProfileIn(BaseModel):
     nominee_mobile: Phone | None = None
     co_applicants: Annotated[list[CoApplicantIn], Field(max_length=6)] = []
 
-    _p = field_validator("pan", mode="before")(lambda v: _upper(v))
     _b = field_validator(
         "legal_name",
         "entity_name",

@@ -10,6 +10,7 @@ from app.models.project import Project
 from app.models.project_legal import ProjectBank, ProjectLegal
 from app.models.user import Role, User
 from app.schemas.common import LongText, PlainText
+from app.schemas.ids import CIN, GSTIN, IFSC, RERA, AccountNumber
 from app.services import doc_readiness
 from app.services.audit import log_audit
 
@@ -19,31 +20,17 @@ Manager = Annotated[User, Depends(require_role(Role.admin, Role.manager))]
 DocsOrManager = Annotated[User, Depends(require_role(Role.admin, Role.manager, Role.docs))]
 
 
-def _upper(v: str | None) -> str | None:
-    return v.strip().upper().replace(" ", "") if isinstance(v, str) and v.strip() else None
-
-
 class LegalIn(BaseModel):
     """Everything is optional while being filled in; readiness says what's still missing."""
 
     model_config = ConfigDict(extra="forbid")
     developer_legal_name: Annotated[PlainText, StringConstraints(max_length=200)] | None = None
-    rera_number: Annotated[str, StringConstraints(pattern=r"^[A-Z0-9/\-]{6,50}$")] | None = None
+    rera_number: RERA | None = None
     registered_address: LongText | None = None
     signatory_name: Annotated[PlainText, StringConstraints(max_length=150)] | None = None
     signatory_designation: Annotated[PlainText, StringConstraints(max_length=100)] | None = None
-    gstin: (
-        Annotated[
-            str, StringConstraints(pattern=r"^[0-9]{2}[A-Z]{5}[0-9]{4}[A-Z][1-9A-Z]Z[0-9A-Z]$")
-        ]
-        | None
-    ) = None
-    cin: (
-        Annotated[str, StringConstraints(pattern=r"^[LU][0-9]{5}[A-Z]{2}[0-9]{4}[A-Z]{3}[0-9]{6}$")]
-        | None
-    ) = None
-
-    _norm = field_validator("rera_number", "gstin", "cin", mode="before")(lambda v: _upper(v))
+    gstin: GSTIN | None = None
+    cin: CIN | None = None
 
     @field_validator(
         "developer_legal_name",
@@ -68,16 +55,9 @@ class BankIn(BaseModel):
     model_config = ConfigDict(extra="forbid")
     bank_name: Annotated[PlainText, StringConstraints(max_length=150)] | None = None
     account_holder_name: Annotated[PlainText, StringConstraints(max_length=200)] | None = None
-    account_number: Annotated[str, StringConstraints(pattern=r"^[0-9]{9,18}$")] | None = None
-    ifsc: Annotated[str, StringConstraints(pattern=r"^[A-Z]{4}0[A-Z0-9]{6}$")] | None = None
+    account_number: AccountNumber | None = None
+    ifsc: IFSC | None = None
     branch: Annotated[PlainText, StringConstraints(max_length=150)] | None = None
-
-    _norm = field_validator("ifsc", mode="before")(lambda v: _upper(v))
-
-    @field_validator("account_number", mode="before")
-    @classmethod
-    def _digits(cls, v):
-        return v.replace(" ", "").replace("-", "") if isinstance(v, str) and v.strip() else None
 
 
 class BankOut(BaseModel):
