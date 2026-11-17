@@ -317,6 +317,24 @@ with the official logo at the same sizes. Offline support arrives in Sprint 16.
   or one unit type. A unit's panel shows the plans for its floor and its type, or the project-wide plans if there
   are none more specific.
 
+## Post-sales (Phase 1, sprint 2): the financial ledger
+
+- One ledger per accepted case (`ledgers`, `ledger_charges`, `ledger_schedule_items`). **Generate** builds a draft
+  from the unit's cost sheet at the agreed price: base price, GST, stamp duty, registration, legal, furnishing and
+  other charges, plus the project's payment stages (Booking due on the booking date; later stages due on their
+  construction milestone). The lender comes from the booking's bank payment details.
+- Charge groups: agreement value (base, floor rise, PLC, parking, amenities, discounts as negative amounts), GST,
+  statutory (stamp duty, registration), other charges (outside the payment plan).
+- Rules before submitting/approving (`services/ledger.problems`): schedule amounts = agreement value; schedule GST =
+  GST charge = GST rate x agreement value; loan <= total payable and needs a lender; milestone stages need a name.
+- **Maker-checker**: finance executives (and admins) prepare and submit; finance approvers (and admins) approve or
+  return with a reason, never their own submission. Approved ledgers are locked; an approver reopens with a reason
+  (new version). Every step is in the case history and the audit log; approvers are notified.
+- Seven balances (`services/ledger.balances`): total outstanding, currently demanded, overdue (due date passed),
+  own contribution still required, loan not yet disbursed, under dispute, other charges. Until receipts arrive the
+  booking amount counts as received (own funds); disbursements and disputes are 0 until their modules exist.
+- Viewers: admin, CRM manager, post-sales executive, finance, finance approver, management, auditor.
+
 ## Post-sales (Phase 1, sprint 1): handover, customer master and KYC
 
 - **Roles** (`app/models/user.py`): besides admin, manager, executive and docs, there are post-sales roles:

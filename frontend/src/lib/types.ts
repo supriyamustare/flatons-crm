@@ -9,6 +9,7 @@ export const LEAD_READERS: Role[] = ["admin", "manager", "executive", "docs"];
 export const POSTSALES_ROLES: Role[] = ["admin", "crm_manager", "postsales_exec", "finance", "finance_approver", "legal",
   "project_manager", "site", "service", "after_sales", "management", "auditor"];
 export const CASE_EDITORS: Role[] = ["admin", "crm_manager", "postsales_exec"];
+export const LEDGER_VIEWERS: Role[] = ["admin", "crm_manager", "postsales_exec", "finance", "finance_approver", "management", "auditor"];
 export const KYC_VIEWERS: Role[] = ["admin", "crm_manager", "postsales_exec", "legal", "auditor"];
 export const isPostSalesOnly = (r: Role) => POSTSALES_ROLES.includes(r) && r !== "admin";
 

@@ -20,6 +20,7 @@ from app.api import (
     integrations,
     inventory,
     leads,
+    ledger,
     marketing,
     notifications,
     pipeline,
@@ -85,4 +86,5 @@ app.include_router(channel_partners.router, prefix="/api")
 app.include_router(floor_plans.router, prefix="/api")
 app.include_router(project_legal.router, prefix="/api")
 app.include_router(postsales.router, prefix="/api")
+app.include_router(ledger.router, prefix="/api")
 app.include_router(leads.router, prefix="/api")
