@@ -16,6 +16,7 @@ from app.api import (
     dashboard,
     demands,
     floor_plans,
+    followups,
     health,
     inbound,
     integrations,
@@ -93,4 +94,5 @@ app.include_router(ledger.router, prefix="/api")
 app.include_router(payments.router, prefix="/api")
 app.include_router(milestones.router, prefix="/api")
 app.include_router(demands.router, prefix="/api")
+app.include_router(followups.router, prefix="/api")
 app.include_router(leads.router, prefix="/api")
