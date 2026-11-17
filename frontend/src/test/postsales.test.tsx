@@ -182,3 +182,27 @@ describe("saving closes the window and confirms", () => {
     vi.useRealTimers();
   });
 });
+
+describe("assigning a case", () => {
+  it("CRM managers assign an owner; a notification confirms it", async () => {
+    const pooja = { id: 21, full_name: "Pooja Test", role: "postsales_exec" as const };
+    const { post } = mockApi(makeUser("crm_manager"), { get: { "/post-sales/cases/4": base, "/post-sales/owners": [pooja] },
+      post: { "/post-sales/cases/4/assign": { ...base, owner: pooja } } });
+    renderApp("/post-sales/4");
+    await userEvent.click(await screen.findByRole("button", { name: "Assign" }));
+    const d = await screen.findByRole("dialog", { name: "Assign case" });
+    await waitFor(() => expect(within(d).getByRole("option", { name: "Pooja Test (Post-sales executive)" })).toBeInTheDocument());
+    await userEvent.selectOptions(within(d).getByLabelText("Owner"), "21");
+    await userEvent.click(within(d).getByRole("button", { name: "Assign" }));
+    await waitFor(() => expect(post).toHaveBeenCalledWith("/post-sales/cases/4/assign", { owner_id: 21 }));
+    expect(await screen.findByText("Case assigned to Pooja Test")).toBeInTheDocument();
+    expect(screen.queryByRole("dialog", { name: "Assign case" })).not.toBeInTheDocument();
+  });
+
+  it("post-sales executives don't get the Assign button", async () => {
+    mockApi(makeUser("postsales_exec"), { get: { "/post-sales/cases/4": base } });
+    renderApp("/post-sales/4");
+    await screen.findByRole("tabpanel", { name: "Handover" });
+    expect(screen.queryByRole("button", { name: "Assign" })).not.toBeInTheDocument();
+  });
+});

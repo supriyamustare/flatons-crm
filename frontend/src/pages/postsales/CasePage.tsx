@@ -5,11 +5,12 @@ import { Link, useParams } from "react-router";
 import { ArrowLeft, Check, FileText, Plus, Trash2, X } from "lucide-react";
 import { Alert, Badge, Button, ErrorState, Modal, PageHeader, SelectInput, TextArea, TextInput, cx } from "../../components/ui";
 import { useCurrentUser } from "../../hooks/useAuth";
-import { DOC_LABELS, OWNERSHIP_LABELS, kycFileUrl, useCase, useCaseAction } from "../../hooks/usePostSales";
+import { DOC_LABELS, OWNERSHIP_LABELS, kycFileUrl, useCase, useCaseAction, useOwners } from "../../hooks/usePostSales";
 import type { CaseDetail, KycDocType, OwnershipType, Requirement } from "../../hooks/usePostSales";
 import { errorMessage, formatDateTime } from "../../lib/api";
 import { formatMobile, formatRupees } from "../../lib/leads";
 import { statusBadge } from "../../components/postsales/CaseBits";
+import { ROLE_LABELS } from "../../lib/types";
 
 type Tab = "handover" | "customer" | "kyc" | "history";
 const ENTITY: OwnershipType[] = ["company", "partnership", "huf", "trust", "other"];
@@ -256,6 +257,39 @@ function UploadKyc({ c, req, onClose }: { c: CaseDetail; req: Requirement; onClo
   );
 }
 
+function AssignOwner({ c, act }: { c: CaseDetail; act: ReturnType<typeof useCaseAction> }) {
+  const [open, setOpen] = useState(false);
+  const [owner, setOwner] = useState(c.owner ? String(c.owner.id) : "");
+  const people = useOwners(open);
+  const toast = useToast();
+  return (
+    <>
+      <Button variant="ghost" onClick={() => { setOwner(c.owner ? String(c.owner.id) : ""); setOpen(true); }}>{c.owner ? "Change owner" : "Assign"}</Button>
+      {open && (
+        <Modal title={c.owner ? "Change owner" : "Assign case"} onClose={() => setOpen(false)}>
+          <form className="space-y-4" onSubmit={(e: FormEvent) => {
+            e.preventDefault();
+            act.mutate({ path: `/post-sales/cases/${c.id}/assign`, body: { owner_id: Number(owner) } }, {
+              onSuccess: (d) => { toast(`Case assigned to ${d.owner?.full_name ?? "the new owner"}`); setOpen(false); } });
+          }}>
+            {act.isError && <Alert>{errorMessage(act.error)}</Alert>}
+            <SelectInput label="Owner" value={owner} onChange={(e) => setOwner(e.target.value)}
+              hint="Post-sales executives and CRM managers. They’ll get a notification.">
+              <option value="">Choose a person</option>
+              {people.data?.map((u) => <option key={u.id} value={u.id}>{u.full_name} ({ROLE_LABELS[u.role]})</option>)}
+            </SelectInput>
+            {people.data && people.data.length === 0 && <p className="text-sm text-muted">No active post-sales executives or CRM managers yet. Add them under Users.</p>}
+            <div className="flex justify-end gap-2">
+              <Button type="button" variant="secondary" onClick={() => setOpen(false)}>Cancel</Button>
+              <Button type="submit" loading={act.isPending} disabled={!owner || owner === String(c.owner?.id ?? "")}>Assign</Button>
+            </div>
+          </form>
+        </Modal>
+      )}
+    </>
+  );
+}
+
 export function CasePage() {
   const id = Number(useParams().caseId);
   const me = useCurrentUser();
@@ -272,7 +306,8 @@ export function CasePage() {
       <PageHeader title={`${c.case_code}: ${c.customer}`} description={`${c.project} · Unit ${c.unit_no} · ${formatRupees(c.agreed_price)} · booked ${c.booking_date}`} />
       <div className="mb-4 flex flex-wrap items-center gap-3 text-sm">
         {statusBadge(c)}
-        <span className="text-muted">Owner: {c.owner?.full_name ?? "Unassigned"}</span>
+        <span className="flex items-center gap-1 text-muted">Owner: {c.owner?.full_name ?? "Unassigned"}
+          {["admin", "crm_manager"].includes(me.role) && c.status !== "cancelled" && <AssignOwner c={c} act={act} />}</span>
         <span className="text-muted">Sales: {c.sales_exec?.full_name ?? "—"}</span>
         {c.profile?.mobile && <a href={`tel:${c.profile.mobile}`} className="text-forest-800 underline">{formatMobile(c.profile.mobile)}</a>}
         {["admin", "crm_manager", "manager"].includes(me.role) && <Link to={`/bookings/${c.booking_id}`} className="text-forest-800 underline">{c.booking_code}</Link>}
