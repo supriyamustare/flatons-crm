@@ -18,6 +18,7 @@ const AccountPage = lazy(() => import("./pages/AccountPage").then((m) => ({ defa
 const CallsPage = lazy(() => import("./pages/CallsPage").then((m) => ({ default: m.CallsPage })));
 const ChannelPartnersPage = lazy(() => import("./pages/ChannelPartnersPage").then((m) => ({ default: m.ChannelPartnersPage })));
 const ChannelPartnerDetailPage = lazy(() => import("./pages/ChannelPartnersPage").then((m) => ({ default: m.ChannelPartnerDetailPage })));
+const DemandLetterPage = lazy(() => import("./pages/postsales/DemandLetterPage").then((m) => ({ default: m.DemandLetterPage })));
 const StatementPage = lazy(() => import("./pages/postsales/StatementPage").then((m) => ({ default: m.StatementPage })));
 const CostSheetPage = lazy(() => import("./pages/CostSheetPage").then((m) => ({ default: m.CostSheetPage })));
 const PostSalesPage = lazy(() => import("./pages/postsales/PostSalesPage").then((m) => ({ default: m.PostSalesPage })));
@@ -59,6 +60,7 @@ export function AppRoutes() {
         {/* Printable page: no menu around it */}
         <Route path="cost-sheet/:unitId" element={<CostSheetPage />} />
         <Route path="statement/:caseId" element={<StatementPage />} />
+        <Route path="demand-letter/:caseId/:demandId" element={<DemandLetterPage />} />
         <Route element={<AppLayout />}>
           <Route index element={<DashboardPage />} />
           <Route path="account" element={<AccountPage />} />

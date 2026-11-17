@@ -9,12 +9,16 @@ from app.core.deps import DbSession, require_role
 from app.models.floor_plan import FloorPlan
 from app.models.inventory import Building, Floor, Unit, UnitType
 from app.models.project import Project
-from app.models.user import Role, User
+from app.models.user import POSTSALES_ROLES, Role, User
 from app.services import receipts as files
 from app.services.audit import log_audit
 
 router = APIRouter(tags=["floor plans"])
-Viewer = Annotated[User, Depends(require_role(Role.admin, Role.manager, Role.executive, Role.docs))]
+# Sales and every post-sales role (site, project and CRM staff need the plans too)
+Viewer = Annotated[
+    User,
+    Depends(require_role(Role.admin, Role.manager, Role.executive, Role.docs, *POSTSALES_ROLES)),
+]
 Manager = Annotated[User, Depends(require_role(Role.admin, Role.manager))]
 FOLDER = "floor_plans"
 

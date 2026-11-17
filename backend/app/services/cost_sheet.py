@@ -20,6 +20,7 @@ from typing import Any
 from pydantic import BaseModel
 
 DEFAULT_TEMPLATE: dict[str, Any] = {
+    "demand_due_days": 15,  # days to pay after a stage is demanded
     "developer_name": "",
     "site_address": "",
     "rera_number": "",

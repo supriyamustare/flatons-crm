@@ -50,6 +50,9 @@ class TemplateIn(BaseModel):
     registration_cap: Money = 30000
     legal_charges: Money = 10000
     furnishing_per_sqft: Annotated[float, Field(ge=0, le=100_000)] = 0
+    demand_due_days: Annotated[int, Field(ge=0, le=90)] = (
+        15  # days to pay after a stage is demanded
+    )
     stages: Annotated[list[StageIn], Field(min_length=1, max_length=40)]
     notes: Annotated[list[Text], Field(max_length=30)] = []
     signatory: Annotated[PlainText, StringConstraints(max_length=120)] | None = None

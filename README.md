@@ -317,6 +317,23 @@ with the official logo at the same sizes. Offline support arrives in Sprint 16.
   or one unit type. A unit's panel shows the plans for its floor and its type, or the project-wide plans if there
   are none more specific.
 
+## Post-sales (Phase 1, sprint 4, part 1): milestones and demands
+
+- **Construction milestones** (`project_milestones`, `milestone_evidence`; files under `FILE_STORAGE_PATH/milestones`):
+  the project's payment stages after Booking. Project managers, site staff or admins report one complete with a date
+  and 1-10 evidence files; a CRM manager or admin who didn't report it verifies or returns it (with a reason).
+- **Verifying** a milestone marks that stage **demanded** today and **due** after the project's "days to pay a
+  demand" (cost sheet settings, default 15) in every live booking's ledger, and drafts a demand where the ledger is
+  approved. Stages now have `demanded_on` (counts in "currently demanded") and `due_date` (counts as overdue after it).
+  Ledger schedule edits keep these dates.
+- **Demands** (`demands`; DMD-00001): this stage still unpaid (incl. GST) + earlier demanded stages still unpaid,
+  due date. Finance submits (needs the project's legal and bank details complete); a finance approver who didn't
+  submit approves or returns. Approval **freezes the letter** (the bank account number kept encrypted). Post-sales,
+  CRM, finance or admin record how it was issued. A correction = cancel with a reason (+ a new version); one live
+  demand per stage. Payment status (unpaid / part paid / paid / overdue) comes from confirmed receipts.
+- **Demand letter**: `/demand-letter/{case}/{demand}` (print or save as PDF); DRAFT-marked until approved.
+- Floor plans are now visible to post-sales staff too.
+
 ## Post-sales (Phase 1, sprint 3): receipts and reconciliation
 
 - **Receipts** (`receipts`, `receipt_allocations`; RCT-00001): amount, date, mode (cheque, DD, NEFT, RTGS, IMPS,
