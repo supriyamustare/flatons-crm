@@ -311,3 +311,33 @@ async def test_case_list_counts_and_new_roles_can_be_created(login_as, booked):
         },
     )
     assert r.status_code == 201 and r.json()["role"] == "finance_approver"
+
+
+async def test_assigning_an_owner(login_as, db, booked):
+    crm, _ = await login_as(Role.crm_manager)
+    _, pooja = await login_as(Role.postsales_exec)
+    _, fin = await login_as(Role.finance)
+    names = [u["id"] for u in (await crm.get("/api/post-sales/owners")).json()]
+    assert pooja.id in names and fin.id not in names  # only post-sales executives and CRM managers
+    r = await crm.post(
+        f"/api/post-sales/cases/{booked['case_id']}/assign", json={"owner_id": pooja.id}
+    )
+    assert r.status_code == 200 and r.json()["owner"]["id"] == pooja.id
+    assert r.json()["history"][-1]["action"] == "assigned"
+    assert await db.scalar(
+        select(Notification.id).where(
+            Notification.user_id == pooja.id, Notification.type == "case_assigned"
+        )
+    )
+    assert (
+        await crm.post(
+            f"/api/post-sales/cases/{booked['case_id']}/assign", json={"owner_id": fin.id}
+        )
+    ).status_code == 422
+    pse, _ = await login_as(Role.postsales_exec)
+    assert (await pse.get("/api/post-sales/owners")).status_code == 403
+    assert (
+        await pse.post(
+            f"/api/post-sales/cases/{booked['case_id']}/assign", json={"owner_id": pooja.id}
+        )
+    ).status_code == 403

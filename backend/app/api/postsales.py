@@ -210,6 +210,17 @@ async def list_cases(
     return CasePage(items=items, total=total, counts={str(k): v for k, v in counts.items()})
 
 
+@router.get("/owners", response_model=list[UserBrief])
+async def owners(_: Allocator, db: DbSession) -> list[UserBrief]:
+    """People who can own a case (active post-sales executives and CRM managers), for the Assign control."""
+    users = await db.scalars(
+        select(User)
+        .where(User.is_active.is_(True), User.role.in_([Role.postsales_exec, Role.crm_manager]))
+        .order_by(User.full_name)
+    )
+    return [UserBrief.model_validate(u) for u in users]
+
+
 @router.get("/cases/{case_id}", response_model=CaseDetail)
 async def get_case(case_id: int, user: Viewer, db: DbSession) -> CaseDetail:
     return await _detail(db, await _case(db, case_id), user)

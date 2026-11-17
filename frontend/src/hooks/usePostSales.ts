@@ -67,3 +67,8 @@ export function useCaseAction(id: number) {
   });
 }
 export const kycFileUrl = (docId: number) => `/api/post-sales/kyc/${docId}/file`;
+
+/** People a case can be assigned to (admins and CRM managers only). */
+export function useOwners(enabled: boolean) {
+  return useQuery({ queryKey: ["post-sales", "owners"], queryFn: async () => (await api.get<UserBrief[]>("/post-sales/owners")).data, enabled });
+}
