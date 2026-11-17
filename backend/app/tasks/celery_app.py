@@ -11,7 +11,13 @@ celery_app = Celery(
     "flatons_crm",
     broker=settings.broker_url,
     backend=settings.redis_url,
-    include=["app.tasks.system", "app.tasks.digest", "app.tasks.inventory", "app.tasks.inbound"],
+    include=[
+        "app.tasks.system",
+        "app.tasks.digest",
+        "app.tasks.inventory",
+        "app.tasks.inbound",
+        "app.tasks.postsales",
+    ],
 )
 
 celery_app.conf.update(
@@ -31,6 +37,10 @@ celery_app.conf.beat_schedule = {
     "daily-follow-up-digest": {
         "task": "followups.daily_digest",
         "schedule": crontab(hour=8, minute=0),
+    },
+    "payment-reminders": {
+        "task": "postsales.payment_reminders",
+        "schedule": crontab(hour=9, minute=0),
     },
     "release-expired-unit-holds": {
         "task": "inventory.release_expired_holds",

@@ -317,6 +317,20 @@ with the official logo at the same sizes. Offline support arrives in Sprint 16.
   or one unit type. A unit's panel shows the plans for its floor and its type, or the project-wide plans if there
   are none more specific.
 
+## Post-sales (Phase 1, sprint 4, part 2): follow-ups, promises to pay, reminders
+
+- **Payment follow-ups** (`payment_follow_ups`): how (call, email, SMS, WhatsApp, visit, letter, note), outcome
+  (reached, not reachable, promised to pay, disputed, says already paid, other), note, optional demand, contact date
+  (last 30 days), optional next follow-up (next 60 days). Logged by post-sales, CRM, finance or admin; visible to
+  ledger viewers. A promise needs an amount and a date in the next 90 days.
+- A promise is **kept** when confirmed receipts recorded after it was made, dated by the promise date, reach the
+  amount; **broken** once the date passes without that; **open** until then.
+- **Daily reminders** (Celery beat `postsales.payment_reminders`, 09:00 India time; `services/followups.run_reminders`)
+  to the case owner (or CRM managers if none): issued demands due in 3 days / today / overdue 1, 7, 15, 30 days
+  (CRM managers too from 15); broken promises (owner, whoever logged it, CRM managers; once); follow-ups due today.
+  The same reminder isn't repeated within 20 hours. Customer-facing SMS/email/WhatsApp come with the portal phase.
+- Post-sales home: **Follow-ups due** (follow-ups due, promises due today or broken) via `/api/post-sales/follow-ups/due`.
+
 ## Post-sales (Phase 1, sprint 4, part 1): milestones and demands
 
 - **Construction milestones** (`project_milestones`, `milestone_evidence`; files under `FILE_STORAGE_PATH/milestones`):
