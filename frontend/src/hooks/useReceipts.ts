@@ -32,3 +32,7 @@ export function useReceiptAction(caseId: number) {
     onSuccess: (d) => { qc.setQueryData(["receipts", caseId], d); void qc.invalidateQueries({ queryKey: ["ledger", caseId] }); },
   });
 }
+
+/** "Rejected" for a receipt thrown out before confirmation; otherwise the stored status. */
+export const statusLabel = (r: Pick<Receipt, "status" | "confirmed_at">) =>
+  r.status === "reversed" && !r.confirmed_at ? "Rejected" : RECEIPT_STATUS[r.status];

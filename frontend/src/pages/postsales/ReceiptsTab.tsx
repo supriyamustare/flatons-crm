@@ -4,7 +4,7 @@ import { Plus, Printer, Trash2 } from "lucide-react";
 import { Alert, Badge, Button, Modal, SelectInput, TextArea, TextInput, cx } from "../../components/ui";
 import { useToast } from "../../components/Toast";
 import { inr } from "../../hooks/useLedger";
-import { MODE_LABELS, RECEIPT_STATUS, useReceiptAction, useReceipts } from "../../hooks/useReceipts";
+import { MODE_LABELS, statusLabel, useReceiptAction, useReceipts } from "../../hooks/useReceipts";
 import type { Match, Receipt, ReceiptMode, Receipts } from "../../hooks/useReceipts";
 import { errorMessage, formatDateTime } from "../../lib/api";
 
@@ -40,12 +40,13 @@ function MatchRows({ d, rows, setRows }: { d: Receipts; rows: Row[]; setRows: (r
 
 function RecordReceipt({ d, caseId, onClose }: { d: Receipts; caseId: number; onClose: () => void }) {
   const act = useReceiptAction(caseId); const toast = useToast();
-  const [f, setF] = useState({ amount: "", received_on: today(), mode: "neft" as ReceiptMode, source: "own", reference: "", payer_name: "", bank_name: "", notes: "" });
+  const [f, setF] = useState({ amount: "", received_on: today(), mode: "" as ReceiptMode | "", source: "own", reference: "", payer_name: "", bank_name: "", notes: "" });
   const [manual, setManual] = useState(false);
   const [rows, setRows] = useState<Row[]>([{ target: "", amount: "" }]);
   const set = (k: keyof typeof f) => (e: { target: { value: string } }) => setF({ ...f, [k]: e.target.value });
   const amount = num(f.amount);
   const cashTooMuch = f.mode === "cash" && amount >= 200_000;
+  const looksCash = f.mode !== "" && f.mode !== "cash" && ["CASH", "BYCASH", "INCASH"].includes(f.reference.toUpperCase().replace(/[^A-Z]/g, ""));
   const submit = (e: FormEvent) => {
     e.preventDefault();
     const v = (x: string) => x.trim() || null;
@@ -61,16 +62,18 @@ function RecordReceipt({ d, caseId, onClose }: { d: Receipts; caseId: number; on
           <TextInput label="Amount (₹)" inputMode="numeric" value={f.amount} onChange={set("amount")} autoFocus />
           <TextInput label="Received on" type="date" value={f.received_on} max={today()} onChange={set("received_on")} />
           <SelectInput label="Mode" value={f.mode} onChange={set("mode")}>
+            <option value="" disabled>Choose how it was paid</option>
             {(Object.keys(MODE_LABELS) as ReceiptMode[]).map((m) => <option key={m} value={m}>{MODE_LABELS[m]}</option>)}
           </SelectInput>
           <SelectInput label="Paid from" value={f.source} onChange={set("source")}>
             <option value="own">Customer’s own funds</option><option value="loan">Loan disbursement</option>
           </SelectInput>
-          <TextInput label={f.mode === "cheque" || f.mode === "dd" ? "Cheque / DD number" : "UTR / transaction reference"} value={f.reference} onChange={set("reference")} maxLength={60}
+          <TextInput label={f.mode === "cheque" || f.mode === "dd" ? "Cheque / DD number" : f.mode === "cash" ? "Reference (optional)" : f.mode ? "UTR / transaction reference" : "Reference"} value={f.reference} onChange={set("reference")} maxLength={60}
             hint={f.mode === "cash" ? "Optional for cash" : undefined} />
           <TextInput label="Bank" value={f.bank_name} onChange={set("bank_name")} maxLength={150} />
         </div>
         {cashTooMuch && <p role="alert" className="text-sm text-danger">Cash of ₹2,00,000 or more can’t be accepted (Income-tax Act, section 269ST).</p>}
+        {looksCash && <p role="alert" className="text-sm text-danger">This looks like a cash payment; choose Cash as the mode.</p>}
         <TextInput label="Paid by" value={f.payer_name} onChange={set("payer_name")} maxLength={150} />
         <fieldset className="space-y-2 rounded-lg bg-paper p-3 text-sm">
           <legend className="font-semibold">Matching</legend>
@@ -81,7 +84,7 @@ function RecordReceipt({ d, caseId, onClose }: { d: Receipts; caseId: number; on
         </fieldset>
         <TextArea label="Notes (optional)" value={f.notes} onChange={set("notes")} rows={2} maxLength={500} />
         <div className="flex justify-end gap-2"><Button type="button" variant="secondary" onClick={onClose}>Cancel</Button>
-          <Button type="submit" loading={act.isPending} disabled={amount <= 0 || cashTooMuch}>Record receipt</Button></div>
+          <Button type="submit" loading={act.isPending} disabled={amount <= 0 || !f.mode || cashTooMuch || looksCash}>Record receipt</Button></div>
       </form>
     </Modal>
   );
@@ -107,15 +110,16 @@ function Rematch({ d, r, caseId, onClose }: { d: Receipts; r: Receipt; caseId: n
 
 function VoidDialog({ r, kind, caseId, onClose }: { r: Receipt; kind: "bounce" | "reverse"; caseId: number; onClose: () => void }) {
   const act = useReceiptAction(caseId); const toast = useToast(); const [reason, setReason] = useState("");
-  const title = kind === "bounce" ? `Mark ${r.receipt_no} as bounced` : `Reverse ${r.receipt_no}`;
+  const reject = kind === "reverse" && r.status === "recorded";
+  const title = kind === "bounce" ? `Mark ${r.receipt_no} as bounced` : reject ? `Reject ${r.receipt_no}` : `Reverse ${r.receipt_no}`;
   return (
     <Modal title={title} onClose={onClose}>
-      <form className="space-y-3" onSubmit={(e: FormEvent) => { e.preventDefault(); act.mutate({ path: `/${r.id}/${kind}`, body: { reason: reason.trim() } }, { onSuccess: () => { toast(kind === "bounce" ? "Marked as bounced" : "Receipt reversed"); onClose(); } }); }}>
+      <form className="space-y-3" onSubmit={(e: FormEvent) => { e.preventDefault(); act.mutate({ path: `/${r.id}/${kind}`, body: { reason: reason.trim() } }, { onSuccess: () => { toast(kind === "bounce" ? "Marked as bounced" : reject ? "Receipt rejected" : "Receipt reversed"); onClose(); } }); }}>
         {act.isError && <Alert>{errorMessage(act.error)}</Alert>}
         <p className="text-sm">{inr(r.amount)} {r.reference ? `(${r.reference})` : ""} will stop counting. It stays on record with your reason.</p>
-        <TextArea label="Reason" value={reason} onChange={(e) => setReason(e.target.value)} rows={2} maxLength={500} autoFocus placeholder={kind === "bounce" ? "e.g. Insufficient funds" : "e.g. Entered twice"} />
+        <TextArea label="Reason" value={reason} onChange={(e) => setReason(e.target.value)} rows={2} maxLength={500} autoFocus placeholder={kind === "bounce" ? "e.g. Insufficient funds" : reject ? "e.g. Was a cheque, entered as NEFT" : "e.g. Entered twice"} />
         <div className="flex justify-end gap-2"><Button type="button" variant="secondary" onClick={onClose}>Cancel</Button>
-          <Button type="submit" variant="danger" loading={act.isPending} disabled={reason.trim().length < 3}>{kind === "bounce" ? "Mark bounced" : "Reverse"}</Button></div>
+          <Button type="submit" variant="danger" loading={act.isPending} disabled={reason.trim().length < 3}>{kind === "bounce" ? "Mark bounced" : reject ? "Reject" : "Reverse"}</Button></div>
       </form>
     </Modal>
   );
@@ -155,19 +159,19 @@ export function ReceiptsTab({ caseId }: { caseId: number }) {
               <tr key={r.id} className={cx("border-t border-line align-top", (r.status === "bounced" || r.status === "reversed") && "text-muted")}>
                 <th scope="row" className="px-3 py-2 text-left font-normal"><span className="font-medium">{r.receipt_no}</span> <span className="text-xs text-muted">{r.received_on}</span>
                   <span className="block text-xs text-muted">{r.source === "loan" ? "Loan disbursement" : "Own funds"}{r.payer_name ? ` · ${r.payer_name}` : ""}{r.from_booking ? " · from the booking" : ""}</span>
-                  {r.void_reason && <span className="block text-xs text-danger">{RECEIPT_STATUS[r.status]}: {r.void_reason}</span>}</th>
+                  {r.void_reason && <span className="block text-xs text-danger">{statusLabel(r)}: {r.void_reason}</span>}</th>
                 <td className="px-3 py-2">{MODE_LABELS[r.mode]}{r.reference && <span className="block text-xs text-muted">{r.reference}</span>}</td>
                 <td className={cx("px-3 py-2 text-right tabular-nums", (r.status === "bounced" || r.status === "reversed") && "line-through")}>{inr(r.amount)}</td>
                 <td className="px-3 py-2 text-right tabular-nums">{r.status === "bounced" || r.status === "reversed" ? <span aria-label="Not counted">—</span> : <>{inr(r.matched)}
                   {r.matched < r.amount && <span className="block text-xs text-muted">{inr(r.amount - r.matched)} advance</span>}</>}</td>
-                <td className="px-3 py-2"><Badge tone={tone(r.status)}>{RECEIPT_STATUS[r.status]}</Badge>
+                <td className="px-3 py-2"><Badge tone={tone(r.status)}>{statusLabel(r)}</Badge>
                   <span className="block text-xs text-muted">by {r.recorded_by?.full_name ?? "—"}{r.confirmed_by ? `; confirmed by ${r.confirmed_by.full_name}` : ""}</span></td>
                 <td className="px-3 py-2"><div className="flex flex-wrap justify-end gap-1">
                   {r.can_match && <Button variant="ghost" onClick={() => setOpen({ kind: "match", r })}>Match</Button>}
                   {r.can_confirm && <Button variant="secondary" loading={act.isPending} onClick={() => act.mutate({ path: `/${r.id}/confirm` }, { onSuccess: () => toast(`${r.receipt_no} confirmed`) })}>Confirm</Button>}
                   {r.status === "recorded" && !r.can_confirm && <span className="self-center text-xs text-muted">Waiting for a finance approver</span>}
                   {r.can_bounce && <Button variant="ghost" onClick={() => setOpen({ kind: "bounce", r })}>Bounced</Button>}
-                  {r.can_reverse && <Button variant="ghost" onClick={() => setOpen({ kind: "reverse", r })}>Reverse</Button>}
+                  {r.can_reverse && <Button variant="ghost" onClick={() => setOpen({ kind: "reverse", r })}>{r.status === "recorded" ? "Reject" : "Reverse"}</Button>}
                 </div></td>
               </tr>
             ))}
