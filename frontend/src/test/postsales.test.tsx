@@ -206,3 +206,23 @@ describe("assigning a case", () => {
     expect(screen.queryByRole("button", { name: "Assign" })).not.toBeInTheDocument();
   });
 });
+
+describe("users page", () => {
+  it("the Add user form offers every role, including post-sales, and creates one", async () => {
+    const { post } = mockApi(makeUser("admin"), { get: { "/users": [] }, post: { "/users": { id: 30, email: "pooja.test@example.com", full_name: "Pooja Test", role: "postsales_exec", is_active: true } } });
+    renderApp("/users");
+    await userEvent.click(await screen.findByRole("button", { name: /Add user/ }));
+    const d = await screen.findByRole("dialog");
+    const role = within(d).getByLabelText("Role");
+    const options = within(role).getAllByRole("option").map((o) => o.textContent);
+    expect(options).toHaveLength(15);
+    expect(options).toEqual(expect.arrayContaining(["Post-sales executive", "CRM manager", "Finance approver", "Auditor"]));
+    expect(within(role).getByRole("group", { name: "Post-sales" })).toBeInTheDocument();
+    await userEvent.selectOptions(role, "postsales_exec");
+    expect(d).toHaveTextContent("Handover, customer details, KYC and document follow-up");
+    await userEvent.type(within(d).getByLabelText(/Full name|Name/), "Pooja Test");
+    await userEvent.type(within(d).getByLabelText(/Email/), "pooja.test@example.com");
+    await userEvent.click(within(d).getByRole("button", { name: /Add user|Create/ }));
+    await waitFor(() => expect(post).toHaveBeenCalledWith("/users", expect.objectContaining({ role: "postsales_exec", email: "pooja.test@example.com" })));
+  });
+});
