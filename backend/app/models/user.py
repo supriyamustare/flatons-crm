@@ -45,6 +45,18 @@ POSTSALES_ROLES = (
 )
 # Who may change post-sales cases, customer details and KYC
 CASE_EDITORS = (Role.admin, Role.crm_manager, Role.postsales_exec)
+# Ledger: who may see it, who prepares it (maker), who approves it (checker)
+LEDGER_VIEWERS = (
+    Role.admin,
+    Role.crm_manager,
+    Role.postsales_exec,
+    Role.finance,
+    Role.finance_approver,
+    Role.management,
+    Role.auditor,
+)
+LEDGER_MAKERS = (Role.admin, Role.finance)
+LEDGER_CHECKERS = (Role.admin, Role.finance_approver)
 # Who may open KYC files (sensitive identity documents)
 KYC_VIEWERS = (Role.admin, Role.crm_manager, Role.postsales_exec, Role.legal, Role.auditor)
 
