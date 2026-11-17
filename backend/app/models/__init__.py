@@ -28,6 +28,7 @@ from app.models.ledger import (
 )
 from app.models.marketing import Campaign, Channel, Expense, ExpenseCategory
 from app.models.notification import Notification
+from app.models.payment import Allocation, FundSource, Receipt, ReceiptMode, ReceiptStatus
 from app.models.pipeline import DEFAULT_PROBABILITIES, PipelineStage
 from app.models.postsales import (
     CaseEvent,
@@ -48,6 +49,11 @@ from app.models.user import Role, User
 from app.models.visit import InterestLevel, SiteVisit, VisitSource, VisitStatus
 
 __all__ = [
+    "Allocation",
+    "FundSource",
+    "Receipt",
+    "ReceiptMode",
+    "ReceiptStatus",
     "ChargeHead",
     "Ledger",
     "LedgerCharge",

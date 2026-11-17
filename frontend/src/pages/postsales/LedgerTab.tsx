@@ -20,7 +20,7 @@ function Balances({ l }: { l: Ledger }) {
   return (
     <section aria-label="Balances" className="rounded-xl bg-white p-4 ring-1 ring-line">
       <p className="mb-3 text-sm text-muted">Total payable <b className="text-ink">{inr(t.total_payable)}</b> · received <b className="text-ink">{inr(b.received)}</b>
-        <span className="block text-xs">Received is the booking amount until receipts are recorded (next sprint).</span></p>
+        <span className="block text-xs">Only confirmed receipts count{b.pending_confirmation ? `; ${inr(b.pending_confirmation)} is waiting for confirmation` : ""}{b.unapplied ? `; ${inr(b.unapplied)} is an advance not yet matched` : ""}.</span></p>
       <dl className="grid grid-cols-2 gap-2 sm:grid-cols-4 lg:grid-cols-7">
         {cards.map(([label, n, tone]) => (
           <div key={label} className={cx("rounded-lg p-2.5", tone === "danger" ? "bg-danger-soft" : "bg-paper")}>

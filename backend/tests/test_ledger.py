@@ -97,12 +97,29 @@ async def test_generate_from_the_cost_sheet(login_as, case):
 async def test_the_seven_balances(login_as, case):
     fin, _, led = await generated(login_as, case)
     b, total = led["balances"], led["totals"]["total_payable"]
-    booking_stage = 322_500 + 3_225  # 10% + its GST, due today
-    assert b["received"] == PAID and b["total_outstanding"] == total - PAID
-    assert b["currently_demanded"] == booking_stage - PAID == 3_225
+    # The booking amount is a receipt waiting for confirmation: not counted yet
+    assert (b["received"], b["pending_confirmation"], b["currently_demanded"]) == (
+        0,
+        PAID,
+        322_500 + 3_225,
+    )
+    chk, _ = await login_as(Role.finance_approver)
+    rid = (await chk.get(f"/api/post-sales/cases/{case}/receipts")).json()["receipts"][0]["id"]
+    await chk.post(f"/api/post-sales/cases/{case}/receipts/{rid}/confirm")
+    b = (await fin.get(f"/api/post-sales/cases/{case}/ledger")).json()["balances"]
+    assert (
+        b["received"] == PAID
+        and b["total_outstanding"] == total - PAID
+        and b["pending_confirmation"] == 0
+    )
+    assert b["currently_demanded"] == 3_225  # the booking stage's GST is still unpaid
     assert b["overdue"] == 0  # due today, not yet past
     assert b["own_contribution_required"] == total - PAID and b["loan_not_disbursed"] == 0
-    assert b["under_dispute"] == 0 and b["other_charges"] == 225_800 + 30_000 + 10_000
+    assert (
+        b["under_dispute"] == 0
+        and b["other_charges"] == 225_800 + 30_000 + 10_000
+        and b["unapplied"] == 0
+    )
     r = await fin.put(
         f"/api/post-sales/cases/{case}/ledger/funding",
         json={"loan_sanctioned": 2_500_000, "lender": "HDFC Bank", "loan_reference": "HL-123"},

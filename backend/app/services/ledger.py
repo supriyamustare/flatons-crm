@@ -78,6 +78,8 @@ class Balances(BaseModel):
     loan_not_disbursed: int
     under_dispute: int
     other_charges: int
+    unapplied: int = 0  # received but not yet matched to a stage or charge (an advance)
+    pending_confirmation: int = 0  # recorded receipts waiting for a finance approver
 
 
 def totals(ledger: Ledger) -> Totals:
@@ -100,25 +102,41 @@ def is_due(item: ScheduleItem, today: date) -> bool:
 
 
 def balances(
-    ledger: Ledger, *, received_own: int, loan_disbursed: int = 0, disputed: int = 0, today: date
+    ledger: Ledger,
+    *,
+    received_own: int,
+    loan_disbursed: int = 0,
+    disputed: int = 0,
+    today: date,
+    paid_by_stage: dict[int, int] | None = None,
+    paid_other: int = 0,
+    pending: int = 0,
 ) -> Balances:
+    """paid_by_stage: confirmed receipts matched to each stage (by its number). When not given, what's been
+    received is applied to the stages oldest first (used before receipts are matched)."""
     t = totals(ledger)
     received = received_own + loan_disbursed
-    due = sum(i.amount + i.gst for i in ledger.schedule if is_due(i, today))
-    past = sum(
-        i.amount + i.gst for i in ledger.schedule if i.due_date is not None and i.due_date < today
-    )
+    stages = sorted(ledger.schedule, key=lambda i: i.seq)
+    if paid_by_stage is None:
+        left, paid_by_stage = received, {}
+        for i in stages:
+            take = min(left, i.amount + i.gst)
+            paid_by_stage[i.seq], left = take, left - take
+    unpaid = {i.seq: max(0, i.amount + i.gst - paid_by_stage.get(i.seq, 0)) for i in stages}
+    applied = sum(min(paid_by_stage.get(i.seq, 0), i.amount + i.gst) for i in stages) + paid_other
     return Balances(
         received=received,
         received_own=received_own,
         loan_disbursed=loan_disbursed,
         total_outstanding=t.total_payable - received,
-        currently_demanded=max(0, due - received),
-        overdue=max(0, past - received),
+        currently_demanded=sum(unpaid[i.seq] for i in stages if is_due(i, today)),
+        overdue=sum(unpaid[i.seq] for i in stages if i.due_date is not None and i.due_date < today),
         own_contribution_required=max(0, t.total_payable - ledger.loan_sanctioned - received_own),
         loan_not_disbursed=max(0, ledger.loan_sanctioned - loan_disbursed),
         under_dispute=disputed,
-        other_charges=t.statutory + t.other,
+        other_charges=max(0, t.statutory + t.other - paid_other),
+        unapplied=max(0, received - applied),
+        pending_confirmation=pending,
     )
 
 
