@@ -357,6 +357,7 @@ async def generate(case_id: int, request: Request, user: Maker, db: DbSession) -
                 gst=st.gst,
                 trigger_type=TriggerType.on_booking if first else TriggerType.on_milestone,
                 due_date=case.booking.booking_date if first else None,
+                demanded_on=case.booking.booking_date if first else None,
                 milestone=None if first else st.name,
             )
         )
@@ -427,20 +428,33 @@ async def put_schedule(
         )
     except payments.MatchError as exc:
         raise HTTPException(status.HTTP_422_UNPROCESSABLE_CONTENT, str(exc)) from None
-    ledger.schedule = [
-        ScheduleItem(
-            seq=i + 1,
-            name=x.name,
-            amount=x.amount,
-            gst=x.gst,
-            trigger_type=x.trigger_type,
-            due_date=case.booking.booking_date
-            if x.trigger_type == TriggerType.on_booking
-            else x.due_date,
-            milestone=x.milestone if x.trigger_type == TriggerType.on_milestone else None,
+    # Keep demand/due dates already set for milestone stages (by milestone name)
+    known = {
+        (x.milestone or "").strip().lower(): (x.demanded_on, x.due_date)
+        for x in ledger.schedule
+        if x.trigger_type == TriggerType.on_milestone and x.demanded_on
+    }
+    items = []
+    for n, x in enumerate(body):
+        if x.trigger_type == TriggerType.on_booking:
+            dem, due = case.booking.booking_date, case.booking.booking_date
+        elif x.trigger_type == TriggerType.on_date:
+            dem, due = x.due_date, x.due_date
+        else:
+            dem, due = known.get((x.milestone or "").strip().lower(), (None, None))
+        items.append(
+            ScheduleItem(
+                seq=n + 1,
+                name=x.name,
+                amount=x.amount,
+                gst=x.gst,
+                trigger_type=x.trigger_type,
+                due_date=due,
+                demanded_on=dem,
+                milestone=x.milestone if x.trigger_type == TriggerType.on_milestone else None,
+            )
         )
-        for i, x in enumerate(body)
-    ]
+    ledger.schedule = items
     await db.flush()
     _log(
         db,

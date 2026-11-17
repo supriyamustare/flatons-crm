@@ -5,6 +5,7 @@ from app.models.base import Base
 from app.models.booking import Booking, BookingEvent, BookingStatus, PaymentMode, PaymentPreference
 from app.models.call import CONNECTED_OUTCOMES, CallDirection, CallLog, CallOutcome
 from app.models.channel_partner import ChannelPartner
+from app.models.demand import Demand, DemandStatus, IssueMethod
 from app.models.floor_plan import FloorPlan
 from app.models.integration import InboundEvent, InboundStatus, Integration, IntegrationKind
 from app.models.inventory import Building, Floor, Unit, UnitStatus, UnitType
@@ -27,6 +28,7 @@ from app.models.ledger import (
     TriggerType,
 )
 from app.models.marketing import Campaign, Channel, Expense, ExpenseCategory
+from app.models.milestone import MilestoneEvidence, MilestoneStatus, ProjectMilestone
 from app.models.notification import Notification
 from app.models.payment import Allocation, FundSource, Receipt, ReceiptMode, ReceiptStatus
 from app.models.pipeline import DEFAULT_PROBABILITIES, PipelineStage
@@ -49,6 +51,12 @@ from app.models.user import Role, User
 from app.models.visit import InterestLevel, SiteVisit, VisitSource, VisitStatus
 
 __all__ = [
+    "Demand",
+    "DemandStatus",
+    "IssueMethod",
+    "MilestoneEvidence",
+    "MilestoneStatus",
+    "ProjectMilestone",
     "Allocation",
     "FundSource",
     "Receipt",

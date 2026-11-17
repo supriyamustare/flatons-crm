@@ -98,7 +98,9 @@ def totals(ledger: Ledger) -> Totals:
 
 
 def is_due(item: ScheduleItem, today: date) -> bool:
-    return item.due_date is not None and item.due_date <= today
+    """Demanded (counts in "currently demanded") once its demand date has arrived; overdue only after its due date."""
+    when = item.demanded_on or item.due_date
+    return when is not None and when <= today
 
 
 def balances(

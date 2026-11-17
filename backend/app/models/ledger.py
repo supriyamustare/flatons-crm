@@ -159,4 +159,6 @@ class ScheduleItem(Base):
     due_date: Mapped[date | None] = mapped_column(
         Date
     )  # set for booking/date triggers; for milestones once reached
+    # When the stage was demanded (booking date, the fixed date, or when its milestone was verified)
+    demanded_on: Mapped[date | None] = mapped_column(Date)
     milestone: Mapped[str | None] = mapped_column(String(120))

@@ -9,7 +9,7 @@ import { api, errorMessage } from "../../lib/api";
 interface Template {
   developer_name: string | null; site_address: string | null; rera_number: string | null; signatory: string | null;
   gst_pct: number; stamp_duty_pct: number; registration_pct: number; registration_cap: number; legal_charges: number; furnishing_per_sqft: number;
-  stages: { name: string; pct: number }[]; notes: string[];
+  stages: { name: string; pct: number }[]; notes: string[]; demand_due_days: number;
 }
 
 /** Admin: the project's cost sheet: details, charges, payment stages and notes. */
@@ -45,6 +45,7 @@ export function ProjectCostSheetDialog({ projectId, onClose }: { projectId: numb
           <TextInput label="Registration max (₹)" type="number" value={t.registration_cap} onChange={n("registration_cap")} />
           <TextInput label="Legal charges (₹)" type="number" value={t.legal_charges} onChange={n("legal_charges")} />
           <TextInput label="Furnishing (₹/sq ft)" type="number" step="0.01" value={t.furnishing_per_sqft} onChange={n("furnishing_per_sqft")} />
+          <TextInput label="Days to pay a demand" type="number" min={0} max={90} value={t.demand_due_days ?? 15} onChange={n("demand_due_days")} />
         </div>
         <fieldset>
           <legend className="mb-1 text-sm font-semibold">Payment stages <span className={total === 100 ? "text-forest-800" : "text-danger"}>(total {total}%)</span></legend>

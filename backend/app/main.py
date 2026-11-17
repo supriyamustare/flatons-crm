@@ -14,6 +14,7 @@ from app.api import (
     channel_partners,
     cost_sheets,
     dashboard,
+    demands,
     floor_plans,
     health,
     inbound,
@@ -22,6 +23,7 @@ from app.api import (
     leads,
     ledger,
     marketing,
+    milestones,
     notifications,
     payments,
     pipeline,
@@ -89,4 +91,6 @@ app.include_router(project_legal.router, prefix="/api")
 app.include_router(postsales.router, prefix="/api")
 app.include_router(ledger.router, prefix="/api")
 app.include_router(payments.router, prefix="/api")
+app.include_router(milestones.router, prefix="/api")
+app.include_router(demands.router, prefix="/api")
 app.include_router(leads.router, prefix="/api")
