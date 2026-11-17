@@ -4,7 +4,7 @@ import { Alert, Button, Modal, SelectInput, TextInput } from "../../components/u
 import { useCreateUser, useDeactivateUser, useUpdateUser } from "../../hooks/useUsers";
 import type { UserChanges } from "../../hooks/useUsers";
 import { errorMessage } from "../../lib/api";
-import { ROLE_DESCRIPTIONS, ROLE_LABELS, ROLES } from "../../lib/types";
+import { ROLE_DESCRIPTIONS, ROLE_GROUPS, ROLE_LABELS } from "../../lib/types";
 import type { Role, User } from "../../lib/types";
 
 /** Readable temporary password, e.g. "maple-river-4821". */
@@ -24,10 +24,14 @@ function RoleSelect({ value, onChange, disabled }: { value: Role; onChange: (r: 
       disabled={disabled}
       hint={ROLE_DESCRIPTIONS[value]}
     >
-      {ROLES.map((r) => (
-        <option key={r} value={r}>
-          {ROLE_LABELS[r]}
-        </option>
+      {ROLE_GROUPS.map((g) => (
+        <optgroup key={g.label} label={g.label}>
+          {g.roles.map((r) => (
+            <option key={r} value={r}>
+              {ROLE_LABELS[r]}
+            </option>
+          ))}
+        </optgroup>
       ))}
     </SelectInput>
   );

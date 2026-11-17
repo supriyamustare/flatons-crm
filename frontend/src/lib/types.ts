@@ -28,7 +28,14 @@ export interface UserBrief {
   role: Role;
 }
 
-export const ROLES: Role[] = ["admin", "manager", "executive", "docs"];
+/** Every role, grouped as the Users page shows them. */
+export const ROLE_GROUPS: { label: string; roles: Role[] }[] = [
+  { label: "Administration", roles: ["admin"] },
+  { label: "Pre-sales", roles: ["manager", "executive", "docs"] },
+  { label: "Post-sales", roles: ["crm_manager", "postsales_exec", "finance", "finance_approver", "legal", "project_manager", "site", "service", "after_sales"] },
+  { label: "Oversight", roles: ["management", "auditor"] },
+];
+export const ROLES: Role[] = ROLE_GROUPS.flatMap((g) => g.roles);
 
 export const ROLE_LABELS: Record<Role, string> = {
   admin: "Admin",
