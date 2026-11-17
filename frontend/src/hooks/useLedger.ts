@@ -14,7 +14,7 @@ export interface Ledger {
   charges: Charge[]; schedule: Item[]; problems: string[]; can_edit: boolean; can_approve: boolean; head_labels: Record<string, string>;
   totals: { agreement_value: number; gst: number; statutory: number; other: number; total_payable: number; schedule_amount: number; schedule_gst: number } | null;
   balances: { received: number; received_own: number; loan_disbursed: number; total_outstanding: number; currently_demanded: number; overdue: number;
-    own_contribution_required: number; loan_not_disbursed: number; under_dispute: number; other_charges: number } | null;
+    own_contribution_required: number; loan_not_disbursed: number; under_dispute: number; other_charges: number; unapplied: number; pending_confirmation: number } | null;
 }
 export const AGREEMENT: ChargeHead[] = ["base_price", "floor_rise", "plc", "parking", "amenities", "discount"];
 export const STATUTORY: ChargeHead[] = ["stamp_duty", "registration"];

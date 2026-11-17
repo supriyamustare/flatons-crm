@@ -23,7 +23,7 @@ const ledger: Ledger = {
     { seq: 2, name: "Plinth", amount: 2_902_500, gst: 29_025, trigger_type: "on_milestone", due_date: null, milestone: "Plinth", is_due: false }],
   totals: { agreement_value: 3_225_000, gst: 32_250, statutory: 225_800, other: 0, total_payable: 3_483_050, schedule_amount: 3_225_000, schedule_gst: 32_250 },
   balances: { received: 322_500, received_own: 322_500, loan_disbursed: 0, total_outstanding: 3_160_550, currently_demanded: 3_225, overdue: 0,
-    own_contribution_required: 660_550, loan_not_disbursed: 2_500_000, under_dispute: 0, other_charges: 225_800 },
+    own_contribution_required: 660_550, loan_not_disbursed: 2_500_000, under_dispute: 0, other_charges: 225_800, unapplied: 0, pending_confirmation: 0 },
 };
 
 async function openLedger() {

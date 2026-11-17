@@ -317,6 +317,24 @@ with the official logo at the same sizes. Offline support arrives in Sprint 16.
   or one unit type. A unit's panel shows the plans for its floor and its type, or the project-wide plans if there
   are none more specific.
 
+## Post-sales (Phase 1, sprint 3): receipts and reconciliation
+
+- **Receipts** (`receipts`, `receipt_allocations`; RCT-00001): amount, date, mode (cheque, DD, NEFT, RTGS, IMPS,
+  UPI, card, cash, other), source (own funds or loan disbursement), payer, reference, bank. Rules: a reference for
+  everything but cash; no cash of Rs 2,00,000 or more (Income-tax Act s.269ST; also a database rule); no future
+  dates; a live reference can't be recorded twice (a bounced cheque may be presented again); loan disbursements need
+  a sanctioned loan on the ledger.
+- **Matching**: oldest unpaid stages first by default, or by hand to stages (by stage number) and to statutory/other
+  charges. Nothing can be matched beyond what's unpaid (live receipts reserve their matches); the rest is an advance.
+  Ledger schedule/charge edits that would fall below matched amounts are refused.
+- **Maker-checker**: finance records and matches; a finance approver (never the recorder) confirms. Only confirmed
+  receipts count. Approvers mark cheques/DDs **bounced** or confirmed receipts **reversed**, with a reason; nothing is
+  deleted. Every step is in the case history and audit log.
+- The booking amount becomes a receipt waiting for confirmation when the ledger is generated (and, by migration, for
+  ledgers that already existed), using the booking's payment mode and reference.
+- Balances now come from confirmed, matched receipts (`services/payments.position`), plus "waiting for confirmation"
+  and "advance". **Statement of account**: `/statement/{case}` (print or save as PDF).
+
 ## Post-sales (Phase 1, sprint 2): the financial ledger
 
 - One ledger per accepted case (`ledgers`, `ledger_charges`, `ledger_schedule_items`). **Generate** builds a draft

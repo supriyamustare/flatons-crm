@@ -3,7 +3,7 @@ from typing import Annotated
 
 from fastapi import APIRouter, Depends, HTTPException, Request, status
 from pydantic import BaseModel, ConfigDict, Field, StringConstraints, model_validator
-from sqlalchemy import select
+from sqlalchemy import func, select
 
 from app.api.cost_sheets import build as build_cost_sheet
 from app.core.deps import DbSession, require_role
@@ -16,11 +16,13 @@ from app.models.ledger import (
     ScheduleItem,
     TriggerType,
 )
+from app.models.payment import LIVE, Allocation, FundSource, Receipt, ReceiptMode
 from app.models.postsales import CaseStatus, PostSalesCase
 from app.models.user import LEDGER_CHECKERS, LEDGER_MAKERS, LEDGER_VIEWERS, Role, User
 from app.schemas.common import PlainText
 from app.schemas.user import UserBrief
 from app.services import ledger as svc
+from app.services import payments
 from app.services import postsales as cases
 from app.services.audit import log_audit
 from app.services.notifications import notify
@@ -176,7 +178,7 @@ async def _out(db: DbSession, case: PostSalesCase, ledger: Ledger | None, user: 
             for i in ledger.schedule
         ],
         totals=svc.totals(ledger),
-        balances=svc.balances(ledger, received_own=case.booking.booking_amount, today=t),
+        balances=await _balances(db, ledger, t),
         problems=svc.problems(ledger),
         can_edit=user.role in LEDGER_MAKERS
         and ledger.status == LedgerStatus.draft
@@ -185,6 +187,28 @@ async def _out(db: DbSession, case: PostSalesCase, ledger: Ledger | None, user: 
         and ledger.status == LedgerStatus.pending_approval
         and ledger.submitted_by_id != user.id,
         head_labels=labels,
+    )
+
+
+async def _balances(db: DbSession, ledger: Ledger, t: date) -> svc.Balances:
+    receipts = list(await db.scalars(select(Receipt).where(Receipt.case_id == ledger.case_id)))
+    pos = payments.position(ledger, receipts)
+    return svc.balances(
+        ledger,
+        received_own=pos["received_own"],
+        loan_disbursed=pos["loan_disbursed"],
+        today=t,
+        paid_by_stage=pos["paid_by_stage"],
+        paid_other=pos["paid_other"],
+        pending=pos["pending"],
+    )
+
+
+async def _live_receipts(db: DbSession, case_id: int) -> list[Receipt]:
+    return list(
+        await db.scalars(
+            select(Receipt).where(Receipt.case_id == case_id, Receipt.status.in_(LIVE))
+        )
     )
 
 
@@ -217,6 +241,60 @@ def _log(
         details=details,
         request=request,
     )
+
+
+BOOKING_MODES = {
+    "cheque": ReceiptMode.cheque,
+    "bank_transfer": ReceiptMode.neft,
+    "upi": ReceiptMode.upi,
+    "card": ReceiptMode.card,
+    "cash": ReceiptMode.cash,
+    "other": ReceiptMode.other,
+}
+
+
+async def _booking_receipt(db: DbSession, case: PostSalesCase, ledger: Ledger, user: User) -> None:
+    """The booking amount taken at booking becomes a receipt that finance must confirm like any other."""
+    b = case.booking
+    if b.booking_amount <= 0 or await db.scalar(
+        select(Receipt.id).where(Receipt.case_id == case.id, Receipt.from_booking.is_(True))
+    ):
+        return
+    mode = BOOKING_MODES.get(b.payment_mode.value if b.payment_mode else "other", ReceiptMode.other)
+    note = "Booking amount recorded at booking"
+    if mode == ReceiptMode.cash and b.booking_amount >= 200_000:
+        mode, note = (
+            ReceiptMode.other,
+            "Booking amount was recorded as cash of Rs 2 lakh or more; check how it was actually paid",
+        )
+    reference = (b.payment_reference or "").strip().upper() or (
+        None if mode == ReceiptMode.cash else f"BKG-{b.id:05d}"
+    )
+    if reference and await db.scalar(
+        select(Receipt.id).where(
+            Receipt.mode == mode,
+            func.upper(Receipt.reference) == reference,
+            Receipt.status.in_(LIVE),
+        )
+    ):
+        reference = f"BKG-{b.id:05d}"
+    r = Receipt(
+        case_id=case.id,
+        amount=b.booking_amount,
+        received_on=b.booking_date,
+        mode=mode,
+        source=FundSource.own,
+        payer_name=b.customer_name or b.lead.name,
+        reference=reference,
+        notes=note,
+        from_booking=True,
+        recorded_by_id=user.id,
+    )
+    r.allocations = [
+        Allocation(stage_seq=seq, amount=amt)
+        for seq, amt in payments.auto_match(ledger, [], b.booking_amount)
+    ]
+    db.add(r)
 
 
 @router.get("", response_model=LedgerOut)
@@ -284,6 +362,7 @@ async def generate(case_id: int, request: Request, user: Maker, db: DbSession) -
         )
     ledger.schedule = items
     await db.flush()
+    await _booking_receipt(db, case, ledger, user)
     _log(
         db,
         case,
@@ -306,6 +385,13 @@ async def put_charges(
 ) -> LedgerOut:
     case = await _case(db, case_id)
     ledger = _draft(await _ledger(db, case_id))
+    new_totals: dict = {}
+    for c in body:
+        new_totals[c.head] = new_totals.get(c.head, 0) + c.amount
+    try:
+        payments.charges_fit(new_totals, await _live_receipts(db, case_id))
+    except payments.MatchError as exc:
+        raise HTTPException(status.HTTP_422_UNPROCESSABLE_CONTENT, str(exc)) from None
     before = {c.label: c.amount for c in ledger.charges}
     ledger.charges = [
         LedgerCharge(head=c.head, label=c.label, amount=c.amount, sort_order=i)
@@ -334,6 +420,13 @@ async def put_schedule(
 ) -> LedgerOut:
     case = await _case(db, case_id)
     ledger = _draft(await _ledger(db, case_id))
+    try:
+        payments.schedule_fits(
+            [(i + 1, x.name, x.amount + x.gst) for i, x in enumerate(body)],
+            await _live_receipts(db, case_id),
+        )
+    except payments.MatchError as exc:
+        raise HTTPException(status.HTTP_422_UNPROCESSABLE_CONTENT, str(exc)) from None
     ledger.schedule = [
         ScheduleItem(
             seq=i + 1,

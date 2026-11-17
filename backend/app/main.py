@@ -23,6 +23,7 @@ from app.api import (
     ledger,
     marketing,
     notifications,
+    payments,
     pipeline,
     postsales,
     project_legal,
@@ -87,4 +88,5 @@ app.include_router(floor_plans.router, prefix="/api")
 app.include_router(project_legal.router, prefix="/api")
 app.include_router(postsales.router, prefix="/api")
 app.include_router(ledger.router, prefix="/api")
+app.include_router(payments.router, prefix="/api")
 app.include_router(leads.router, prefix="/api")
