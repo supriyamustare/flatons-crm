@@ -1,3 +1,4 @@
+import re
 from datetime import UTC, date, datetime, timedelta, timezone
 from typing import Annotated
 
@@ -70,6 +71,12 @@ class ReceiptIn(BaseModel):
             self.reference = self.reference.strip().upper()
         if self.mode != ReceiptMode.cash and not self.reference:
             raise ValueError("Enter the cheque number, UTR or transaction reference")
+        if (
+            self.mode != ReceiptMode.cash
+            and self.reference
+            and re.sub(r"[^A-Z]", "", self.reference) in ("CASH", "BYCASH", "CASHPAYMENT", "INCASH")
+        ):
+            raise ValueError("This looks like a cash payment; choose Cash as the mode")
         if self.mode == ReceiptMode.cash and self.amount >= CASH_LIMIT:
             raise ValueError(
                 "Cash of Rs 2,00,000 or more can't be accepted (Income-tax Act, section 269ST)"
@@ -221,7 +228,8 @@ async def summary(db: DbSession, case: PostSalesCase, user: User) -> ReceiptsOut
                 can_bounce=is_checker
                 and r.mode in BOUNCEABLE
                 and r.status in (ReceiptStatus.recorded, ReceiptStatus.confirmed),
-                can_reverse=is_checker and r.status == ReceiptStatus.confirmed,
+                can_reverse=is_checker
+                and r.status in (ReceiptStatus.recorded, ReceiptStatus.confirmed),
             )
         )
     stages = []
@@ -449,9 +457,10 @@ async def _void(
             raise HTTPException(
                 status.HTTP_422_UNPROCESSABLE_CONTENT, "This receipt is already bounced or reversed"
             )
-    elif r.status != ReceiptStatus.confirmed:
+    elif r.status not in (ReceiptStatus.recorded, ReceiptStatus.confirmed):
         raise HTTPException(
-            status.HTTP_422_UNPROCESSABLE_CONTENT, "Only a confirmed receipt can be reversed"
+            status.HTTP_422_UNPROCESSABLE_CONTENT,
+            "This receipt is already bounced, reversed or rejected",
         )
     was = r.status
     r.status, r.void_reason, r.voided_by_id, r.voided_at = to, reason, user.id, datetime.now(UTC)
@@ -479,5 +488,5 @@ async def bounce(
 async def reverse(
     case_id: int, rid: int, body: ReasonIn, request: Request, user: Checker, db: DbSession
 ) -> ReceiptsOut:
-    """A confirmed receipt entered in error. It stays on record, marked reversed, and no longer counts."""
+    """A receipt entered in error: rejected before confirmation, or reversed after. It stays on record and no longer counts."""
     return await _void(db, case_id, rid, user, request, body.reason, ReceiptStatus.reversed)

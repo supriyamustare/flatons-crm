@@ -102,3 +102,35 @@ describe("receipts tab", () => {
     expect(screen.queryByRole("navigation", { name: "Main" })).not.toBeInTheDocument();
   });
 });
+
+describe("avoiding wrong entries", () => {
+  it("the mode must be chosen, and a 'CASH' reference needs the Cash mode", async () => {
+    mockApi(makeUser("finance"), { get: { "/post-sales/cases/4": kase, "/post-sales/cases/4/receipts": { ...data, can_record: true } } });
+    renderApp("/post-sales/4");
+    const panel = await openReceipts();
+    await userEvent.click(within(panel).getByRole("button", { name: "Record receipt" }));
+    const d = await screen.findByRole("dialog", { name: "Record receipt" });
+    await userEvent.type(within(d).getByLabelText("Amount (₹)"), "250000");
+    expect(within(d).getByLabelText("Mode")).toHaveValue("");
+    expect(within(d).getByRole("button", { name: "Record receipt" })).toBeDisabled();
+    await userEvent.selectOptions(within(d).getByLabelText("Mode"), "neft");
+    await userEvent.type(within(d).getByLabelText("UTR / transaction reference"), "cash");
+    expect(within(d).getByRole("alert")).toHaveTextContent("choose Cash as the mode");
+    expect(within(d).getByRole("button", { name: "Record receipt" })).toBeDisabled();
+  });
+
+  it("approvers reject a receipt still waiting for confirmation; it shows as Rejected", async () => {
+    const waiting = { ...booking, id: 4, receipt_no: "RCT-00004", from_booking: false, reference: "000123", can_reverse: true };
+    const rejected = { ...waiting, status: "reversed" as const, void_reason: "Was a cheque, entered as NEFT", can_confirm: false, can_reverse: false };
+    const { post } = mockApi(makeUser("finance_approver"), { get: { "/post-sales/cases/4": kase, "/post-sales/cases/4/receipts": { ...data, receipts: [waiting] } },
+      post: { "/post-sales/cases/4/receipts/4/reverse": { ...data, receipts: [rejected] } } });
+    renderApp("/post-sales/4");
+    const panel = await openReceipts();
+    await userEvent.click(within(within(panel).getByRole("row", { name: /RCT-00004/ })).getByRole("button", { name: "Reject" }));
+    const d = await screen.findByRole("dialog", { name: "Reject RCT-00004" });
+    await userEvent.type(within(d).getByLabelText("Reason"), "Was a cheque, entered as NEFT");
+    await userEvent.click(within(d).getByRole("button", { name: "Reject" }));
+    await waitFor(() => expect(post).toHaveBeenCalledWith("/post-sales/cases/4/receipts/4/reverse", { reason: "Was a cheque, entered as NEFT" }));
+    expect(await within(panel).findByText("Rejected: Was a cheque, entered as NEFT")).toBeInTheDocument();
+  });
+});

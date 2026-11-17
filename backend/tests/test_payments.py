@@ -196,12 +196,6 @@ async def test_duplicates_bounces_and_reversals(login_as, case):
             json={"reason": "Wrong entry"},
         )
     ).status_code == 422
-    assert (
-        await chk.post(
-            f"/api/post-sales/cases/{case}/receipts/{upi['id']}/reverse",
-            json={"reason": "Wrong entry"},
-        )
-    ).status_code == 422  # not confirmed yet
     await chk.post(f"/api/post-sales/cases/{case}/receipts/{upi['id']}/confirm")
     data = (
         await chk.post(
@@ -280,3 +274,40 @@ async def test_who_can_see_and_do_what(login_as, case):
                 f"/api/post-sales/cases/{case}/receipts", json=rec(1_000, ref=f"R-{role.value}")
             )
         ).status_code == record, role
+
+
+async def test_wrong_entries_can_be_rejected_before_confirmation(login_as, case):
+    fin, _, _ = await generated(login_as, case)
+    chk = await checker(login_as)
+    r = await fin.post(
+        f"/api/post-sales/cases/{case}/receipts", json=rec(250_000, mode="neft", ref="cash")
+    )
+    assert (
+        r.status_code == 422 and "choose Cash as the mode" in r.text
+    )  # can't slip past the cash limit
+    wrong = (
+        await fin.post(
+            f"/api/post-sales/cases/{case}/receipts", json=rec(50_000, mode="neft", ref="000123")
+        )
+    ).json()["receipts"][0]
+    data = (
+        await chk.post(
+            f"/api/post-sales/cases/{case}/receipts/{wrong['id']}/reverse",
+            json={"reason": "Was a cheque, entered as NEFT"},
+        )
+    ).json()
+    gone = next(x for x in data["receipts"] if x["id"] == wrong["id"])
+    assert (
+        gone["status"] == "reversed"
+        and gone["confirmed_at"] is None
+        and gone["void_reason"] == "Was a cheque, entered as NEFT"
+    )
+    assert (
+        data["balances"]["pending_confirmation"] == 322_500
+    )  # only the booking receipt is still waiting
+    # now it can be entered correctly as a cheque
+    assert (
+        await fin.post(
+            f"/api/post-sales/cases/{case}/receipts", json=rec(50_000, mode="cheque", ref="000123")
+        )
+    ).status_code == 201

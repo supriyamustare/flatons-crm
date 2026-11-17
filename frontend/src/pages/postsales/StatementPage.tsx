@@ -2,7 +2,7 @@ import { useParams } from "react-router";
 import { Printer } from "lucide-react";
 import { ErrorState } from "../../components/ui";
 import { inr, useLedger } from "../../hooks/useLedger";
-import { MODE_LABELS, RECEIPT_STATUS, useReceipts } from "../../hooks/useReceipts";
+import { MODE_LABELS, statusLabel, useReceipts } from "../../hooks/useReceipts";
 import { useCase } from "../../hooks/usePostSales";
 import { errorMessage } from "../../lib/api";
 
@@ -53,7 +53,7 @@ export function StatementPage() {
           <thead><tr className="bg-neutral-100">{["Receipt", "Date", "Mode / reference", "Amount", "Status"].map((h) => <th key={h} className={`${td} text-left`}>{h}</th>)}</tr></thead>
           <tbody>{[...rec.receipts].reverse().map((x) => (
             <tr key={x.id}><td className={td}>{x.receipt_no}</td><td className={td}>{x.received_on}</td><td className={td}>{MODE_LABELS[x.mode]}{x.reference ? ` ${x.reference}` : ""}{x.source === "loan" ? " (loan)" : ""}</td>
-              <td className={num}>{inr(x.amount)}</td><td className={td}>{RECEIPT_STATUS[x.status]}{x.void_reason ? `: ${x.void_reason}` : ""}</td></tr>))}</tbody>
+              <td className={num}>{inr(x.amount)}</td><td className={td}>{statusLabel(x)}{x.void_reason ? `: ${x.void_reason}` : ""}</td></tr>))}</tbody>
         </table>
         <p className="mt-6 text-[11px] text-neutral-600">Only confirmed receipts count as received. Receipts waiting for confirmation, bounced or reversed are listed for reference. This statement is computer-generated.</p>
       </article>
