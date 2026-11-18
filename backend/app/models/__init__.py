@@ -4,6 +4,7 @@ from app.models.audit import AuditLog
 from app.models.base import Base
 from app.models.booking import Booking, BookingEvent, BookingStatus, PaymentMode, PaymentPreference
 from app.models.call import CONNECTED_OUTCOMES, CallDirection, CallLog, CallOutcome
+from app.models.case_document import Approval, CaseDocument, DocCategory, Verification, Visibility
 from app.models.channel_partner import ChannelPartner
 from app.models.demand import Demand, DemandStatus, IssueMethod
 from app.models.floor_plan import FloorPlan
@@ -52,6 +53,11 @@ from app.models.user import Role, User
 from app.models.visit import InterestLevel, SiteVisit, VisitSource, VisitStatus
 
 __all__ = [
+    "Approval",
+    "CaseDocument",
+    "DocCategory",
+    "Verification",
+    "Visibility",
     "FollowUpChannel",
     "FollowUpOutcome",
     "PaymentFollowUp",

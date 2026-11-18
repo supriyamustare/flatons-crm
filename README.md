@@ -317,6 +317,23 @@ with the official logo at the same sizes. Offline support arrives in Sprint 16.
   or one unit type. A unit's panel shows the plans for its floor and its type, or the project-wide plans if there
   are none more specific.
 
+## Post-sales (Phase 1, sprint 5, part 1): the customer document folder
+
+- **Customer folder** (`case_documents`; DOC-00001; files under `FILE_STORAGE_PATH/case_docs`): the specification's 11
+  categories (01 Booking & Application ... 11 Other Project Documents). Mandatory metadata: category, type, title,
+  number, date, validity, linked reference, uploader and time, verification (pending/verified/rejected/expired),
+  approval (under approval/approved/released/withdrawn/rejected), version, visibility (internal/customer), SHA-256.
+- **Process**: upload (type/size checked by content; duplicate file or live duplicate number in the category refused)
+  -> review by someone other than the uploader (approve or reject with a reason; rejected files stay in the history)
+  -> release to the customer (CRM manager/admin) or withdraw (with a reason). A new version needs a reason; a
+  released old version is withdrawn automatically. Uploads, reviews, releases, withdrawals and downloads are audited.
+- **Who** (`services/case_documents.py`): view by category (KYC: KYC viewers; demands/payments/loan: ledger viewers;
+  others: all post-sales roles); upload and review by category (e.g. legal for agreements, finance approver for
+  payments/loan/demands, site for construction/possession/warranties).
+- Generated documents appear in their folder without being stored twice: KYC files (02), issued/cancelled demand
+  letters (04), confirmed receipts and the statement of account (05).
+- Not yet: malware scanning (needs a scanner such as ClamAV on the server; planned for hardening).
+
 ## Post-sales (Phase 1, sprint 4, part 2): follow-ups, promises to pay, reminders
 
 - **Payment follow-ups** (`payment_follow_ups`): how (call, email, SMS, WhatsApp, visit, letter, note), outcome
