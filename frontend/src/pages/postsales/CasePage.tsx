@@ -15,8 +15,9 @@ import { LedgerTab } from "./LedgerTab";
 import { ReceiptsTab } from "./ReceiptsTab";
 import { DemandsTab } from "./DemandsTab";
 import { FollowUpsTab } from "./FollowUpsTab";
+import { DocumentsTab } from "./DocumentsTab";
 
-type Tab = "handover" | "customer" | "kyc" | "ledger" | "receipts" | "demands" | "followups" | "history";
+type Tab = "handover" | "customer" | "kyc" | "ledger" | "receipts" | "demands" | "followups" | "documents" | "history";
 const ENTITY: OwnershipType[] = ["company", "partnership", "huf", "trust", "other"];
 const HISTORY: Record<string, string> = {
   created: "Case created from the booking", accepted: "Handover accepted", returned_to_sales: "Returned to sales", resent_by_sales: "Resent by sales",
@@ -29,6 +30,8 @@ const HISTORY: Record<string, string> = {
   milestone_reached: "Construction milestone verified", demand_created: "Demand drafted", demand_submitted: "Demand sent for approval", demand_approved: "Demand approved",
   demand_returned: "Demand returned", demand_issued: "Demand issued", demand_cancelled: "Demand cancelled",
   payment_follow_up: "Payment follow-up logged", promise_broken: "Promise to pay broken",
+  document_uploaded: "Document uploaded", document_replaced: "New document version", document_approved: "Document approved", document_rejected: "Document rejected",
+  document_released: "Document released to customer", document_withdrawn: "Document withdrawn",
 };
 
 function ReasonDialog({ title, label, cta, onClose, onSubmit, busy, error }: { title: string; label: string; cta: string; onClose: () => void;
@@ -324,7 +327,7 @@ export function CasePage() {
         {c.kyc_total > 0 && <span className="text-muted">KYC {c.kyc_done}/{c.kyc_total} verified</span>}
       </div>
       <div role="tablist" aria-label="Case" className="mb-4 flex gap-1 overflow-x-auto rounded-xl bg-white p-1 ring-1 ring-line">
-        {([["handover", "Handover"], ["customer", "Customer"], ["kyc", "KYC"], ["ledger", "Ledger"], ["receipts", "Receipts"], ["demands", "Demands"], ["followups", "Follow-ups"], ["history", "History"]] as const)
+        {([["handover", "Handover"], ["customer", "Customer"], ["kyc", "KYC"], ["ledger", "Ledger"], ["receipts", "Receipts"], ["demands", "Demands"], ["followups", "Follow-ups"], ["documents", "Documents"], ["history", "History"]] as const)
           .filter(([k]) => !["ledger", "receipts", "demands", "followups"].includes(k) || LEDGER_VIEWERS.includes(me.role)).map(([k, l]) => (
           <button key={k} role="tab" aria-selected={tab === k} onClick={() => setTab(k)}
             className={cx("min-h-11 flex-1 rounded-lg px-3 text-sm whitespace-nowrap", tab === k ? "bg-forest-900 text-white" : "hover:bg-forest-50")}>{l}</button>
@@ -337,6 +340,7 @@ export function CasePage() {
       {tab === "receipts" && <ReceiptsTab caseId={c.id} />}
       {tab === "demands" && <DemandsTab caseId={c.id} />}
       {tab === "followups" && <FollowUpsTab caseId={c.id} />}
+      {tab === "documents" && <DocumentsTab caseId={c.id} />}
       {tab === "history" && (
         <section role="tabpanel" aria-label="History" className="rounded-xl bg-white p-5 ring-1 ring-line">
           <ol className="space-y-2 text-sm">{c.history.map((h, i) => (
@@ -344,6 +348,7 @@ export function CasePage() {
               {typeof h.details?.receipt === "string" && <> ({String(h.details.receipt)})</>}
               {typeof h.details?.demand === "string" && <> ({String(h.details.demand)})</>}
               {typeof h.details?.milestone === "string" && <>: {String(h.details.milestone)}</>}
+              {typeof h.details?.document === "string" && <> ({String(h.details.document)}{typeof h.details?.title === "string" ? `, ${String(h.details.title)}` : ""})</>}
               <span className="block text-xs text-muted">{h.actor?.full_name ?? "System"}, {formatDateTime(h.at)}</span></li>))}</ol>
         </section>
       )}

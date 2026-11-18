@@ -11,6 +11,7 @@ from app.api import (
     auth,
     bookings,
     calls,
+    case_documents,
     channel_partners,
     cost_sheets,
     dashboard,
@@ -95,4 +96,5 @@ app.include_router(payments.router, prefix="/api")
 app.include_router(milestones.router, prefix="/api")
 app.include_router(demands.router, prefix="/api")
 app.include_router(followups.router, prefix="/api")
+app.include_router(case_documents.router, prefix="/api")
 app.include_router(leads.router, prefix="/api")
