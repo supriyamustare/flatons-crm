@@ -83,7 +83,7 @@ async def create_for_booking(
             type="handover",
             title=f"New handover: {lead.name}",
             body=f"Booking {booking.id:05d} is ready for post-sales to check and accept",
-            link=f"/post-sales/{case.id}",
+            link=f"/post-sales/{case.id}?tab=handover",
         )
     return case
 

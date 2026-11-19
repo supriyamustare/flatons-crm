@@ -307,7 +307,7 @@ async def submit(
             type="demand_approval",
             title=f"Demand to approve: {case.booking.lead.name}",
             body=f"{svc.code(d)}: {d.stage_name}, Rs {d.total_due:,}",
-            link=f"/post-sales/{case.id}",
+            link=f"/post-sales/{case.id}?tab=demands",
         )
     await db.commit()
     return await summary(db, case, user)

@@ -1,4 +1,5 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { useLocation } from "react-router";
 import type { FormEvent } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { CheckCircle2, FileText } from "lucide-react";
@@ -42,6 +43,7 @@ function ReportDialog({ projectId, m, onClose }: { projectId: number; m: Milesto
 /** Construction milestones (post-sales): reported with evidence, verified by someone else; verifying demands the stage. */
 export function ProjectMilestones({ projectId }: { projectId: number }) {
   const q = useMilestones(projectId, true);
+  const location = useLocation();
   const qc = useQueryClient(); const toast = useToast();
   const [reporting, setReporting] = useState<Milestone | null>(null);
   const [returning, setReturning] = useState<Milestone | null>(null);
@@ -56,6 +58,10 @@ export function ProjectMilestones({ projectId }: { projectId: number }) {
       else { toast(`${m.name} returned`); setReturning(null); setReason(""); }
     },
   });
+  // Opened from a notification (/projects/1#milestones): scroll here once the list has loaded
+  useEffect(() => {
+    if (q.data && location.hash === "#milestones") document.getElementById("milestones")?.scrollIntoView({ behavior: "smooth", block: "start" });
+  }, [q.data, location.hash]);
   if (!q.data) return null;
   const tone = (s: Milestone["status"]) => (s === "verified" ? "neutral" : s === "reported" ? "gold" : "muted") as "neutral" | "gold" | "muted";
   return (

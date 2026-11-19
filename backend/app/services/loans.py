@@ -89,7 +89,7 @@ async def run_loan_reminders(db: AsyncSession, today: date, send) -> dict:
         if case is None:
             continue
         who = [loan.owner_id or case.owner_id] if (loan.owner_id or case.owner_id) else crm
-        name, link = case.booking.lead.name, f"/post-sales/{case.id}"
+        name, link = case.booking.lead.name, f"/post-sales/{case.id}?tab=loan"
         for d in loan.disbursements:
             if is_delayed(d, today) and d.delay_notified_on != today:
                 days = (today - d.expected_date).days

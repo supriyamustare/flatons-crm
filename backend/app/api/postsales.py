@@ -333,7 +333,7 @@ async def resend(case_id: int, request: Request, user: Sales, db: DbSession) -> 
             type="handover",
             title=f"Handover resent: {case.booking.lead.name}",
             body="Sales has corrected the booking",
-            link=f"/post-sales/{case.id}",
+            link=f"/post-sales/{case.id}?tab=handover",
         )
     log_audit(
         db,
