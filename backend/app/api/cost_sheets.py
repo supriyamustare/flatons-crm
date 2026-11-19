@@ -53,6 +53,14 @@ class TemplateIn(BaseModel):
     demand_due_days: Annotated[int, Field(ge=0, le=90)] = (
         15  # days to pay after a stage is demanded
     )
+    agreement_min_paid_pct: Annotated[float, Field(ge=0, le=100)] = (
+        10  # received before the agreement can start
+    )
+    agreement_requires_kyc: bool = True
+    agreement_clauses: Annotated[
+        list[Annotated[PlainText, StringConstraints(min_length=1, max_length=5000)]],
+        Field(max_length=80),
+    ] = []
     stages: Annotated[list[StageIn], Field(min_length=1, max_length=40)]
     notes: Annotated[list[Text], Field(max_length=30)] = []
     signatory: Annotated[PlainText, StringConstraints(max_length=120)] | None = None
