@@ -317,6 +317,21 @@ with the official logo at the same sizes. Offline support arrives in Sprint 16.
   or one unit type. A unit's panel shows the plans for its floor and its type, or the project-wide plans if there
   are none more specific.
 
+## Post-sales (Phase 1, sprint 6, part 1): home loan coordination
+
+- **Loans** (`loans`, `loan_doc_requests`, `loan_disbursements`; one open loan per case, closed ones kept with a reason),
+  per the specification's Stage 9: lender, application no., customer consent (required before any coordination),
+  applied/sanctioned amounts, sanction date and validity, bank RM contact, technical/legal verification, pending
+  conditions, follow-up owner and next follow-up date.
+- **Workflow** worked out from what's recorded (`services/loans.stage`): details captured -> documents requested ->
+  documents submitted -> bank review -> disbursement requested -> awaited -> funds received -> reconciled.
+- **Disbursements**: request (never beyond the sanction), acknowledge with an expected date / delay reason, cancel with a
+  reason, record funds received (finance: date, amount, UTR) which creates a **loan receipt** in Receipts. It counts
+  only when a finance approver confirms it, and demands are never marked paid automatically.
+- **Daily (09:00)**: delayed disbursements (owner; CRM managers too from 7 days), loan follow-ups due, sanctions
+  expiring in 15/7/1 days. Warnings when the ledger's loan differs from the sanction.
+- **Access**: only ledger viewers see loan data; post-sales, CRM, finance and admin edit; finance/admin record funds.
+
 ## Post-sales (Phase 1, sprint 5, part 2): the sale agreement workflow
 
 - **Agreements** (`agreements`; AGR-00001; one live per case, cancelled ones kept with a reason), following the
