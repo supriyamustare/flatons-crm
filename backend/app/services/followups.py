@@ -205,4 +205,7 @@ async def run_reminders(db: AsyncSession, today: date) -> dict:
         )
 
     counts |= await run_loan_reminders(db, today, send)
+    from app.services.appointments import run_appointment_reminders
+
+    counts |= await run_appointment_reminders(db, today, send)
     return counts

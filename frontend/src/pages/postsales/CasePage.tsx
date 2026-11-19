@@ -18,9 +18,10 @@ import { FollowUpsTab } from "./FollowUpsTab";
 import { DocumentsTab } from "./DocumentsTab";
 import { AgreementTab } from "./AgreementTab";
 import { LoanTab } from "./LoanTab";
+import { AppointmentsTab } from "./AppointmentsTab";
 
-type Tab = "handover" | "customer" | "kyc" | "ledger" | "receipts" | "demands" | "followups" | "documents" | "agreement" | "loan" | "history";
-const ALL_TABS: Tab[] = ["handover", "customer", "kyc", "ledger", "receipts", "demands", "followups", "documents", "agreement", "loan", "history"];
+type Tab = "handover" | "customer" | "kyc" | "ledger" | "receipts" | "demands" | "followups" | "documents" | "agreement" | "loan" | "appointments" | "history";
+const ALL_TABS: Tab[] = ["handover", "customer", "kyc", "ledger", "receipts", "demands", "followups", "documents", "agreement", "loan", "appointments", "history"];
 const MONEY_TABS: Tab[] = ["ledger", "receipts", "demands", "followups", "loan"];
 const ENTITY: OwnershipType[] = ["company", "partnership", "huf", "trust", "other"];
 const HISTORY: Record<string, string> = {
@@ -41,6 +42,8 @@ const HISTORY: Record<string, string> = {
   agreement_customer_accepted: "Customer accepted the agreement", agreement_execution_updated: "Execution details updated", agreement_registered: "Agreement registered",
   agreement_final_uploaded: "Signed agreement uploaded", agreement_cancelled: "Agreement cancelled",
   loan_created: "Home loan added", loan_updated: "Loan details updated", loan_document_requested: "Bank requested a document", loan_document_submitted: "Document submitted to the bank",
+  appointment_scheduled: "Appointment scheduled", appointment_confirmed: "Appointment confirmed", appointment_rescheduled: "Appointment rescheduled",
+  appointment_cancelled: "Appointment cancelled", appointment_attended: "Appointment attended", appointment_missed: "Appointment missed",
   loan_disbursement_requested: "Disbursement requested", loan_disbursement_updated: "Disbursement updated", loan_funds_received: "Loan funds received", loan_closed: "Loan closed",
 };
 
@@ -341,7 +344,7 @@ export function CasePage() {
         {c.kyc_total > 0 && <span className="text-muted">KYC {c.kyc_done}/{c.kyc_total} verified</span>}
       </div>
       <div role="tablist" aria-label="Case" className="mb-4 flex gap-1 overflow-x-auto rounded-xl bg-white p-1 ring-1 ring-line">
-        {([["handover", "Handover"], ["customer", "Customer"], ["kyc", "KYC"], ["ledger", "Ledger"], ["receipts", "Receipts"], ["demands", "Demands"], ["followups", "Follow-ups"], ["documents", "Documents"], ["agreement", "Agreement"], ["loan", "Loan"], ["history", "History"]] as const)
+        {([["handover", "Handover"], ["customer", "Customer"], ["kyc", "KYC"], ["ledger", "Ledger"], ["receipts", "Receipts"], ["demands", "Demands"], ["followups", "Follow-ups"], ["documents", "Documents"], ["agreement", "Agreement"], ["loan", "Loan"], ["appointments", "Appointments"], ["history", "History"]] as const)
           .filter(([k]) => allowedTab(k)).map(([k, l]) => (
           <button key={k} role="tab" aria-selected={tab === k} onClick={() => setTab(k)}
             className={cx("min-h-11 flex-1 rounded-lg px-3 text-sm whitespace-nowrap", tab === k ? "bg-forest-900 text-white" : "hover:bg-forest-50")}>{l}</button>
@@ -357,6 +360,7 @@ export function CasePage() {
       {tab === "documents" && <DocumentsTab caseId={c.id} />}
       {tab === "agreement" && <AgreementTab caseId={c.id} />}
       {tab === "loan" && <LoanTab caseId={c.id} />}
+      {tab === "appointments" && <AppointmentsTab caseId={c.id} />}
       {tab === "history" && (
         <section role="tabpanel" aria-label="History" className="rounded-xl bg-white p-5 ring-1 ring-line">
           <ol className="space-y-2 text-sm">{c.history.map((h, i) => (
@@ -364,6 +368,7 @@ export function CasePage() {
               {typeof h.details?.receipt === "string" && <> ({String(h.details.receipt)})</>}
               {typeof h.details?.demand === "string" && <> ({String(h.details.demand)})</>}
               {typeof h.details?.milestone === "string" && <>: {String(h.details.milestone)}</>}
+              {typeof h.details?.appointment === "string" && <> ({String(h.details.appointment)}{typeof h.details?.at === "string" ? `, ${String(h.details.at)}` : ""})</>}
               {typeof h.details?.agreement === "string" && <> ({String(h.details.agreement)})</>}
               {typeof h.details?.document === "string" && <> ({String(h.details.document)}{typeof h.details?.title === "string" ? `, ${String(h.details.title)}` : ""})</>}
               <span className="block text-xs text-muted">{h.actor?.full_name ?? "System"}, {formatDateTime(h.at)}</span></li>))}</ol>

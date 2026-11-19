@@ -317,6 +317,20 @@ with the official logo at the same sizes. Offline support arrives in Sprint 16.
   or one unit type. A unit's panel shows the plans for its floor and its type, or the project-wide plans if there
   are none more specific.
 
+## Post-sales (Phase 1, sprint 6, part 2): the appointment calendar
+
+- **Appointments** (`appointments`; APT-00001) per case: agreement signing, registration, site visit, customer
+  inspection, possession handover, defect inspection, document collection, other. Owner (defaults to the case owner),
+  date/time, duration, location, documents to bring, notes, customer confirmation (date and how), reschedules (the old
+  one kept with its reason; confirmation needed again), cancellation (reason), attendance (outcome) or no-show.
+- **Double booking**: an owner with an overlapping appointment gets a 409 unless the booking is confirmed (`allow_clash`).
+- **No-show** sets a follow-up for the next day; it shows in Follow-ups due ("Missed appointment") until rescheduled.
+- **Calendar** (`/calendar`, `GET /api/calendar?start=&days=&mine=`): appointments, registration appointments from
+  agreements (not entered twice) and, for sales roles, sales site visits (executives see their own). Week view; on
+  phones a day list, and the Calendar sits in post-sales staff's bottom bar.
+- **Daily (09:00)**, to the owner (CRM managers if none): tomorrow's and today's appointments (today's flags unconfirmed
+  ones), attendance not recorded, missed-appointment follow-ups. Customer-facing reminders come with the portal.
+
 ## Post-sales (Phase 1, sprint 6, part 1): home loan coordination
 
 - **Loans** (`loans`, `loan_doc_requests`, `loan_disbursements`; one open loan per case, closed ones kept with a reason),

@@ -247,4 +247,29 @@ async def my_due(user: Viewer, db: DbSession) -> list[DueItem]:
                         amount=fu.promise_amount,
                     )
                 )
+    # Missed appointments waiting for a follow-up (until rescheduled)
+    from app.models.appointment import Appointment, AppointmentStatus
+
+    q2 = (
+        select(Appointment, PostSalesCase)
+        .join(PostSalesCase, PostSalesCase.id == Appointment.case_id)
+        .where(
+            Appointment.status == AppointmentStatus.no_show,
+            Appointment.follow_up_on.is_not(None),
+            Appointment.follow_up_on <= t,
+        )
+    )
+    if user.role not in (Role.admin, Role.crm_manager):
+        q2 = q2.where(or_(Appointment.owner_id == user.id, PostSalesCase.owner_id == user.id))
+    for a, case in (await db.execute(q2)).all():
+        out.append(
+            DueItem(
+                case_id=case.id,
+                case_code=cases.code(case),
+                customer=case.booking.lead.name,
+                reason="Missed appointment",
+                on=a.follow_up_on,
+                amount=None,
+            )
+        )
     return sorted(out, key=lambda x: x.on)

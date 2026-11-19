@@ -20,6 +20,7 @@ const ChannelPartnersPage = lazy(() => import("./pages/ChannelPartnersPage").the
 const ChannelPartnerDetailPage = lazy(() => import("./pages/ChannelPartnersPage").then((m) => ({ default: m.ChannelPartnerDetailPage })));
 const DemandLetterPage = lazy(() => import("./pages/postsales/DemandLetterPage").then((m) => ({ default: m.DemandLetterPage })));
 const AgreementDraftPage = lazy(() => import("./pages/postsales/AgreementDraftPage").then((m) => ({ default: m.AgreementDraftPage })));
+const CalendarPage = lazy(() => import("./pages/calendar/CalendarPage").then((m) => ({ default: m.CalendarPage })));
 const StatementPage = lazy(() => import("./pages/postsales/StatementPage").then((m) => ({ default: m.StatementPage })));
 const CostSheetPage = lazy(() => import("./pages/CostSheetPage").then((m) => ({ default: m.CostSheetPage })));
 const PostSalesPage = lazy(() => import("./pages/postsales/PostSalesPage").then((m) => ({ default: m.PostSalesPage })));
@@ -68,6 +69,7 @@ export function AppRoutes() {
           <Route path="account" element={<AccountPage />} />
           <Route element={<RequireRole roles={POSTSALES_ROLES} />}>
             <Route path="post-sales" element={<PostSalesPage />} />
+            <Route path="calendar" element={<CalendarPage />} />
             <Route path="post-sales/:caseId" element={<CasePage />} />
           </Route>
           <Route path="bookings" element={<BookingsPage />} />
