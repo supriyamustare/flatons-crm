@@ -110,7 +110,11 @@ async def run_reminders(db: AsyncSession, today: date) -> dict:
         if unpaid <= 0:
             continue
         who = [case.owner_id] if case.owner_id else crm
-        name, link, code = case.booking.lead.name, f"/post-sales/{case.id}", f"DMD-{d.id:05d}"
+        name, link, code = (
+            case.booking.lead.name,
+            f"/post-sales/{case.id}?tab=demands",
+            f"DMD-{d.id:05d}",
+        )
         days = (today - d.due_date).days
         if days == -3:
             counts["due_soon"] += await _send(
@@ -165,7 +169,7 @@ async def run_reminders(db: AsyncSession, today: date) -> dict:
                 type="promise_broken",
                 title=f"Promise to pay broken: {case.booking.lead.name}",
                 body=f"Rs {fu.promise_amount:,} was promised by {fu.promise_date.isoformat()}",
-                link=f"/post-sales/{case.id}",
+                link=f"/post-sales/{case.id}?tab=followups",
                 today=today,
             )
             fu.broken_notified_at = datetime.now(UTC)
@@ -190,7 +194,7 @@ async def run_reminders(db: AsyncSession, today: date) -> dict:
                 type="payment_follow_up_due",
                 title=f"Follow up today: {case.booking.lead.name}",
                 body=(fu.note or "")[:200],
-                link=f"/post-sales/{case.id}",
+                link=f"/post-sales/{case.id}?tab=followups",
                 today=today,
             )
     from app.services.loans import run_loan_reminders

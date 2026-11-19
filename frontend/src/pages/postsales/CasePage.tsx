@@ -1,7 +1,7 @@
 import { useToast } from "../../components/Toast";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import type { FormEvent } from "react";
-import { Link, useParams } from "react-router";
+import { Link, useParams, useSearchParams } from "react-router";
 import { ArrowLeft, Check, FileText, Plus, Trash2, X } from "lucide-react";
 import { Alert, Badge, Button, ErrorState, Modal, PageHeader, SelectInput, TextArea, TextInput, cx } from "../../components/ui";
 import { useCurrentUser } from "../../hooks/useAuth";
@@ -20,6 +20,8 @@ import { AgreementTab } from "./AgreementTab";
 import { LoanTab } from "./LoanTab";
 
 type Tab = "handover" | "customer" | "kyc" | "ledger" | "receipts" | "demands" | "followups" | "documents" | "agreement" | "loan" | "history";
+const ALL_TABS: Tab[] = ["handover", "customer", "kyc", "ledger", "receipts", "demands", "followups", "documents", "agreement", "loan", "history"];
+const MONEY_TABS: Tab[] = ["ledger", "receipts", "demands", "followups", "loan"];
 const ENTITY: OwnershipType[] = ["company", "partnership", "huf", "trust", "other"];
 const HISTORY: Record<string, string> = {
   created: "Case created from the booking", accepted: "Handover accepted", returned_to_sales: "Returned to sales", resent_by_sales: "Resent by sales",
@@ -316,8 +318,12 @@ export function CasePage() {
   const me = useCurrentUser();
   const q = useCase(id);
   const act = useCaseAction(id);
-  const [tab, setTab] = useState<Tab>("handover");
-  useEffect(() => { if (q.data && q.data.status === "accepted" && tab === "handover") setTab("customer"); }, [q.data?.status]); // eslint-disable-line react-hooks/exhaustive-deps
+  // The tab lives in the address (?tab=ledger), so notifications and bookmarks open the right one and Back works
+  const [params, setParams] = useSearchParams();
+  const requested = params.get("tab") as Tab | null;
+  const allowedTab = (t: Tab) => ALL_TABS.includes(t) && (!MONEY_TABS.includes(t) || LEDGER_VIEWERS.includes(me.role));
+  const tab: Tab = requested && allowedTab(requested) ? requested : q.data?.status === "accepted" ? "customer" : "handover";
+  const setTab = (t: Tab) => setParams((p) => { const n = new URLSearchParams(p); n.set("tab", t); return n; });
   if (q.isPending) return <div className="h-64 animate-pulse rounded-xl bg-white" />;
   if (q.isError) return <ErrorState message={errorMessage(q.error, "Couldn’t load this case.")} onRetry={() => void q.refetch()} />;
   const c = q.data;
@@ -336,7 +342,7 @@ export function CasePage() {
       </div>
       <div role="tablist" aria-label="Case" className="mb-4 flex gap-1 overflow-x-auto rounded-xl bg-white p-1 ring-1 ring-line">
         {([["handover", "Handover"], ["customer", "Customer"], ["kyc", "KYC"], ["ledger", "Ledger"], ["receipts", "Receipts"], ["demands", "Demands"], ["followups", "Follow-ups"], ["documents", "Documents"], ["agreement", "Agreement"], ["loan", "Loan"], ["history", "History"]] as const)
-          .filter(([k]) => !["ledger", "receipts", "demands", "followups", "loan"].includes(k) || LEDGER_VIEWERS.includes(me.role)).map(([k, l]) => (
+          .filter(([k]) => allowedTab(k)).map(([k, l]) => (
           <button key={k} role="tab" aria-selected={tab === k} onClick={() => setTab(k)}
             className={cx("min-h-11 flex-1 rounded-lg px-3 text-sm whitespace-nowrap", tab === k ? "bg-forest-900 text-white" : "hover:bg-forest-50")}>{l}</button>
         ))}

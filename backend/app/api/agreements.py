@@ -354,7 +354,7 @@ async def submit(case_id: int, request: Request, user: Drafter, db: DbSession) -
             type="agreement_review",
             title=f"Agreement to review: {case.booking.lead.name}",
             body=f"{code(a)} draft version {a.version}",
-            link=f"/post-sales/{case.id}",
+            link=f"/post-sales/{case.id}?tab=agreement",
         )
     return await _done(db, case, user)
 

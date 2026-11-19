@@ -511,7 +511,7 @@ async def submit(case_id: int, request: Request, user: Maker, db: DbSession) -> 
             type="ledger_approval",
             title=f"Ledger to approve: {case.booking.lead.name}",
             body=f"{cases.code(case)} ledger (version {ledger.version}) is waiting for approval",
-            link=f"/post-sales/{case.id}",
+            link=f"/post-sales/{case.id}?tab=ledger",
         )
     await db.commit()
     return await _out(db, case, ledger, user)
@@ -559,7 +559,7 @@ async def approve(case_id: int, request: Request, user: Checker, db: DbSession) 
             type="ledger_approved",
             title=f"Ledger approved: {case.booking.lead.name}",
             body=f"{cases.code(case)} version {ledger.version}",
-            link=f"/post-sales/{case.id}",
+            link=f"/post-sales/{case.id}?tab=ledger",
         )
     await db.commit()
     return await _out(db, case, ledger, user)
@@ -580,7 +580,7 @@ async def return_ledger(
             type="ledger_returned",
             title=f"Ledger returned: {case.booking.lead.name}",
             body=body.reason,
-            link=f"/post-sales/{case.id}",
+            link=f"/post-sales/{case.id}?tab=ledger",
         )
     await db.commit()
     return await _out(db, case, ledger, user)

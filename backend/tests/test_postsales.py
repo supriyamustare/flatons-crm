@@ -74,7 +74,7 @@ async def test_booking_creates_a_case_filled_from_the_booking(login_as, db, book
             Notification.type == "handover", Notification.user_id == booked["psx_id"]
         )
     )
-    assert note and note.link == f"/post-sales/{case.id}"
+    assert note and note.link == f"/post-sales/{case.id}?tab=handover"
     crm, _ = await login_as(Role.crm_manager)
     d = (await crm.get(f"/api/post-sales/cases/{case.id}")).json()
     assert (
