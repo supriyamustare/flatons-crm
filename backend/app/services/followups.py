@@ -193,4 +193,12 @@ async def run_reminders(db: AsyncSession, today: date) -> dict:
                 link=f"/post-sales/{case.id}",
                 today=today,
             )
+    from app.services.loans import run_loan_reminders
+
+    async def send(user_ids, *, type: str, title: str, body: str, link: str) -> int:
+        return await _send(
+            db, sent, user_ids, type=type, title=title, body=body, link=link, today=today
+        )
+
+    counts |= await run_loan_reminders(db, today, send)
     return counts

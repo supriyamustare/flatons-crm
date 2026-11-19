@@ -17,8 +17,9 @@ import { DemandsTab } from "./DemandsTab";
 import { FollowUpsTab } from "./FollowUpsTab";
 import { DocumentsTab } from "./DocumentsTab";
 import { AgreementTab } from "./AgreementTab";
+import { LoanTab } from "./LoanTab";
 
-type Tab = "handover" | "customer" | "kyc" | "ledger" | "receipts" | "demands" | "followups" | "documents" | "agreement" | "history";
+type Tab = "handover" | "customer" | "kyc" | "ledger" | "receipts" | "demands" | "followups" | "documents" | "agreement" | "loan" | "history";
 const ENTITY: OwnershipType[] = ["company", "partnership", "huf", "trust", "other"];
 const HISTORY: Record<string, string> = {
   created: "Case created from the booking", accepted: "Handover accepted", returned_to_sales: "Returned to sales", resent_by_sales: "Resent by sales",
@@ -37,6 +38,8 @@ const HISTORY: Record<string, string> = {
   agreement_approved: "Agreement approved", agreement_changes_requested: "Agreement changes requested", agreement_shared: "Agreement shared with customer",
   agreement_customer_accepted: "Customer accepted the agreement", agreement_execution_updated: "Execution details updated", agreement_registered: "Agreement registered",
   agreement_final_uploaded: "Signed agreement uploaded", agreement_cancelled: "Agreement cancelled",
+  loan_created: "Home loan added", loan_updated: "Loan details updated", loan_document_requested: "Bank requested a document", loan_document_submitted: "Document submitted to the bank",
+  loan_disbursement_requested: "Disbursement requested", loan_disbursement_updated: "Disbursement updated", loan_funds_received: "Loan funds received", loan_closed: "Loan closed",
 };
 
 function ReasonDialog({ title, label, cta, onClose, onSubmit, busy, error }: { title: string; label: string; cta: string; onClose: () => void;
@@ -332,8 +335,8 @@ export function CasePage() {
         {c.kyc_total > 0 && <span className="text-muted">KYC {c.kyc_done}/{c.kyc_total} verified</span>}
       </div>
       <div role="tablist" aria-label="Case" className="mb-4 flex gap-1 overflow-x-auto rounded-xl bg-white p-1 ring-1 ring-line">
-        {([["handover", "Handover"], ["customer", "Customer"], ["kyc", "KYC"], ["ledger", "Ledger"], ["receipts", "Receipts"], ["demands", "Demands"], ["followups", "Follow-ups"], ["documents", "Documents"], ["agreement", "Agreement"], ["history", "History"]] as const)
-          .filter(([k]) => !["ledger", "receipts", "demands", "followups"].includes(k) || LEDGER_VIEWERS.includes(me.role)).map(([k, l]) => (
+        {([["handover", "Handover"], ["customer", "Customer"], ["kyc", "KYC"], ["ledger", "Ledger"], ["receipts", "Receipts"], ["demands", "Demands"], ["followups", "Follow-ups"], ["documents", "Documents"], ["agreement", "Agreement"], ["loan", "Loan"], ["history", "History"]] as const)
+          .filter(([k]) => !["ledger", "receipts", "demands", "followups", "loan"].includes(k) || LEDGER_VIEWERS.includes(me.role)).map(([k, l]) => (
           <button key={k} role="tab" aria-selected={tab === k} onClick={() => setTab(k)}
             className={cx("min-h-11 flex-1 rounded-lg px-3 text-sm whitespace-nowrap", tab === k ? "bg-forest-900 text-white" : "hover:bg-forest-50")}>{l}</button>
         ))}
@@ -347,6 +350,7 @@ export function CasePage() {
       {tab === "followups" && <FollowUpsTab caseId={c.id} />}
       {tab === "documents" && <DocumentsTab caseId={c.id} />}
       {tab === "agreement" && <AgreementTab caseId={c.id} />}
+      {tab === "loan" && <LoanTab caseId={c.id} />}
       {tab === "history" && (
         <section role="tabpanel" aria-label="History" className="rounded-xl bg-white p-5 ring-1 ring-line">
           <ol className="space-y-2 text-sm">{c.history.map((h, i) => (

@@ -30,6 +30,13 @@ from app.models.ledger import (
     ScheduleItem,
     TriggerType,
 )
+from app.models.loan import (
+    Disbursement,
+    DisbursementStatus,
+    Loan,
+    LoanDocRequest,
+    VerificationState,
+)
 from app.models.marketing import Campaign, Channel, Expense, ExpenseCategory
 from app.models.milestone import MilestoneEvidence, MilestoneStatus, ProjectMilestone
 from app.models.notification import Notification
@@ -54,6 +61,11 @@ from app.models.user import Role, User
 from app.models.visit import InterestLevel, SiteVisit, VisitSource, VisitStatus
 
 __all__ = [
+    "Disbursement",
+    "DisbursementStatus",
+    "Loan",
+    "LoanDocRequest",
+    "VerificationState",
     "Agreement",
     "AgreementStatus",
     "Approval",

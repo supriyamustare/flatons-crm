@@ -25,6 +25,7 @@ from app.api import (
     inventory,
     leads,
     ledger,
+    loans,
     marketing,
     milestones,
     notifications,
@@ -99,4 +100,5 @@ app.include_router(demands.router, prefix="/api")
 app.include_router(followups.router, prefix="/api")
 app.include_router(case_documents.router, prefix="/api")
 app.include_router(agreements.router, prefix="/api")
+app.include_router(loans.router, prefix="/api")
 app.include_router(leads.router, prefix="/api")
