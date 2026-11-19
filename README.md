@@ -317,6 +317,24 @@ with the official logo at the same sizes. Offline support arrives in Sprint 16.
   or one unit type. A unit's panel shows the plans for its floor and its type, or the project-wide plans if there
   are none more specific.
 
+## Post-sales (Phase 1, sprint 5, part 2): the sale agreement workflow
+
+- **Agreements** (`agreements`; AGR-00001; one live per case, cancelled ones kept with a reason), following the
+  specification's Stage 4: initiated -> data verified -> drafted (versioned) -> internal review -> (changes requested)
+  -> customer review -> execution preparation -> signed & registered -> final uploaded -> released ("completed").
+- **Starting conditions are per project** (Cost sheet settings > Agreement): minimum % of the agreement value received
+  (confirmed receipts; default 10), KYC approved (on/off), plus an approved ledger.
+- **Data checks / discrepancies** (`services/agreements.checks`): legal name and PAN, ownership structure, co-applicant
+  PANs, unit areas, booking price = ledger base price, schedule = agreement value and GST, developer legal details.
+- **Draft** from the project's clauses (placeholders until Legal supplies approved wording; `{project}`, `{unit_no}`,
+  `{agreement_value}` (Indian grouping), `{agreement_no}`): parties, unit, consideration, schedule. `/agreement-draft/{case}`
+  prints it, DRAFT-marked until registered. Each new draft is a version; approvals start over.
+- **Internal review**: legal and finance (finance approver) both approve; never the drafter; an admin can give one
+  side only. Customer review is recorded by staff (portal later). Execution: stamp duty (from the ledger), registration
+  fee, appointment, sub-registrar office, ID documents, signing note; registration needs those first.
+- **Final upload** goes into folder 03 (linked to the agreement, registration number as document number) for the
+  folder's review and release; the agreement shows "Released to customer" once released.
+
 ## Post-sales (Phase 1, sprint 5, part 1): the customer document folder
 
 - **Customer folder** (`case_documents`; DOC-00001; files under `FILE_STORAGE_PATH/case_docs`): the specification's 11

@@ -8,6 +8,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from app.api import (
+    agreements,
     auth,
     bookings,
     calls,
@@ -97,4 +98,5 @@ app.include_router(milestones.router, prefix="/api")
 app.include_router(demands.router, prefix="/api")
 app.include_router(followups.router, prefix="/api")
 app.include_router(case_documents.router, prefix="/api")
+app.include_router(agreements.router, prefix="/api")
 app.include_router(leads.router, prefix="/api")

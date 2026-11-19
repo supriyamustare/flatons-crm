@@ -1,5 +1,6 @@
 """Import every model here so Alembic autogenerate can see it."""
 
+from app.models.agreement import Agreement, AgreementStatus
 from app.models.audit import AuditLog
 from app.models.base import Base
 from app.models.booking import Booking, BookingEvent, BookingStatus, PaymentMode, PaymentPreference
@@ -53,6 +54,8 @@ from app.models.user import Role, User
 from app.models.visit import InterestLevel, SiteVisit, VisitSource, VisitStatus
 
 __all__ = [
+    "Agreement",
+    "AgreementStatus",
     "Approval",
     "CaseDocument",
     "DocCategory",

@@ -10,6 +10,7 @@ interface Template {
   developer_name: string | null; site_address: string | null; rera_number: string | null; signatory: string | null;
   gst_pct: number; stamp_duty_pct: number; registration_pct: number; registration_cap: number; legal_charges: number; furnishing_per_sqft: number;
   stages: { name: string; pct: number }[]; notes: string[]; demand_due_days: number;
+  agreement_min_paid_pct: number; agreement_requires_kyc: boolean; agreement_clauses: string[];
 }
 
 /** Admin: the project's cost sheet: details, charges, payment stages and notes. */
@@ -19,7 +20,8 @@ export function ProjectCostSheetDialog({ projectId, onClose }: { projectId: numb
   const tpl = useQuery({ queryKey: ["cost-template", projectId], queryFn: async () => (await api.get<Template>(`/projects/${projectId}/cost-sheet`)).data });
   const [t, setT] = useState<Template | null>(null);
   const [notes, setNotes] = useState("");
-  useEffect(() => { if (tpl.data && !t) { setT(tpl.data); setNotes(tpl.data.notes.join("\n")); } }, [tpl.data, t]);
+  const [clauses, setClauses] = useState<string | null>(null);
+  useEffect(() => { if (tpl.data && !t) { setT(tpl.data); setNotes(tpl.data.notes.join("\n")); setClauses((tpl.data.agreement_clauses ?? []).join("\n\n")); } }, [tpl.data, t]);
   const save = useMutation({
     mutationFn: async (body: Template) => (await api.put<Template>(`/projects/${projectId}/cost-sheet`, body)).data,
     onSuccess: () => { void qc.invalidateQueries({ queryKey: ["cost-template", projectId] }); void qc.invalidateQueries({ queryKey: ["cost-sheet"] }); toast("Cost sheet settings saved"); onClose(); },
@@ -30,7 +32,7 @@ export function ProjectCostSheetDialog({ projectId, onClose }: { projectId: numb
   const txt = (k: keyof Template) => (e: React.ChangeEvent<HTMLInputElement>) => setT({ ...t, [k]: e.target.value });
   return (
     <Modal title="Cost sheet settings" onClose={onClose}>
-      <form className="space-y-4" onSubmit={(e: FormEvent) => { e.preventDefault(); save.mutate({ ...t, notes: notes.split("\n").map((x) => x.trim()).filter(Boolean) }); }}>
+      <form className="space-y-4" onSubmit={(e: FormEvent) => { e.preventDefault(); save.mutate({ ...t, notes: notes.split("\n").map((x) => x.trim()).filter(Boolean), agreement_clauses: (clauses ?? "").split(/\n\s*\n/).map((x) => x.trim()).filter(Boolean) }); }}>
         {save.isError && <Alert>{errorMessage(save.error)}</Alert>}
         <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
           <TextInput label="Developer name" value={t.developer_name ?? ""} onChange={txt("developer_name")} />
@@ -64,6 +66,16 @@ export function ProjectCostSheetDialog({ projectId, onClose }: { projectId: numb
           <Button type="button" variant="ghost" onClick={() => setT({ ...t, stages: [...t.stages, { name: "New stage", pct: 5 }] })}><Plus className="size-4" aria-hidden />Add stage</Button>
         </fieldset>
         <TextArea label="Notes (one per line)" value={notes} onChange={(e) => setNotes(e.target.value)} rows={6} />
+        <fieldset className="space-y-3 rounded-lg bg-paper p-3">
+          <legend className="text-sm font-semibold">Agreement</legend>
+          <div className="grid grid-cols-2 gap-3">
+            <TextInput label="Received before the agreement starts (%)" type="number" min={0} max={100} value={t.agreement_min_paid_pct ?? 10} onChange={n("agreement_min_paid_pct")} />
+            <label className="flex min-h-11 items-center gap-2 self-end text-sm"><input type="checkbox" className="size-4 accent-forest-900" checked={t.agreement_requires_kyc ?? true}
+              onChange={(e) => setT({ ...t, agreement_requires_kyc: e.target.checked })} />KYC must be approved first</label>
+          </div>
+          <TextArea label="Agreement clauses (blank line between clauses)" value={clauses ?? ""} onChange={(e) => setClauses(e.target.value)} rows={8}
+            hint="Approved wording from Legal. You can use {project}, {unit_no}, {agreement_value} and {agreement_no}. Leave empty to use the placeholder clauses." />
+        </fieldset>
         <div className="flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
           <Button type="button" variant="secondary" onClick={onClose}>Cancel</Button>
           <Button type="submit" loading={save.isPending} disabled={total !== 100}>Save</Button>
