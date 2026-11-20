@@ -72,10 +72,12 @@ from app.models.task import FollowUpTask, TaskStatus, TaskType
 from app.models.ticket import (
     ClosureReason,
     Priority,
+    ServiceSettings,
     Team,
     Ticket,
     TicketAttachment,
     TicketCategory,
+    TicketEscalation,
     TicketEvent,
     TicketStatus,
 )
@@ -83,6 +85,8 @@ from app.models.user import Role, User
 from app.models.visit import InterestLevel, SiteVisit, VisitSource, VisitStatus
 
 __all__ = [
+    "ServiceSettings",
+    "TicketEscalation",
     "ClosureReason",
     "Priority",
     "Team",

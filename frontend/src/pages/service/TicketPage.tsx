@@ -8,7 +8,7 @@ import { CLOSURE, STATUS, slaBadge, useTicket, useTicketAction } from "../../hoo
 import { errorMessage, formatDateTime } from "../../lib/api";
 
 type Dlg = null | "ack" | "wait" | "note" | "message" | "propose" | "confirm" | "close" | "reopen" | "assign" | "attach";
-const KIND: Record<string, string> = { raised: "Raised", status: "Status", note: "Internal note", message_in: "From the customer", message_out: "To the customer", assigned: "Assigned",
+const KIND: Record<string, string> = { escalated: "Escalated", raised: "Raised", status: "Status", note: "Internal note", message_in: "From the customer", message_out: "To the customer", assigned: "Assigned",
   attachment: "Attachment", resolution: "Resolution proposed", confirmed: "Customer confirmed", not_confirmed: "Customer not satisfied", closed: "Closed", reopened: "Reopened" };
 
 export function TicketPage() {
@@ -81,6 +81,8 @@ export function TicketPage() {
           <section aria-label="Description" className="rounded-xl bg-white p-4 text-sm ring-1 ring-line"><h2 className="mb-1 font-semibold">Customer’s issue</h2><p className="whitespace-pre-wrap">{t.description}</p></section>
           {t.resolution && <section aria-label="Resolution" className="rounded-xl bg-white p-4 text-sm ring-1 ring-line"><h2 className="mb-1 font-semibold">Resolution</h2><p className="whitespace-pre-wrap">{t.resolution}</p>
             {t.needs_confirmation && <p className="mt-1 text-xs text-muted">{t.customer_confirmed ? "Confirmed by the customer" : "Needs the customer’s confirmation before closing as resolved"}</p>}</section>}
+          {(t.escalations?.length ?? 0) > 0 && <section aria-label="Escalations" className="rounded-xl bg-white p-4 text-sm ring-1 ring-line"><h2 className="mb-1 font-semibold">Escalations</h2>
+            <ol className="space-y-1.5">{t.escalations!.map((e, i) => <li key={i}><Badge tone="gold">Level {e.level}</Badge> {e.rule}<span className="block text-xs text-muted">{formatDateTime(e.at)} · told {e.recipients.join(", ") || "nobody available"}</span></li>)}</ol></section>}
           {t.attachments.length > 0 && <section aria-label="Attachments" className="rounded-xl bg-white p-4 text-sm ring-1 ring-line"><h2 className="mb-1 font-semibold">Attachments</h2>
             <ul>{t.attachments.map((a) => <li key={a.id}><a href={a.url} target="_blank" rel="noopener" className="text-forest-800 underline">{a.file_name}</a> <span className="text-xs text-muted">{a.purpose}</span></li>)}</ul></section>}
         </aside>

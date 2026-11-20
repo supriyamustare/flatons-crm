@@ -1,4 +1,4 @@
-from datetime import timedelta
+from datetime import date, timedelta
 from typing import Annotated, Literal
 
 from fastapi import (
@@ -106,7 +106,7 @@ async def _ticket(db: DbSession, tid: int) -> Ticket:
     return t
 
 
-def summary(t: Ticket, case: PostSalesCase, users: dict) -> dict:
+def summary(t: Ticket, case: PostSalesCase, users: dict, pct: int = 25) -> dict:
     return {
         "id": t.id,
         "ticket_no": code(t),
@@ -128,7 +128,7 @@ def summary(t: Ticket, case: PostSalesCase, users: dict) -> dict:
         "closure_reason": t.closure_reason.value if t.closure_reason else None,
         "reopened_count": t.reopened_count,
         "csat": t.csat,
-        "sla": svc.sla(t),
+        "sla": svc.sla(t, None, pct),
     }
 
 
@@ -146,11 +146,12 @@ async def _users(db: DbSession, ids: set) -> dict:
 
 async def detail(db: DbSession, t: Ticket, user: User) -> dict:
     await db.refresh(t)
+    cfg = await svc.get_settings(db)
     case = await _case(db, t.case_id)
     users = await _users(db, {t.owner_id, t.raised_by_id, *(e.by_id for e in t.events)})
     agent = user.role in AGENTS
     closed_ago = (svc.now() - t.closed_at) if t.closed_at else None
-    return summary(t, case, users) | {
+    return summary(t, case, users, cfg["at_risk_pct"]) | {
         "description": t.description,
         "channel": t.channel,
         "raised_by": users.get(t.raised_by_id),
@@ -159,7 +160,11 @@ async def detail(db: DbSession, t: Ticket, user: User) -> dict:
         "customer_confirmed": t.customer_confirmed,
         "confirmed_at": t.confirmed_at,
         "csat_comment": t.csat_comment,
-        "needs_confirmation": t.category in svc.NEEDS_CONFIRMATION,
+        "needs_confirmation": t.needs_confirmation,
+        "escalations": [
+            {"level": e.level, "rule": e.rule, "recipients": e.recipients, "at": e.at}
+            for e in t.escalations
+        ],
         "timeline": [
             {
                 "id": e.id,
@@ -194,13 +199,13 @@ async def detail(db: DbSession, t: Ticket, user: User) -> dict:
                 or (
                     agent
                     and closed_ago is not None
-                    and closed_ago <= timedelta(days=svc.REOPEN_DAYS)
+                    and closed_ago <= timedelta(days=int(cfg["reopen_days"]))
                 )
             ),
             "note": agent,
             "message": agent and t.status != S.closed,
         },
-        "reopen_days": svc.REOPEN_DAYS,
+        "reopen_days": cfg["reopen_days"],
         "owners": [
             UserBrief.model_validate(u).model_dump()
             for u in await db.scalars(
@@ -275,7 +280,8 @@ async def list_tickets(
         q = q.where(Ticket.case_id == case_id)
     rows = list(await db.scalars(q.order_by(Ticket.resolution_due_at).limit(limit)))
     users = await _users(db, {t.owner_id for t in rows})
-    items = [summary(t, await _case(db, t.case_id), users) for t in rows]
+    pct = (await svc.get_settings(db))["at_risk_pct"]
+    items = [summary(t, await _case(db, t.case_id), users, pct) for t in rows]
     if view == "at_risk":
         items = [i for i in items if i["sla"]["at_risk"]]
     elif view == "breached":
@@ -327,6 +333,7 @@ async def raise_ticket(
         for path, _, _ in stored:
             files.delete_receipt(path, FOLDER)
         raise HTTPException(status.HTTP_422_UNPROCESSABLE_CONTENT, str(exc)) from None
+    cfg = await svc.get_settings(db)
     t = Ticket(
         case_id=case.id,
         category=category,
@@ -335,11 +342,11 @@ async def raise_ticket(
         description=description.strip(),
         channel=channel,
         priority=priority,
-        team=svc.TEAM[category],
+        team=Team(cfg["categories"][category.value]["team"]),
         events=[],  # a new ticket starts with an empty timeline (loaded, so adding to it needs no database read)
         raised_by_id=user.id,
     )
-    svc.set_targets(t, svc.now())
+    svc.set_targets(t, svc.now(), cfg)
     t.attachments = [
         TicketAttachment(file_path=p, file_name=n, file_type=m, uploaded_by_id=user.id)
         for p, n, m in stored
@@ -580,7 +587,7 @@ async def close(tid: int, body: CloseIn, request: Request, user: Agent, db: DbSe
                 status.HTTP_422_UNPROCESSABLE_CONTENT,
                 "Propose the resolution before closing it as resolved",
             )
-        if t.category in svc.NEEDS_CONFIRMATION and not t.customer_confirmed:
+        if t.needs_confirmation and not t.customer_confirmed:
             raise HTTPException(
                 status.HTTP_422_UNPROCESSABLE_CONTENT,
                 "This category needs the customer's confirmation before closing as resolved",
@@ -619,11 +626,13 @@ async def reopen(tid: int, body: ReasonIn, request: Request, user: Agent, db: Db
         raise HTTPException(
             status.HTTP_422_UNPROCESSABLE_CONTENT, "Only a closed ticket can be reopened"
         )
-    late = (svc.now() - t.closed_at) > timedelta(days=svc.REOPEN_DAYS)
+    cfg = await svc.get_settings(db)
+    days = int(cfg["reopen_days"])
+    late = (svc.now() - t.closed_at) > timedelta(days=days)
     if late and user.role not in (Role.admin, Role.crm_manager):
         raise HTTPException(
             status.HTTP_403_FORBIDDEN,
-            f"Closed more than {svc.REOPEN_DAYS} days ago: a CRM manager must reopen it",
+            f"Closed more than {days} days ago: a CRM manager must reopen it",
         )
     previous = {"closed_at": t.closed_at.isoformat(), "reason": t.closure_reason.value}
     t.status, t.closure_reason, t.closed_at, t.resolved_at, t.customer_confirmed, t.confirmed_at = (
@@ -635,8 +644,9 @@ async def reopen(tid: int, body: ReasonIn, request: Request, user: Agent, db: Db
         None,
     )
     t.reopened_count += 1
+    t.escalation_level = 0  # escalation starts again for the reopened work
     t.resolution_due_at = svc.now() + timedelta(
-        hours=svc.RESOLUTION_HOURS[t.priority]
+        hours=t.resolution_window_h
     )  # a fresh resolution target
     _event(
         t,
@@ -664,3 +674,132 @@ async def attachment(aid: int, _: Viewer, db: DbSession) -> FileResponse:
         media_type=a.file_type,
         headers={"Content-Disposition": f'inline; filename="{a.file_name}"'},
     )
+
+
+class SettingsIn(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+    response_hours: dict[Priority, Annotated[int, Field(ge=1, le=720)]]
+    resolution_hours: dict[Priority, Annotated[int, Field(ge=1, le=2160)]]
+    at_risk_pct: Annotated[int, Field(ge=5, le=75)] = 25
+    reopen_days: Annotated[int, Field(ge=0, le=90)] = 14
+    categories: dict[TicketCategory, dict]
+    escalation: dict
+
+
+@router.get("/service/settings")
+async def get_service_settings(user: Viewer, db: DbSession) -> dict:
+    return {
+        **await svc.get_settings(db),
+        "labels": {k.value: v for k, v in svc.LABELS.items()},
+        "teams": {k.value: v for k, v in svc.TEAM_LABELS.items()},
+        "can_edit": user.role == Role.admin,
+    }
+
+
+@router.put("/service/settings")
+async def put_service_settings(
+    body: SettingsIn,
+    request: Request,
+    user: Annotated[User, Depends(require_role(Role.admin))],
+    db: DbSession,
+) -> dict:
+    """SLA targets, category rules and escalation recipients. Applies to tickets raised from now on."""
+    from app.models.ticket import ServiceSettings
+
+    if (
+        set(body.response_hours) != set(Priority)
+        or set(body.resolution_hours) != set(Priority)
+        or set(body.categories) != set(TicketCategory)
+    ):
+        raise HTTPException(
+            status.HTTP_422_UNPROCESSABLE_CONTENT,
+            "Give targets for every priority and rules for every category",
+        )
+    for p in Priority:
+        if body.response_hours[p] > body.resolution_hours[p]:
+            raise HTTPException(
+                status.HTTP_422_UNPROCESSABLE_CONTENT,
+                f"{p.value.capitalize()}: the response target can't be longer than the resolution target",
+            )
+    cats = {}
+    for c, rule in body.categories.items():
+        if rule.get("team") not in {t.value for t in Team} or not isinstance(
+            rule.get("needs_confirmation"), bool
+        ):
+            raise HTTPException(
+                status.HTTP_422_UNPROCESSABLE_CONTENT,
+                f"{svc.LABELS[c]}: choose a team and whether confirmation is needed",
+            )
+        cats[c.value] = {"team": rule["team"], "needs_confirmation": rule["needs_confirmation"]}
+    esc = body.escalation
+    allowed = {r.value for r in POSTSALES_ROLES}
+    l2, l3, after = esc.get("level2_roles"), esc.get("level3_roles"), esc.get("level3_after_hours")
+    if not (
+        isinstance(l2, list)
+        and l2
+        and set(l2) <= allowed
+        and isinstance(l3, list)
+        and l3
+        and set(l3) <= allowed
+        and isinstance(after, int)
+        and 1 <= after <= 720
+    ):
+        raise HTTPException(
+            status.HTTP_422_UNPROCESSABLE_CONTENT,
+            "Escalation needs recipients for levels 2 and 3, and level 3 after 1 to 720 hours",
+        )
+    data = {
+        "response_hours": {p.value: h for p, h in body.response_hours.items()},
+        "resolution_hours": {p.value: h for p, h in body.resolution_hours.items()},
+        "at_risk_pct": body.at_risk_pct,
+        "reopen_days": body.reopen_days,
+        "categories": cats,
+        "escalation": {"level2_roles": l2, "level3_roles": l3, "level3_after_hours": after},
+    }
+    row = await db.get(ServiceSettings, 1)
+    before = row.data if row else None
+    if row is None:
+        db.add(ServiceSettings(id=1, data=data, updated_by_id=user.id))
+    else:
+        row.data, row.updated_by_id = data, user.id
+    log_audit(
+        db,
+        action="service.settings_changed",
+        entity_type="service_settings",
+        entity_id=1,
+        actor=user,
+        details={"before": before, "after": data},
+        request=request,
+    )
+    await db.commit()
+    return {
+        **await svc.get_settings(db),
+        "labels": {k.value: v for k, v in svc.LABELS.items()},
+        "teams": {k.value: v for k, v in svc.TEAM_LABELS.items()},
+        "can_edit": True,
+    }
+
+
+@router.get("/service/reports")
+async def service_reports(
+    user: Viewer, db: DbSession, start: date | None = None, end: date | None = None
+) -> dict:
+    """Tickets raised in the period (India time); times in hours; paused time shown separately."""
+    from datetime import datetime as dt
+    from datetime import timezone as tz
+
+    ist = tz(timedelta(hours=5, minutes=30))
+    today = svc.now().astimezone(ist).date()
+    end = end or today
+    start = start or (end - timedelta(days=29))
+    if start > end:
+        raise HTTPException(
+            status.HTTP_422_UNPROCESSABLE_CONTENT, "The start date must be before the end date"
+        )
+    lo = dt.combine(start, dt.min.time(), tzinfo=ist)
+    hi = dt.combine(end + timedelta(days=1), dt.min.time(), tzinfo=ist)
+    rows = list(
+        await db.scalars(select(Ticket).where(Ticket.created_at >= lo, Ticket.created_at < hi))
+    )
+    cfg = await svc.get_settings(db)
+    return {"start": start, "end": end, **svc.report(rows, svc.now(), cfg["at_risk_pct"])}

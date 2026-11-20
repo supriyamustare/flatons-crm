@@ -14,7 +14,11 @@ export function ServicePage() {
   const q = useTickets({ view, category: category || undefined, team: team || undefined });
   return (
     <div>
-      <h1 className="mb-4 font-display text-2xl text-forest-900 sm:text-3xl">Service</h1>
+      <div className="mb-4 flex flex-wrap items-center justify-between gap-2">
+        <h1 className="font-display text-2xl text-forest-900 sm:text-3xl">Service</h1>
+        <div className="flex gap-2 text-sm"><Link to="/service/reports" className="inline-flex min-h-10 items-center rounded-lg px-3 ring-1 ring-line hover:bg-forest-50">Reports</Link>
+          <Link to="/service/settings" className="inline-flex min-h-10 items-center rounded-lg px-3 ring-1 ring-line hover:bg-forest-50">Settings</Link></div>
+      </div>
       <div role="tablist" aria-label="Ticket views" className="mb-3 flex flex-wrap gap-1.5">
         {VIEWS.map(([k, l]) => <button key={k} role="tab" aria-selected={view === k} onClick={() => setView(k)}
           className={cx("min-h-10 rounded-full px-4 text-sm", view === k ? "bg-forest-900 text-white" : "bg-white ring-1 ring-line hover:bg-forest-50")}>{l}</button>)}
