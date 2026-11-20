@@ -38,6 +38,7 @@ from app.api import (
     projects,
     reports,
     tasks,
+    tickets,
     users,
     visits,
 )
@@ -105,4 +106,5 @@ app.include_router(agreements.router, prefix="/api")
 app.include_router(loans.router, prefix="/api")
 app.include_router(appointments.router, prefix="/api")
 app.include_router(project_updates.router, prefix="/api")
+app.include_router(tickets.router, prefix="/api")
 app.include_router(leads.router, prefix="/api")

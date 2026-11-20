@@ -317,6 +317,24 @@ with the official logo at the same sizes. Offline support arrives in Sprint 16.
   or one unit type. A unit's panel shows the plans for its floor and its type, or the project-wide plans if there
   are none more specific.
 
+## Post-sales (Phase 1, sprint 8, part 1): customer service tickets (Stage 11)
+
+- **Tickets** (`tickets`, `ticket_events`, `ticket_attachments`; TKT-00001) raised from a case (customer and unit
+  linked automatically): the specification's 15 categories, subcategory, title, description, attachments, channel,
+  priority. The team comes from the category (e.g. payment -> Finance, defect -> After-sales); CRM managers/admins assign
+  an owner. Workflow: raised -> assigned -> acknowledged (first response) -> in progress -> waiting for customer /
+  internal team / third party -> resolution proposed -> customer confirmation -> closed (closure reason required).
+- **Internal notes** never reach the customer; **messages** (to/from the customer, by channel) are the customer log.
+- **Closure rules**: "resolved" needs a proposed resolution; demand, modification, snagging, defect, refund and grievance
+  tickets also need the customer's confirmation (with a 1-5 satisfaction score); other reasons need a note. "Not
+  satisfied" sends it back to in progress. **Reopen** within 14 days (anyone on the team) or later by a CRM manager/
+  admin; the previous closure is kept.
+- **SLA** (`services/tickets.py`): response and resolution targets by priority (urgent 2 h / 1 day ... low 2 days /
+  15 days); paused while waiting for the customer or a third party (resolution target moves out by exactly the paused
+  time; paused hours kept separately); at risk (under 25% of the window left) and breached flags.
+- **Service** menu (`/service`, views: open, mine, at risk, breached, closed; category and team filters); ticket page
+  (`/service/{id}`); Service tab on each case. Part 2: escalation engine, configurable SLA/category rules, reports.
+
 ## Post-sales (Phase 1, sprint 7): construction progress and project communication (Stage 10)
 
 - **Construction progress** on each milestone (`milestone_progress` history; new milestone fields): percentage,

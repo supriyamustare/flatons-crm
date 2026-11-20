@@ -1,5 +1,5 @@
 import {
-  BadgeIndianRupee, BarChart3, Building2, CalendarCheck, CalendarDays, ClipboardCheck, Columns3, Contact, Handshake, Inbox, LayoutDashboard, MapPin, Megaphone, Phone, PlugZap, UserRound, Users, type LucideIcon,
+  BadgeIndianRupee, BarChart3, Building2, CalendarCheck, CalendarDays, LifeBuoy, ClipboardCheck, Columns3, Contact, Handshake, Inbox, LayoutDashboard, MapPin, Megaphone, Phone, PlugZap, UserRound, Users, type LucideIcon,
 } from "lucide-react";
 import type { Role } from "./types";
 import { LEAD_READERS, POSTSALES_ROLES } from "./types";
@@ -24,6 +24,7 @@ export const NAV_ITEMS: NavItem[] = [
   { to: "/", label: "Dashboard", icon: LayoutDashboard, mobile: true },
   { to: "/post-sales", label: "Post-sales", icon: ClipboardCheck, roles: POSTSALES_ROLES, mobile: POSTSALES_ROLES.filter((r) => r !== "admin") },
   { to: "/calendar", label: "Calendar", icon: CalendarDays, roles: [...POSTSALES_ROLES, "manager", "executive"], mobile: POSTSALES_ROLES.filter((r) => r !== "admin") },
+  { to: "/service", label: "Service", icon: LifeBuoy, roles: POSTSALES_ROLES },
   { to: "/leads", label: "Leads", icon: Contact, roles: LEAD_READERS, mobile: true },
   { to: "/inbox", label: "Enquiries", icon: Inbox, roles: ["admin", "manager"], mobile: true, badge: "inbox" },
   { to: "/follow-ups", label: "Follow-ups", icon: CalendarCheck, roles: SALES, mobile: true },
