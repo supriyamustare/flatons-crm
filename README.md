@@ -317,6 +317,24 @@ with the official logo at the same sizes. Offline support arrives in Sprint 16.
   or one unit type. A unit's panel shows the plans for its floor and its type, or the project-wide plans if there
   are none more specific.
 
+## Post-sales (Phase 1, sprint 9): pre-possession and the possession gate (Stage 12)
+
+- **Trigger**: a possession file (`possession_files`) opens once the project's possession milestone is verified
+  (Cost sheet settings > Possession; default the last payment stage, e.g. OC); an admin can open it early with a reason.
+- **A. Finance**: worked out from the ledger (outstanding, overdue vs demanded-not-yet-due, other charges, unallocated
+  payments, loan not disbursed, unconfirmed receipts, open payment/receipt/demand/refund tickets, final stage demanded)
+  plus finance's confirmations (authorised charges, adjustments, taxes/deposits/statutory, payment confirmation).
+  **Clearance is maker-checker**: finance requests (figures frozen), a finance approver who didn't request it clears it;
+  clearing with money outstanding needs a written reason (e.g. payable at possession under the agreement).
+- **B. Documents** and **C. Unit readiness**: project-specific checklists (defaults from the specification); N/A and
+  issues need a reason; meter readings; snags (`possession_snags`) with rectification owner and due date, verified by
+  someone other than the fixer; inspection evidence from folder 09; readiness approved by a project manager/admin only
+  when nothing is pending; a new snag withdraws the approval.
+- **D. Gate**: legal readiness (project details + registered agreement), documents, finance clearance, unit readiness,
+  CRM manager's internal approval, customer informed (possession letter released in folder 09). A "Possession handover"
+  appointment can't be scheduled until these are met or covered by an exception (CRM manager/admin: reason, date,
+  scope = the conditions it covers).
+
 ## Post-sales (Phase 1, sprint 8, part 2): escalation engine, service settings, service reports (Stage 11)
 
 - **Escalation engine** (Celery beat `service.escalations`, every 15 minutes; `services/tickets.run_escalations`):

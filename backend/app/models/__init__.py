@@ -48,6 +48,7 @@ from app.models.milestone import (
 from app.models.notification import Notification
 from app.models.payment import Allocation, FundSource, Receipt, ReceiptMode, ReceiptStatus
 from app.models.pipeline import DEFAULT_PROBABILITIES, PipelineStage
+from app.models.possession import PossessionFile, Snag
 from app.models.postsales import (
     CaseEvent,
     CaseStatus,
@@ -85,6 +86,8 @@ from app.models.user import Role, User
 from app.models.visit import InterestLevel, SiteVisit, VisitSource, VisitStatus
 
 __all__ = [
+    "PossessionFile",
+    "Snag",
     "ServiceSettings",
     "TicketEscalation",
     "ClosureReason",
