@@ -11,6 +11,7 @@ interface Template {
   gst_pct: number; stamp_duty_pct: number; registration_pct: number; registration_cap: number; legal_charges: number; furnishing_per_sqft: number;
   stages: { name: string; pct: number }[]; notes: string[]; demand_due_days: number;
   agreement_min_paid_pct: number; agreement_requires_kyc: boolean; agreement_clauses: string[];
+  possession_trigger?: string | null; possession_documents?: string[]; readiness_items?: string[];
 }
 
 /** Admin: the project's cost sheet: details, charges, payment stages and notes. */
@@ -66,6 +67,12 @@ export function ProjectCostSheetDialog({ projectId, onClose }: { projectId: numb
           <Button type="button" variant="ghost" onClick={() => setT({ ...t, stages: [...t.stages, { name: "New stage", pct: 5 }] })}><Plus className="size-4" aria-hidden />Add stage</Button>
         </fieldset>
         <TextArea label="Notes (one per line)" value={notes} onChange={(e) => setNotes(e.target.value)} rows={6} />
+        <fieldset className="space-y-3 rounded-lg bg-paper p-3">
+          <legend className="text-sm font-semibold">Possession</legend>
+          <TextInput label="Pre-possession starts when this milestone is verified" value={t.possession_trigger ?? ""} onChange={(e) => setT({ ...t, possession_trigger: e.target.value || null })} hint="Leave empty for the last payment stage" />
+          <TextArea label="Possession documents (one per line)" value={(t.possession_documents ?? []).join("\n")} onChange={(e) => setT({ ...t, possession_documents: e.target.value.split("\n").map((x) => x.trim()).filter(Boolean) })} rows={4} hint="Leave empty for the standard list" />
+          <TextArea label="Unit readiness checks (one per line)" value={(t.readiness_items ?? []).join("\n")} onChange={(e) => setT({ ...t, readiness_items: e.target.value.split("\n").map((x) => x.trim()).filter(Boolean) })} rows={4} hint="Leave empty for the standard list" />
+        </fieldset>
         <fieldset className="space-y-3 rounded-lg bg-paper p-3">
           <legend className="text-sm font-semibold">Agreement</legend>
           <div className="grid grid-cols-2 gap-3">

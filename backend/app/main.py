@@ -32,6 +32,7 @@ from app.api import (
     notifications,
     payments,
     pipeline,
+    possession,
     postsales,
     project_legal,
     project_updates,
@@ -107,4 +108,5 @@ app.include_router(loans.router, prefix="/api")
 app.include_router(appointments.router, prefix="/api")
 app.include_router(project_updates.router, prefix="/api")
 app.include_router(tickets.router, prefix="/api")
+app.include_router(possession.router, prefix="/api")
 app.include_router(leads.router, prefix="/api")

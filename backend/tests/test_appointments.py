@@ -47,15 +47,19 @@ async def test_scheduling_rules_and_double_booking(login_as, db, case):
         == (await db.get(PostSalesCase, case)).owner_id  # the case owner by default
         and r.json()["items"][0]["apt_no"].startswith("APT-")
     )
-    r = await book(pse, case, when=at(hour=11) + timedelta(minutes=30), kind="possession")
+    r = await book(pse, case, when=at(hour=11) + timedelta(minutes=30), kind="document_collection")
     assert r.status_code == 409 and "already has customer inspection" in r.text
     assert (
         await book(
-            pse, case, when=at(hour=11) + timedelta(minutes=30), kind="possession", allow_clash=True
+            pse,
+            case,
+            when=at(hour=11) + timedelta(minutes=30),
+            kind="document_collection",
+            allow_clash=True,
         )
     ).status_code == 201
     assert (
-        await book(pse, case, when=at(hour=13), kind="possession")
+        await book(pse, case, when=at(hour=13), kind="document_collection")
     ).status_code == 201  # after both: fine
     _, site = await login_as(Role.site)
     await book(pse, case, when=at(days=2), owner_id=site.id)

@@ -267,6 +267,17 @@ async def schedule(
         raise HTTPException(
             status.HTTP_422_UNPROCESSABLE_CONTENT, "Appointments are for accepted cases"
         )
+    if body.kind == AppointmentKind.possession:
+        from app.services.possession import possession_allowed
+
+        ok, missing = await possession_allowed(db, case)
+        if not ok:
+            raise HTTPException(
+                status.HTTP_422_UNPROCESSABLE_CONTENT,
+                "Possession can't be scheduled yet: "
+                + "; ".join(missing)
+                + ". Complete them or record an approved exception.",
+            )
     owner = body.owner_id or case.owner_id or user.id
     await _check_time_and_owner(db, owner, body.starts_at, body.duration_min, body.allow_clash)
     a = Appointment(

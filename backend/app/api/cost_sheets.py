@@ -61,6 +61,17 @@ class TemplateIn(BaseModel):
         list[Annotated[PlainText, StringConstraints(min_length=1, max_length=5000)]],
         Field(max_length=80),
     ] = []
+    possession_trigger: Annotated[PlainText, StringConstraints(max_length=120)] | None = (
+        None  # milestone that starts pre-possession
+    )
+    possession_documents: Annotated[
+        list[Annotated[PlainText, StringConstraints(min_length=1, max_length=200)]],
+        Field(max_length=40),
+    ] = []
+    readiness_items: Annotated[
+        list[Annotated[PlainText, StringConstraints(min_length=1, max_length=200)]],
+        Field(max_length=60),
+    ] = []
     stages: Annotated[list[StageIn], Field(min_length=1, max_length=40)]
     notes: Annotated[list[Text], Field(max_length=30)] = []
     signatory: Annotated[PlainText, StringConstraints(max_length=120)] | None = None
