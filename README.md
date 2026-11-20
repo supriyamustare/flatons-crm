@@ -317,6 +317,21 @@ with the official logo at the same sizes. Offline support arrives in Sprint 16.
   or one unit type. A unit's panel shows the plans for its floor and its type, or the project-wide plans if there
   are none more specific.
 
+## Post-sales (Phase 1, sprint 8, part 2): escalation engine, service settings, service reports (Stage 11)
+
+- **Escalation engine** (Celery beat `service.escalations`, every 15 minutes; `services/tickets.run_escalations`):
+  level 1 at risk or first response overdue (owner, or CRM managers if unassigned); level 2 resolution breached
+  (configured roles, default CRM managers); level 3 breached by more than N hours (default 24; admins and management).
+  Each level fires once (reopening starts again); paused and resolution-proposed tickets don't escalate. Each escalation
+  is kept (`ticket_escalations`: level, rule, recipients, time) and shown on the ticket.
+- **Service settings** (`/service/settings`; `service_settings`; admins edit, others view): response/resolution hours
+  per priority, at-risk %, reopen days, each category's team and confirmation rule, escalation recipients. Each ticket
+  keeps the window and confirmation rule it was raised under (settings apply to new tickets only).
+- **Service reports** (`/service/reports`, `GET /api/service/reports?start=&end=`): raised/closed/open, first response
+  and resolution (average, median; resolution excludes paused time), paused time (customer / third party), response and
+  resolution breaches, at risk now, escalations by level, reopened, satisfaction (average, responses, 1-5 split); overall,
+  by category and by team.
+
 ## Post-sales (Phase 1, sprint 8, part 1): customer service tickets (Stage 11)
 
 - **Tickets** (`tickets`, `ticket_events`, `ticket_attachments`; TKT-00001) raised from a case (customer and unit

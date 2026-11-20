@@ -17,6 +17,7 @@ celery_app = Celery(
         "app.tasks.inventory",
         "app.tasks.inbound",
         "app.tasks.postsales",
+        "app.tasks.service",
     ],
 )
 
@@ -37,6 +38,10 @@ celery_app.conf.beat_schedule = {
     "daily-follow-up-digest": {
         "task": "followups.daily_digest",
         "schedule": crontab(hour=8, minute=0),
+    },
+    "ticket-escalations": {
+        "task": "service.escalations",
+        "schedule": crontab(minute="*/15"),
     },
     "payment-reminders": {
         "task": "postsales.payment_reminders",

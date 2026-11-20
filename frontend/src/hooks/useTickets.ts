@@ -12,6 +12,7 @@ export interface TicketRow {
 export interface TicketDetail extends TicketRow {
   description: string; channel: string; raised_by: UserBrief | null; resolution: string | null; resolved_at: string | null; customer_confirmed: boolean | null;
   confirmed_at: string | null; csat_comment: string | null; needs_confirmation: boolean; reopen_days: number; owners?: UserBrief[];
+  escalations?: { level: number; rule: string; recipients: string[]; at: string }[];
   timeline: { id: number; kind: string; internal: boolean; text: string | null; data: Record<string, unknown> | null; by: UserBrief | null; at: string }[];
   attachments: { id: number; file_name: string; purpose: string; url: string }[]; can: Record<string, boolean>;
 }

@@ -159,13 +159,23 @@ class Ticket(TimestampMixin, Base):
     )
     escalation_level: Mapped[int] = mapped_column(
         Integer, nullable=False, default=0, server_default=text("0")
-    )  # part 2
+    )
+    # The rules the ticket was raised under (settings changes apply to new tickets only)
+    resolution_window_h: Mapped[int] = mapped_column(
+        Integer, nullable=False, default=168, server_default=text("168")
+    )
+    needs_confirmation: Mapped[bool] = mapped_column(
+        Boolean, nullable=False, default=False, server_default=text("false")
+    )
 
     events: Mapped[list["TicketEvent"]] = relationship(
         lazy="selectin", cascade="all, delete-orphan", order_by="TicketEvent.id"
     )
     attachments: Mapped[list["TicketAttachment"]] = relationship(
         lazy="selectin", cascade="all, delete-orphan", order_by="TicketAttachment.id"
+    )
+    escalations: Mapped[list["TicketEscalation"]] = relationship(
+        lazy="selectin", cascade="all, delete-orphan", order_by="TicketEscalation.id"
     )
 
 
@@ -212,4 +222,36 @@ class TicketAttachment(Base):
     )
     uploaded_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), server_default=func.now(), nullable=False
+    )
+
+
+class TicketEscalation(Base):
+    """An escalation: which rule fired, who was told, when."""
+
+    __tablename__ = "ticket_escalations"
+
+    id: Mapped[int] = mapped_column(BigInteger, Identity(), primary_key=True)
+    ticket_id: Mapped[int] = mapped_column(
+        BigInteger, ForeignKey("tickets.id", ondelete="CASCADE"), nullable=False, index=True
+    )
+    level: Mapped[int] = mapped_column(Integer, nullable=False)
+    rule: Mapped[str] = mapped_column(String(200), nullable=False)
+    recipients: Mapped[list[Any]] = mapped_column(JSONB, nullable=False)  # names
+    at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), server_default=func.now(), nullable=False
+    )
+
+
+class ServiceSettings(Base):
+    """One row: SLA targets, category rules and escalation recipients (defaults in services/tickets.DEFAULTS)."""
+
+    __tablename__ = "service_settings"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, default=1)
+    data: Mapped[dict[str, Any]] = mapped_column(JSONB, nullable=False)
+    updated_by_id: Mapped[int | None] = mapped_column(
+        BigInteger, ForeignKey("users.id", ondelete="SET NULL")
+    )
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), server_default=func.now(), onupdate=func.now(), nullable=False
     )
