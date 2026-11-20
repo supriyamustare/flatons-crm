@@ -317,6 +317,21 @@ with the official logo at the same sizes. Offline support arrives in Sprint 16.
   or one unit type. A unit's panel shows the plans for its floor and its type, or the project-wide plans if there
   are none more specific.
 
+## Post-sales (Phase 1, sprint 7): construction progress and project communication (Stage 10)
+
+- **Construction progress** on each milestone (`milestone_progress` history; new milestone fields): percentage,
+  planned date, phase, tower/building (information only for now), responsible project manager (the first PM to report
+  progress, unless set), delay reason + revised expected date (always together), optional photos. A delay notifies CRM
+  managers. **Progress never raises a demand**; only verified completion does (the specification's "Important" rule).
+- **Schedule impact** (on demands or possession): recorded by a PM/CRM/admin, approved by a CRM manager or admin who
+  didn't record it.
+- **Customer-facing project updates** (`project_updates`, photos, corrections): written by PM/CRM/post-sales/admin,
+  waiting for approval; published by a CRM manager or admin other than the author (or returned with a reason);
+  published updates are never edited or deleted: corrections keep the earlier wording, who, when and why. For the
+  customer portal when it opens.
+- Per-tower milestones and demands for multi-tower projects are left until a multi-tower project's structure is known.
+- `nginx/flatons-crm.conf`: upload limit 25 MB (the API allows up to 20 MB); index.html is never cached.
+
 ## Post-sales (Phase 1, sprint 6, part 2): the appointment calendar
 
 - **Appointments** (`appointments`; APT-00001) per case: agreement signing, registration, site visit, customer

@@ -39,7 +39,12 @@ from app.models.loan import (
     VerificationState,
 )
 from app.models.marketing import Campaign, Channel, Expense, ExpenseCategory
-from app.models.milestone import MilestoneEvidence, MilestoneStatus, ProjectMilestone
+from app.models.milestone import (
+    MilestoneEvidence,
+    MilestoneProgress,
+    MilestoneStatus,
+    ProjectMilestone,
+)
 from app.models.notification import Notification
 from app.models.payment import Allocation, FundSource, Receipt, ReceiptMode, ReceiptStatus
 from app.models.pipeline import DEFAULT_PROBABILITIES, PipelineStage
@@ -57,11 +62,22 @@ from app.models.postsales import (
 )
 from app.models.project import Developer, Project, ProjectStatus, ProjectType
 from app.models.project_legal import ProjectBank, ProjectLegal
+from app.models.project_update import (
+    ProjectUpdate,
+    ProjectUpdateCorrection,
+    ProjectUpdatePhoto,
+    UpdateStatus,
+)
 from app.models.task import FollowUpTask, TaskStatus, TaskType
 from app.models.user import Role, User
 from app.models.visit import InterestLevel, SiteVisit, VisitSource, VisitStatus
 
 __all__ = [
+    "MilestoneProgress",
+    "ProjectUpdate",
+    "ProjectUpdateCorrection",
+    "ProjectUpdatePhoto",
+    "UpdateStatus",
     "Appointment",
     "AppointmentKind",
     "AppointmentStatus",

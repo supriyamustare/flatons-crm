@@ -7,7 +7,12 @@ from pydantic import BaseModel, ConfigDict, StringConstraints
 from sqlalchemy import func, select
 
 from app.core.deps import DbSession, require_role
-from app.models.milestone import MilestoneEvidence, MilestoneStatus, ProjectMilestone
+from app.models.milestone import (
+    MilestoneEvidence,
+    MilestoneProgress,
+    MilestoneStatus,
+    ProjectMilestone,
+)
 from app.models.project import Project
 from app.models.user import POSTSALES_ROLES, Role, User
 from app.schemas.common import PlainText
@@ -51,6 +56,19 @@ class MilestoneOut(BaseModel):
     evidence: list[EvidenceOut] = []
     can_report: bool = False
     can_verify: bool = False
+    phase: str | None = None
+    building_label: str | None = None
+    planned_on: date | None = None
+    percent_complete: int | None = None
+    responsible_pm: UserBrief | None = None
+    delay_reason: str | None = None
+    revised_expected_on: date | None = None
+    schedule_impact: str | None = None
+    impact_recorded_by: UserBrief | None = None
+    impact_approved_by: UserBrief | None = None
+    impact_approved_at: datetime | None = None
+    progress: list[dict] = []
+    can_approve_impact: bool = False
 
 
 class VerifyOut(BaseModel):
@@ -81,7 +99,18 @@ async def _out(db: DbSession, m: ProjectMilestone | None, name: str, user: User)
             status=MilestoneStatus.planned,
             can_report=user.role in (Role.admin, Role.project_manager, Role.site),
         )
-    ids = {x for x in (m.reported_by_id, m.verified_by_id) if x}
+    ids = {
+        x
+        for x in (
+            m.reported_by_id,
+            m.verified_by_id,
+            m.responsible_pm_id,
+            m.impact_recorded_by_id,
+            m.impact_approved_by_id,
+        )
+        if x
+    }
+    ids |= {p.by_id for p in m.progress if p.by_id}
     users = {u.id: u for u in await db.scalars(select(User).where(User.id.in_(ids)))} if ids else {}
     brief = lambda uid: UserBrief.model_validate(users[uid]) if uid in users else None  # noqa: E731
     return MilestoneOut(
@@ -103,7 +132,45 @@ async def _out(db: DbSession, m: ProjectMilestone | None, name: str, user: User)
                 url=f"/api/milestones/evidence/{e.id}/file",
             )
             for e in m.evidence
+            if e.progress_id is None
         ],
+        phase=m.phase,
+        building_label=m.building_label,
+        planned_on=m.planned_on,
+        percent_complete=m.percent_complete,
+        responsible_pm=brief(m.responsible_pm_id),
+        delay_reason=m.delay_reason,
+        revised_expected_on=m.revised_expected_on,
+        schedule_impact=m.schedule_impact,
+        impact_recorded_by=brief(m.impact_recorded_by_id),
+        impact_approved_by=brief(m.impact_approved_by_id),
+        impact_approved_at=m.impact_approved_at,
+        progress=[
+            {
+                "id": p.id,
+                "percent_complete": p.percent_complete,
+                "planned_on": p.planned_on,
+                "revised_expected_on": p.revised_expected_on,
+                "delay_reason": p.delay_reason,
+                "note": p.note,
+                "at": p.at,
+                "by": users[p.by_id].full_name if p.by_id in users else None,
+                "photos": [
+                    {
+                        "id": e.id,
+                        "file_name": e.file_name,
+                        "url": f"/api/milestones/evidence/{e.id}/file",
+                    }
+                    for e in m.evidence
+                    if e.progress_id == p.id
+                ],
+            }
+            for p in m.progress[:20]
+        ],
+        can_approve_impact=bool(m.schedule_impact)
+        and not m.impact_approved_by_id
+        and user.role in (Role.admin, Role.crm_manager)
+        and m.impact_recorded_by_id != user.id,
         can_report=user.role in (Role.admin, Role.project_manager, Role.site)
         and m.status != MilestoneStatus.verified,
         can_verify=user.role in (Role.admin, Role.crm_manager)
@@ -322,3 +389,240 @@ async def evidence_file(eid: int, _: Viewer, db: DbSession) -> FileResponse:
         media_type=e.file_type,
         headers={"Content-Disposition": f'inline; filename="{e.file_name}"'},
     )
+
+
+class ImpactIn(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+    impact: Annotated[PlainText, StringConstraints(min_length=3, max_length=2000)]
+
+
+@router.post("/projects/{project_id}/milestones/progress", response_model=MilestoneOut)
+async def progress(
+    project_id: int,
+    request: Request,
+    user: Reporter,
+    db: DbSession,
+    name: Annotated[str, Form(min_length=1, max_length=120)],
+    percent_complete: Annotated[int | None, Form(ge=0, le=100)] = None,
+    planned_on: Annotated[date | None, Form()] = None,
+    revised_expected_on: Annotated[date | None, Form()] = None,
+    delay_reason: Annotated[str | None, Form(max_length=500)] = None,
+    note: Annotated[str | None, Form(max_length=2000)] = None,
+    phase: Annotated[str | None, Form(max_length=80)] = None,
+    building_label: Annotated[str | None, Form(max_length=80)] = None,
+    responsible_pm_id: Annotated[int | None, Form()] = None,
+    files_in: Annotated[list[UploadFile] | None, File(alias="files")] = None,
+) -> MilestoneOut:
+    """A progress update (history): percentage, dates, delay. It never triggers a demand; only verified completion does."""
+    project = await _project(db, project_id)
+    if name.strip().lower() not in {n.strip().lower() for n in svc.milestone_names(project)}:
+        raise HTTPException(
+            status.HTTP_422_UNPROCESSABLE_CONTENT, "That isn't one of this project's payment stages"
+        )
+    for v in (delay_reason, note, phase, building_label):
+        if v and ("<" in v or ">" in v):
+            raise HTTPException(status.HTTP_422_UNPROCESSABLE_CONTENT, "Text can't contain < or >")
+    delay = (delay_reason or "").strip() or None
+    if delay and not revised_expected_on:
+        raise HTTPException(
+            status.HTTP_422_UNPROCESSABLE_CONTENT,
+            "Give the revised expected date with the delay reason",
+        )
+    if revised_expected_on and not delay:
+        raise HTTPException(
+            status.HTTP_422_UNPROCESSABLE_CONTENT,
+            "Give the reason for the delay with the revised date",
+        )
+    if responsible_pm_id is not None:
+        pm = await db.get(User, responsible_pm_id)
+        if pm is None or not pm.is_active or pm.role not in (Role.project_manager, Role.admin):
+            raise HTTPException(
+                status.HTTP_422_UNPROCESSABLE_CONTENT, "Choose an active project manager"
+            )
+    if (
+        not any(
+            x is not None
+            for x in (
+                percent_complete,
+                planned_on,
+                revised_expected_on,
+                note,
+                phase,
+                building_label,
+                responsible_pm_id,
+            )
+        )
+        and not files_in
+    ):
+        raise HTTPException(
+            status.HTTP_422_UNPROCESSABLE_CONTENT, "Enter at least one detail of the progress"
+        )
+    m = await db.scalar(
+        select(ProjectMilestone).where(
+            ProjectMilestone.project_id == project_id,
+            func.lower(ProjectMilestone.name) == name.strip().lower(),
+        )
+    )
+    if m is not None and m.status == MilestoneStatus.verified:
+        raise HTTPException(
+            status.HTTP_422_UNPROCESSABLE_CONTENT, "This milestone is already verified"
+        )
+    if m is None:
+        m = ProjectMilestone(project_id=project_id, name=name.strip())
+        db.add(m)
+        await db.flush()
+    stored = []
+    try:
+        for f in files_in or []:
+            stored.append(await files.save_receipt(f, folder=FOLDER, max_mb=15, what="Photos"))
+    except files.ReceiptError as exc:
+        for path, _, _ in stored:
+            files.delete_receipt(path, FOLDER)
+        raise HTTPException(status.HTTP_422_UNPROCESSABLE_CONTENT, str(exc)) from None
+    newly_delayed = bool(delay) and (
+        delay != m.delay_reason or revised_expected_on != m.revised_expected_on
+    )
+    # Saved directly (not through the milestone's lists) so a brand-new milestone works too
+    entry = MilestoneProgress(
+        milestone_id=m.id,
+        percent_complete=percent_complete,
+        planned_on=planned_on,
+        revised_expected_on=revised_expected_on,
+        delay_reason=delay,
+        note=(note or "").strip() or None,
+        by_id=user.id,
+    )
+    db.add(entry)
+    await db.flush()
+    for p, n, t in stored:
+        db.add(
+            MilestoneEvidence(
+                milestone_id=m.id,
+                file_path=p,
+                file_name=n,
+                file_type=t,
+                uploaded_by_id=user.id,
+                progress_id=entry.id,
+            )
+        )
+    for k, v in (
+        ("percent_complete", percent_complete),
+        ("planned_on", planned_on),
+        ("phase", (phase or "").strip() or None),
+        ("building_label", (building_label or "").strip() or None),
+        ("responsible_pm_id", responsible_pm_id),
+    ):
+        if v is not None:
+            setattr(m, k, v)
+    if delay:
+        m.delay_reason, m.revised_expected_on = delay, revised_expected_on
+    if (
+        m.responsible_pm_id is None and user.role == Role.project_manager
+    ):  # whoever reports progress first, unless set
+        m.responsible_pm_id = user.id
+    log_audit(
+        db,
+        action="milestone.progress",
+        entity_type="project_milestone",
+        entity_id=m.id,
+        actor=user,
+        details={
+            "name": m.name,
+            "percent": percent_complete,
+            "delay": delay,
+            "revised": revised_expected_on.isoformat() if revised_expected_on else None,
+        },
+        request=request,
+    )
+    if newly_delayed:
+        for uid in await db.scalars(
+            select(User.id).where(
+                User.is_active.is_(True), User.role == Role.crm_manager, User.id != user.id
+            )
+        ):
+            notify(
+                db,
+                user_id=uid,
+                type="milestone_delayed",
+                title=f"Construction delay: {project.name}, {m.name}",
+                body=f"Now expected {revised_expected_on.isoformat()}: {delay}",
+                link=f"/projects/{project_id}#milestones",
+            )
+    await db.commit()
+    await db.refresh(m)
+    return await _out(db, m, m.name, user)
+
+
+@router.post("/projects/{project_id}/milestones/{mid}/impact", response_model=MilestoneOut)
+async def record_impact(
+    project_id: int,
+    mid: int,
+    body: ImpactIn,
+    request: Request,
+    user: Annotated[
+        User, Depends(require_role(Role.admin, Role.project_manager, Role.crm_manager))
+    ],
+    db: DbSession,
+) -> MilestoneOut:
+    """Record the assessed impact on demands or the possession schedule; it needs approval by someone else."""
+    m = await _milestone(db, project_id, mid)
+    m.schedule_impact, m.impact_recorded_by_id, m.impact_approved_by_id, m.impact_approved_at = (
+        body.impact,
+        user.id,
+        None,
+        None,
+    )
+    log_audit(
+        db,
+        action="milestone.impact_recorded",
+        entity_type="project_milestone",
+        entity_id=m.id,
+        actor=user,
+        details={"impact": body.impact},
+        request=request,
+    )
+    for uid in await db.scalars(
+        select(User.id).where(
+            User.is_active.is_(True), User.role == Role.crm_manager, User.id != user.id
+        )
+    ):
+        notify(
+            db,
+            user_id=uid,
+            type="milestone_impact",
+            title=f"Schedule impact to approve: {m.name}",
+            body=body.impact[:200],
+            link=f"/projects/{project_id}#milestones",
+        )
+    await db.commit()
+    await db.refresh(m)
+    return await _out(db, m, m.name, user)
+
+
+@router.post("/projects/{project_id}/milestones/{mid}/impact/approve", response_model=MilestoneOut)
+async def approve_impact(
+    project_id: int, mid: int, request: Request, user: Verifier, db: DbSession
+) -> MilestoneOut:
+    m = await _milestone(db, project_id, mid)
+    if not m.schedule_impact or m.impact_approved_by_id:
+        raise HTTPException(
+            status.HTTP_422_UNPROCESSABLE_CONTENT, "There's no schedule impact waiting for approval"
+        )
+    if m.impact_recorded_by_id == user.id:
+        raise HTTPException(
+            status.HTTP_403_FORBIDDEN,
+            "Someone other than the person who recorded the impact must approve it",
+        )
+    m.impact_approved_by_id, m.impact_approved_at = user.id, datetime.now(UTC)
+    log_audit(
+        db,
+        action="milestone.impact_approved",
+        entity_type="project_milestone",
+        entity_id=m.id,
+        actor=user,
+        details={"impact": m.schedule_impact},
+        request=request,
+    )
+    await db.commit()
+    await db.refresh(m)
+    return await _out(db, m, m.name, user)
