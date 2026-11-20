@@ -118,7 +118,7 @@ export function ProjectMilestones({ projectId }: { projectId: number }) {
   if (!q.data) return null;
   const tone = (s: Milestone["status"]) => (s === "verified" ? "neutral" : s === "reported" ? "gold" : "muted") as "neutral" | "gold" | "muted";
   return (
-    <section id="milestones" aria-labelledby="ms-h" className="mt-8">
+    <section id="milestones" aria-labelledby="ms-h" className="relative z-30 -mx-4 mt-4 bg-paper px-4 pt-4">
       <h2 id="ms-h" className="mb-3 font-display text-xl text-forest-900">Construction milestones</h2>
       {act.isError && <div className="mb-2"><Alert>{errorMessage(act.error)}</Alert></div>}
       <ul className="divide-y divide-line rounded-xl bg-white ring-1 ring-line">

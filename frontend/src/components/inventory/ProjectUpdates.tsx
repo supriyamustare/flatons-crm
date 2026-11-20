@@ -41,7 +41,7 @@ export function ProjectUpdates({ projectId }: { projectId: number }) {
   const needsText = dlg && dlg.mode !== "return"; const needsReason = dlg && (dlg.mode === "correct" || dlg.mode === "return");
   const ok = (!needsText || (f.title.trim().length >= 3 && f.body.trim().length >= 10)) && (!needsReason || f.reason.trim().length >= 3);
   return (
-    <section id="updates" aria-labelledby="pu-h" className="mt-8">
+    <section id="updates" aria-labelledby="pu-h" className="relative z-30 -mx-4 mt-4 bg-paper px-4 pt-4">
       <div className="mb-3 flex items-center justify-between gap-2">
         <h2 id="pu-h" className="font-display text-xl text-forest-900">Project updates for customers</h2>
         {AUTHORS.includes(me.role) && <Button onClick={() => open({ mode: "write" })}><Plus className="size-4" aria-hidden />Write update</Button>}
