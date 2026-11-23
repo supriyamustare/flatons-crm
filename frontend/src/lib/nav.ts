@@ -25,6 +25,7 @@ export const NAV_ITEMS: NavItem[] = [
   { to: "/post-sales", label: "Post-sales", icon: ClipboardCheck, roles: POSTSALES_ROLES, mobile: POSTSALES_ROLES.filter((r) => r !== "admin") },
   { to: "/calendar", label: "Calendar", icon: CalendarDays, roles: [...POSTSALES_ROLES, "manager", "executive"], mobile: POSTSALES_ROLES.filter((r) => r !== "admin") },
   { to: "/service", label: "Service", icon: LifeBuoy, roles: POSTSALES_ROLES },
+  { to: "/mis", label: "MIS", icon: BarChart3, roles: ["admin", "management", "crm_manager", "finance", "finance_approver", "auditor"] },
   { to: "/leads", label: "Leads", icon: Contact, roles: LEAD_READERS, mobile: true },
   { to: "/inbox", label: "Enquiries", icon: Inbox, roles: ["admin", "manager"], mobile: true, badge: "inbox" },
   { to: "/follow-ups", label: "Follow-ups", icon: CalendarCheck, roles: SALES, mobile: true },

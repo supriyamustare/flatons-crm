@@ -31,6 +31,7 @@ from app.api import (
     loans,
     marketing,
     milestones,
+    mis,
     notifications,
     payments,
     pipeline,
@@ -114,4 +115,5 @@ app.include_router(possession.router, prefix="/api")
 app.include_router(possession.evidence_router, prefix="/api")
 app.include_router(cancellations.router, prefix="/api")
 app.include_router(aftersales.router, prefix="/api")
+app.include_router(mis.router, prefix="/api")
 app.include_router(leads.router, prefix="/api")
