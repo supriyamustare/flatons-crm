@@ -290,7 +290,14 @@ async def test_the_gate_guards_possession_appointments(login_as, db, case):
             f"/api/post-sales/cases/{case}/possession/exception",
             json={
                 "reason": "Customer must move in urgently; MD approved all",
-                "scope": ["documents", "finance", "readiness", "internal", "communication"],
+                "scope": [
+                    "documents",
+                    "finance",
+                    "readiness",
+                    "internal",
+                    "communication",
+                    "inspection",
+                ],
             },
         )
     ).json()

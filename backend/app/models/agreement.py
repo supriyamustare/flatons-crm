@@ -122,4 +122,6 @@ class Agreement(TimestampMixin, Base):
     final_document_id: Mapped[int | None] = mapped_column(
         BigInteger, ForeignKey("case_documents.id", ondelete="SET NULL")
     )
+    # Stage 14 registration details: signatories, document checklist, receipt, original custody, delivery to the customer
+    registration: Mapped[dict[str, Any] | None] = mapped_column(JSONB)
     cancel_reason: Mapped[str | None] = mapped_column(String(500))

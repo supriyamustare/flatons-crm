@@ -6,12 +6,13 @@ import { Alert, Badge, Button, Modal, SelectInput, TextArea, TextInput, cx } fro
 import { useToast } from "../../components/Toast";
 import { inr } from "../../hooks/useLedger";
 import { api, errorMessage, formatDateTime } from "../../lib/api";
+import { Handover, Inspections, SnagRegister, StatusAndDates } from "./PossessionExtras";
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 type Any = any;
 const today = () => new Date().toLocaleDateString("en-CA", { timeZone: "Asia/Kolkata" });
 const CONDITIONS = { legal: "Legal and statutory readiness", documents: "Possession documents", finance: "Finance clearance", readiness: "Unit readiness approved",
-  internal: "Internal approval (CRM manager)", communication: "Customer informed (possession letter released)" } as const;
+  internal: "Internal approval (CRM manager)", communication: "Customer informed (possession letter released)", inspection: "Customer inspection done; no open major or critical snags" } as const;
 
 function Mark({ ok, excepted }: { ok: boolean; excepted?: boolean }) {
   if (ok) return <Check className="size-4 shrink-0 text-forest-700" aria-label="met" />;
@@ -32,6 +33,8 @@ export function PossessionTab({ caseId }: { caseId: number }) {
   const [item, setItem] = useState("");
   const [text, setText] = useState(""); const [scope, setScope] = useState<string[]>([]);
   const [snag, setSnag] = useState({ description: "", location: "", owner_id: "", due_on: "" });
+  const upload = async (sid: number, file: File, kind: string) => { const fd = new FormData(); fd.append("file", file); fd.append("kind", kind);
+    const r = await api.post(`/post-sales/cases/${caseId}/possession/snags/${sid}/evidence`, fd); qc.setQueryData(key, r.data); };
   const go = (path: string, body: unknown, msg: string, method: "post" | "put" = "post") => act.mutate({ path, body, method }, { onSuccess: () => { toast(msg); setDlg(null); setText(""); } });
   if (q.isPending) return <div className="h-40 animate-pulse rounded-xl bg-white" />;
   if (q.isError) return <Alert>{errorMessage(q.error)}</Alert>;
@@ -56,6 +59,7 @@ export function PossessionTab({ caseId }: { caseId: number }) {
   return (
     <section role="tabpanel" aria-label="Possession" className="space-y-4">
       {act.isError && !dlg && <Alert>{errorMessage(act.error)}</Alert>}
+      <StatusAndDates f={f} />
       <section aria-label="Possession gate" className={cx("rounded-xl p-4 ring-1", g.open ? "bg-forest-50 ring-forest-100" : "bg-white ring-line")}>
         <div className="flex flex-wrap items-center justify-between gap-2"><h3 className="font-semibold">Possession gate: {g.open ? "possession can be scheduled" : "not yet"}</h3>
           {can.exception && <Button variant="ghost" onClick={() => { setScope(g.conditions.filter((c: Any) => !c.met).map((c: Any) => c.key)); setText(""); setDlg("exception"); }}>Record exception…</Button>}</div>
@@ -120,21 +124,17 @@ export function PossessionTab({ caseId }: { caseId: number }) {
           <TextInput label="Water meter reading" name="wa" defaultValue={f.meters.Water ?? ""} maxLength={60} />
           <Button type="submit" variant="secondary" className="col-span-2 justify-self-start">Save readings</Button></form>}
         {!can.inspect && Object.keys(f.meters).length > 0 && <p className="mt-2 text-xs">Meters: {Object.entries(f.meters).map(([k, v]) => `${k} ${v}`).join(" · ")}</p>}
-        <div className="mt-4 flex items-center justify-between"><h4 className="font-medium">Snag list</h4>{can.inspect && <Button variant="ghost" onClick={() => { setSnag({ description: "", location: "", owner_id: "", due_on: "" }); setDlg("snag"); }}>Add snag</Button>}</div>
-        <ul className="mt-1 space-y-1.5">{f.snags.map((x: Any) => <li key={x.id} className="flex flex-wrap items-center justify-between gap-2 rounded-lg bg-paper p-2">
-          <span>{x.description}{x.location ? ` (${x.location})` : ""}<span className="block text-xs text-muted">{x.owner ?? "—"} · due {x.due_on}{x.overdue && <span className="text-danger"> · overdue</span>}{x.note ? ` · ${x.note}` : ""}</span></span>
-          <span className="flex items-center gap-1"><Badge tone={x.status === "verified" ? "neutral" : x.status === "fixed" ? "muted" : "gold"}>{x.status === "open" ? "Open" : x.status === "fixed" ? "Fixed" : "Verified"}</Badge>
-            {can.inspect && x.status === "open" && <Button variant="ghost" onClick={() => go(`/snags/${x.id}`, { status: "fixed" }, "Marked fixed")}>Fixed</Button>}
-            {can.inspect && x.status === "fixed" && <Button variant="ghost" onClick={() => go(`/snags/${x.id}`, { status: "verified" }, "Snag verified")}>Verify</Button>}</span></li>)}
-          {f.snags.length === 0 && <li className="text-xs text-muted">No snags recorded.</li>}</ul>
         <p className="mt-2 text-xs text-muted">Inspection evidence: {f.evidence_count} file(s) in Documents → 09 Possession &amp; Handover.</p>
       </section>
 
+      <Inspections f={f} caseId={caseId} can={can.inspect || can.documents} go={go} />
+      <SnagRegister f={f} canInspect={can.inspect} canRespond={can.documents || can.inspect} go={go} upload={upload} />
       <section aria-label="Internal approval" className="flex flex-wrap items-center justify-between gap-2 rounded-xl bg-white p-4 text-sm ring-1 ring-line">
         <span>Internal approval: {f.internal_approved_at ? <b>{f.internal_approved_by}, {formatDateTime(f.internal_approved_at)}</b> : "not yet"}</span>
         {can.internal && <Button variant="secondary" onClick={() => go("/internal-approval", undefined, "Internal approval recorded")}>Give internal approval</Button>}
       </section>
 
+      <Handover key={JSON.stringify(f.handover) + String(f.handover_completed_at)} f={f} can={can.documents || can.inspect} go={go} />
       {dlg && dlg !== "start" && <Modal title={{ exception: "Record an exception", clear: "Give finance clearance", return: "Return the clearance request", snag: "Add a snag", doc_na: `Not applicable: ${item}`, issue: `Issue: ${item}` }[dlg]} onClose={() => setDlg(null)}>
         <form className="space-y-3" onSubmit={(e: FormEvent) => { e.preventDefault();
           if (dlg === "exception") go("/exception", { reason: text.trim(), scope }, "Exception recorded");
