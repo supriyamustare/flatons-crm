@@ -382,6 +382,9 @@ async def raise_ticket(
             body=f"{code(t)} {svc.LABELS[category]}: {t.title}",
             link=f"/service/{t.id}",
         )
+    from app.services import comms
+
+    await comms.emit(db, "complaint_created", case, {"ticket_no": code(t), "title": t.title}, t.id)
     await db.commit()
     return await detail(db, t, user)
 

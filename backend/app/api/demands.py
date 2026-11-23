@@ -383,6 +383,15 @@ async def issue(
         request,
         {"demand": svc.code(d), "method": body.method.value},
     )
+    from app.services import comms
+
+    await comms.emit(
+        db,
+        "demand_issued",
+        case,
+        {"stage": d.stage_name, "amount": d.total_due, "due_date": d.due_date.strftime("%d %b %Y")},
+        d.id,
+    )
     await db.commit()
     return await summary(db, case, user)
 

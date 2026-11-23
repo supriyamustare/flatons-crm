@@ -444,6 +444,15 @@ async def share(
         request,
         {"method": body.method, "version": a.version},
     )
+    from app.services import comms
+
+    await comms.emit(
+        db,
+        "agreement_draft_ready",
+        case,
+        {"agreement_no": f"AGR-{a.id:05d}"},
+        f"{a.id}:{getattr(a, 'version', 1)}",
+    )
     return await _done(db, case, user)
 
 
@@ -538,6 +547,18 @@ async def register(
         a,
         request,
         {"registration_no": a.registration_no, "registered_on": a.registered_on.isoformat()},
+    )
+    from app.services import comms
+
+    await comms.emit(
+        db,
+        "agreement_registered",
+        case,
+        {
+            "registration_no": a.registration_no,
+            "registered_on": a.registered_on.strftime("%d %b %Y") if a.registered_on else "",
+        },
+        a.id,
     )
     return await _done(db, case, user)
 

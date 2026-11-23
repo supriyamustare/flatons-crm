@@ -24,6 +24,7 @@ const ServicePage = lazy(() => import("./pages/service/ServicePage").then((m) =>
 const ServiceSettingsPage = lazy(() => import("./pages/service/ServiceSettingsPage").then((m) => ({ default: m.ServiceSettingsPage })));
 const ServiceReportsPage = lazy(() => import("./pages/service/ServiceReportsPage").then((m) => ({ default: m.ServiceReportsPage })));
 const TicketPage = lazy(() => import("./pages/service/TicketPage").then((m) => ({ default: m.TicketPage })));
+const CommunicationsPage = lazy(() => import("./pages/comms/CommunicationsPage").then((m) => ({ default: m.CommunicationsPage })));
 const MisPage = lazy(() => import("./pages/mis/MisPage").then((m) => ({ default: m.MisPage })));
 const CalendarPage = lazy(() => import("./pages/calendar/CalendarPage").then((m) => ({ default: m.CalendarPage })));
 const InspectionReportPage = lazy(() => import("./pages/postsales/InspectionReportPage").then((m) => ({ default: m.InspectionReportPage })));
@@ -80,6 +81,7 @@ export function AppRoutes() {
             <Route path="post-sales" element={<PostSalesPage />} />
             <Route path="calendar" element={<CalendarPage />} />
             <Route path="mis" element={<MisPage />} />
+            <Route path="communications" element={<CommunicationsPage />} />
             <Route path="service" element={<ServicePage />} />
             <Route path="service/settings" element={<ServiceSettingsPage />} />
             <Route path="service/reports" element={<ServiceReportsPage />} />

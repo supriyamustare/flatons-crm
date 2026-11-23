@@ -117,6 +117,19 @@ async def run_reminders(db: AsyncSession, today: date) -> dict:
         )
         days = (today - d.due_date).days
         if days == -3:
+            from app.services import comms
+
+            await comms.emit(
+                db,
+                "payment_due_soon",
+                case,
+                {
+                    "stage": d.stage_name,
+                    "amount": unpaid,
+                    "due_date": d.due_date.strftime("%d %b %Y"),
+                },
+                f"{d.id}:due3",
+            )
             counts["due_soon"] += await _send(
                 db,
                 sent,

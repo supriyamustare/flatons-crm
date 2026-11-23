@@ -721,6 +721,16 @@ async def step(did: int, body: StepIn, request: Request, user: Viewer, db: DbSes
     if d.case_id:
         case = await db.get(PostSalesCase, d.case_id)
         cases.event(db, case, f"defect_{d.status}", user, {"defect": code(d)})
+    from app.services import comms
+
+    if d.status == "customer_update" and d.case_id:
+        await comms.emit(
+            db,
+            "defect_rectified",
+            await db.get(PostSalesCase, d.case_id),
+            {"defect_no": code(d), "description": d.description[:80]},
+            f"{d.id}:{d.reopened_count}",
+        )
     await db.commit()
     return await d_out(db, d, user)
 

@@ -17,6 +17,7 @@ from app.api import (
     cancellations,
     case_documents,
     channel_partners,
+    comms,
     cost_sheets,
     dashboard,
     demands,
@@ -116,4 +117,5 @@ app.include_router(possession.evidence_router, prefix="/api")
 app.include_router(cancellations.router, prefix="/api")
 app.include_router(aftersales.router, prefix="/api")
 app.include_router(mis.router, prefix="/api")
+app.include_router(comms.router, prefix="/api")
 app.include_router(leads.router, prefix="/api")

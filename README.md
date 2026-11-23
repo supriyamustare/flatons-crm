@@ -317,6 +317,24 @@ with the official logo at the same sizes. Offline support arrives in Sprint 16.
   or one unit type. A unit's panel shows the plans for its floor and its type, or the project-wide plans if there
   are none more specific.
 
+## Customer notification engine (Stage 17)
+
+- **Templates** (`comm_templates`; Communications menu: admins and CRM managers edit, management and auditors view):
+  one per event and channel (email / SMS / WhatsApp), optional project override, version, language, subject, body with
+  fields, mandatory flag, immediate or delayed sending. Drafts are approved by someone other than the author; approving
+  a version retires the previous one. Templates may not contain links (documents go through the customer portal) or
+  unknown fields. 16 starting drafts are installed; nothing is sent until they are approved.
+- **Events** wired into the modules: onboarding pending (case accepted), KYC clarification (KYC rejected), agreement
+  draft ready (shared) and registered, demand issued, payment due in 3 days (daily job), payment received (receipt
+  confirmed), document released to the customer, complaint registered (ticket raised), possession appointment
+  confirmed, defect rectified (quality checked), refund processed. Staff events stay in the in-app bell.
+- **Consent** comes from the customer profile: no electronic-communication consent -> not sent (send by letter); a
+  channel opt-out stops non-mandatory messages; WhatsApp needs opt-in.
+- **Delivery** (`comm_messages`; Celery beat `comms.dispatch` every 2 minutes): email through SMTP (`SMTP_HOST`,
+  `SMTP_PORT`, `SMTP_USER`, `SMTP_PASS`, `SMTP_FROM`, `SMTP_TLS`); messages for a channel that isn't set up are held, not
+  lost. Failures retry after 5 min, 30 min and 2 h, then stop with the reason; failed or held messages can be retried.
+  Duplicates for the same event and reference are ignored. History on each case's Communications tab and in the outbox.
+
 ## Management dashboard and MIS reports (Section 6)
 
 - **MIS** menu (`/mis`; admin, management, CRM manager, finance, finance approver, auditor). Filters: project, tower,

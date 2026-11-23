@@ -436,6 +436,10 @@ async def release(did: int, request: Request, user: Staff, db: DbSession) -> Fol
         datetime.now(UTC),
     )
     _log(db, case, user, "document_released", d, request)
+    from app.services import comms
+
+    if str(getattr(d.visibility, "value", d.visibility)) == "customer":
+        await comms.emit(db, "document_released", case, {"document": d.title}, d.id)
     await db.commit()
     return await folder(db, case, user)
 

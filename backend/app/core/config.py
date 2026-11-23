@@ -33,6 +33,10 @@ class Settings(BaseSettings):
     smtp_port: int = 587
     smtp_user: str = ""
     smtp_pass: str = ""
+    smtp_from: str = (
+        ""  # e.g. "Flatons CRM <crm@flatons.in>"; email stays held until this and smtp_host are set
+    )
+    smtp_tls: bool = True
 
     @property
     def is_production(self) -> bool:
