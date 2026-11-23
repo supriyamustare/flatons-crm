@@ -18,6 +18,7 @@ celery_app = Celery(
         "app.tasks.inbound",
         "app.tasks.postsales",
         "app.tasks.service",
+        "app.tasks.mis",
     ],
 )
 
@@ -38,6 +39,10 @@ celery_app.conf.beat_schedule = {
     "daily-follow-up-digest": {
         "task": "followups.daily_digest",
         "schedule": crontab(hour=8, minute=0),
+    },
+    "mis-snapshot": {
+        "task": "mis.snapshot",
+        "schedule": crontab(hour=23, minute=30),
     },
     "ticket-escalations": {
         "task": "service.escalations",

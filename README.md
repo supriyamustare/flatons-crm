@@ -317,6 +317,23 @@ with the official logo at the same sizes. Offline support arrives in Sprint 16.
   or one unit type. A unit's panel shows the plans for its floor and its type, or the project-wide plans if there
   are none more specific.
 
+## Management dashboard and MIS reports (Section 6)
+
+- **MIS** menu (`/mis`; admin, management, CRM manager, finance, finance approver, auditor). Filters: project, tower,
+  CRM owner, booking date range, period (from-to). Figures reuse the case-tab functions, so they always agree.
+- **Dashboard**: active accounts, agreements pending, overdue receivables, open tickets; contract value, outstanding,
+  collected, awaiting confirmation, collection efficiency; an exceptions list (each opens its report); dues falling in
+  7/15/30 days; overdue ageing (1-30, 31-60, 61-90, 90+).
+- **Finance**: by project (contract value, demanded, collected, efficiency), ageing, upcoming dues, customer-wise
+  outstanding, own contribution, bank disbursement pending, unallocated receipts, failed/reversed payments, refunds
+  pending, adjustments (cancellation deductions). Not available (shown with reasons): unmatched bank transactions,
+  waivers, tax/TDS reconciliation.
+- **Operations**: handovers not accepted, incomplete KYC, agreements by stage, documents awaiting approval / not released,
+  overdue follow-ups, missed promises, open tickets by team/priority/age, SLA breaches, requests awaiting approval,
+  possession-ready units, possession delays (what's pending), open snags and defects, cancellations, workload.
+- **CSV export** of any list (logged). **History**: nightly snapshots (`mis_snapshots`, Celery beat `mis.snapshot`
+  at 23:30) per project and overall; current = live, period = from-to, historical = snapshots.
+
 ## Post-sales (Phase 1, sprint 12): defect liability and after-sales (Stage 15)
 
 - **Transfer**: completing the possession handover moves the customer to the after-sales team

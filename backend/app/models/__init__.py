@@ -47,6 +47,7 @@ from app.models.milestone import (
     MilestoneStatus,
     ProjectMilestone,
 )
+from app.models.mis import MisSnapshot
 from app.models.notification import Notification
 from app.models.payment import Allocation, FundSource, Receipt, ReceiptMode, ReceiptStatus
 from app.models.pipeline import DEFAULT_PROBABILITIES, PipelineStage
@@ -88,6 +89,7 @@ from app.models.user import Role, User
 from app.models.visit import InterestLevel, SiteVisit, VisitSource, VisitStatus
 
 __all__ = [
+    "MisSnapshot",
     "Defect",
     "DefectFile",
     "FacilityHandover",

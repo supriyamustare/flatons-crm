@@ -106,7 +106,7 @@ async def financial(db, case: PostSalesCase) -> dict:
     not_yet_due = sum(
         max(0, i.amount + i.gst - paid.get(i.seq, 0))
         for i in ledger.schedule
-        if ledger_svc.is_due(i, t) and (i.due_date is None or i.due_date >= t)
+        if ledger_svc.is_due(i, t) and (i.due_date is None or i.due_date > t)
     )
     disputes = list(
         await db.scalars(
