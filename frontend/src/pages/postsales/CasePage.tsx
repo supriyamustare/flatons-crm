@@ -21,9 +21,10 @@ import { LoanTab } from "./LoanTab";
 import { AppointmentsTab } from "./AppointmentsTab";
 import { ServiceTab } from "./ServiceTab";
 import { PossessionTab } from "./PossessionTab";
+import { CancellationTab } from "./CancellationTab";
 
-type Tab = "handover" | "customer" | "kyc" | "ledger" | "receipts" | "demands" | "followups" | "documents" | "agreement" | "loan" | "appointments" | "service" | "possession" | "history";
-const ALL_TABS: Tab[] = ["handover", "customer", "kyc", "ledger", "receipts", "demands", "followups", "documents", "agreement", "loan", "appointments", "service", "possession", "history"];
+type Tab = "handover" | "customer" | "kyc" | "ledger" | "receipts" | "demands" | "followups" | "documents" | "agreement" | "loan" | "appointments" | "service" | "possession" | "cancellation" | "history";
+const ALL_TABS: Tab[] = ["handover", "customer", "kyc", "ledger", "receipts", "demands", "followups", "documents", "agreement", "loan", "appointments", "service", "possession", "cancellation", "history"];
 const MONEY_TABS: Tab[] = ["ledger", "receipts", "demands", "followups", "loan"];
 const ENTITY: OwnershipType[] = ["company", "partnership", "huf", "trust", "other"];
 const HISTORY: Record<string, string> = {
@@ -44,6 +45,11 @@ const HISTORY: Record<string, string> = {
   agreement_customer_accepted: "Customer accepted the agreement", agreement_execution_updated: "Execution details updated", agreement_registered: "Agreement registered",
   agreement_final_uploaded: "Signed agreement uploaded", agreement_cancelled: "Agreement cancelled",
   loan_created: "Home loan added", loan_updated: "Loan details updated", loan_document_requested: "Bank requested a document", loan_document_submitted: "Document submitted to the bank",
+  cancellation_requested: "Cancellation requested", cancellation_legal_review: "Cancellation: legal review", cancellation_commercial_review: "Cancellation: commercial review",
+  cancellation_settlement: "Cancellation settlement calculated", cancellation_finance_approved: "Cancellation: finance check", cancellation_management_approved: "Cancellation approved",
+  cancellation_rejected: "Cancellation rejected", cancellation_withdrawn: "Cancellation withdrawn", cancellation_communicated: "Cancellation letter sent",
+  cancellation_refund_account: "Refund account recorded", cancellation_refund_account_verified: "Refund account verified", cancellation_refund_paid: "Refund paid",
+  cancellation_refund_reconciled: "Refund reconciled", cancellation_unit_released: "Unit released", cancellation_closed: "Cancellation closed",
   possession_started: "Pre-possession started", possession_finance_updated: "Possession finance checklist updated", possession_clearance_requested: "Finance clearance requested",
   possession_cleared: "Finance clearance given", possession_clearance_returned: "Finance clearance returned", possession_documents_updated: "Possession documents updated",
   possession_inspection_updated: "Unit inspection updated", possession_snag_raised: "Snag raised", possession_snag_updated: "Snag updated", possession_readiness_approved: "Unit readiness approved",
@@ -351,7 +357,7 @@ export function CasePage() {
         {c.kyc_total > 0 && <span className="text-muted">KYC {c.kyc_done}/{c.kyc_total} verified</span>}
       </div>
       <div role="tablist" aria-label="Case" className="mb-4 flex gap-1 overflow-x-auto rounded-xl bg-white p-1 ring-1 ring-line">
-        {([["handover", "Handover"], ["customer", "Customer"], ["kyc", "KYC"], ["ledger", "Ledger"], ["receipts", "Receipts"], ["demands", "Demands"], ["followups", "Follow-ups"], ["documents", "Documents"], ["agreement", "Agreement"], ["loan", "Loan"], ["appointments", "Appointments"], ["service", "Service"], ["possession", "Possession"], ["history", "History"]] as const)
+        {([["handover", "Handover"], ["customer", "Customer"], ["kyc", "KYC"], ["ledger", "Ledger"], ["receipts", "Receipts"], ["demands", "Demands"], ["followups", "Follow-ups"], ["documents", "Documents"], ["agreement", "Agreement"], ["loan", "Loan"], ["appointments", "Appointments"], ["service", "Service"], ["possession", "Possession"], ["cancellation", "Cancellation"], ["history", "History"]] as const)
           .filter(([k]) => allowedTab(k)).map(([k, l]) => (
           <button key={k} role="tab" aria-selected={tab === k} onClick={() => setTab(k)}
             className={cx("min-h-11 flex-1 rounded-lg px-3 text-sm whitespace-nowrap", tab === k ? "bg-forest-900 text-white" : "hover:bg-forest-50")}>{l}</button>
@@ -370,6 +376,7 @@ export function CasePage() {
       {tab === "appointments" && <AppointmentsTab caseId={c.id} />}
       {tab === "service" && <ServiceTab caseId={c.id} />}
       {tab === "possession" && <PossessionTab caseId={c.id} />}
+      {tab === "cancellation" && <CancellationTab caseId={c.id} />}
       {tab === "history" && (
         <section role="tabpanel" aria-label="History" className="rounded-xl bg-white p-5 ring-1 ring-line">
           <ol className="space-y-2 text-sm">{c.history.map((h, i) => (
@@ -377,6 +384,7 @@ export function CasePage() {
               {typeof h.details?.receipt === "string" && <> ({String(h.details.receipt)})</>}
               {typeof h.details?.demand === "string" && <> ({String(h.details.demand)})</>}
               {typeof h.details?.milestone === "string" && <>: {String(h.details.milestone)}</>}
+              {typeof h.details?.cancellation === "string" && <> ({String(h.details.cancellation)})</>}
               {typeof h.details?.ticket === "string" && <> ({String(h.details.ticket)})</>}
               {typeof h.details?.appointment === "string" && <> ({String(h.details.appointment)}{typeof h.details?.at === "string" ? `, ${String(h.details.at)}` : ""})</>}
               {typeof h.details?.agreement === "string" && <> ({String(h.details.agreement)})</>}

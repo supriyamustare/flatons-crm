@@ -288,6 +288,16 @@ async def cancel_booking(
     booking_id: int, body: BookingCancel, request: Request, user: Manager, db: DbSession
 ) -> BookingOut:
     b = await _booking(db, user, booking_id)
+    from sqlalchemy import select
+
+    from app.models.postsales import CaseStatus, PostSalesCase
+
+    case = await db.scalar(select(PostSalesCase).where(PostSalesCase.booking_id == b.id))
+    if case is not None and case.status == CaseStatus.accepted:
+        raise HTTPException(
+            status.HTTP_422_UNPROCESSABLE_CONTENT,
+            "Post-sales has taken over this booking: cancel it through the post-sales cancellation workflow (case Cancellation tab)",
+        )
     try:
         await svc.cancel(db, b, actor=user, reason=body.reason)
     except svc.BookingRuleError as exc:

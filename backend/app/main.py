@@ -13,6 +13,7 @@ from app.api import (
     auth,
     bookings,
     calls,
+    cancellations,
     case_documents,
     channel_partners,
     cost_sheets,
@@ -110,4 +111,5 @@ app.include_router(project_updates.router, prefix="/api")
 app.include_router(tickets.router, prefix="/api")
 app.include_router(possession.router, prefix="/api")
 app.include_router(possession.evidence_router, prefix="/api")
+app.include_router(cancellations.router, prefix="/api")
 app.include_router(leads.router, prefix="/api")
