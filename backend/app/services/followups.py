@@ -211,4 +211,7 @@ async def run_reminders(db: AsyncSession, today: date) -> dict:
     from app.services.possession import run_snag_reminders
 
     counts |= await run_snag_reminders(db, today, send)
+    from app.api.aftersales import run_defect_reminders
+
+    counts |= await run_defect_reminders(db, today, send)
     return counts

@@ -8,6 +8,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from app.api import (
+    aftersales,
     agreements,
     appointments,
     auth,
@@ -112,4 +113,5 @@ app.include_router(tickets.router, prefix="/api")
 app.include_router(possession.router, prefix="/api")
 app.include_router(possession.evidence_router, prefix="/api")
 app.include_router(cancellations.router, prefix="/api")
+app.include_router(aftersales.router, prefix="/api")
 app.include_router(leads.router, prefix="/api")
