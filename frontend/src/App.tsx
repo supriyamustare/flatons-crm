@@ -25,6 +25,7 @@ const ServiceSettingsPage = lazy(() => import("./pages/service/ServiceSettingsPa
 const ServiceReportsPage = lazy(() => import("./pages/service/ServiceReportsPage").then((m) => ({ default: m.ServiceReportsPage })));
 const TicketPage = lazy(() => import("./pages/service/TicketPage").then((m) => ({ default: m.TicketPage })));
 const CalendarPage = lazy(() => import("./pages/calendar/CalendarPage").then((m) => ({ default: m.CalendarPage })));
+const InspectionReportPage = lazy(() => import("./pages/postsales/InspectionReportPage").then((m) => ({ default: m.InspectionReportPage })));
 const StatementPage = lazy(() => import("./pages/postsales/StatementPage").then((m) => ({ default: m.StatementPage })));
 const CostSheetPage = lazy(() => import("./pages/CostSheetPage").then((m) => ({ default: m.CostSheetPage })));
 const PostSalesPage = lazy(() => import("./pages/postsales/PostSalesPage").then((m) => ({ default: m.PostSalesPage })));
@@ -66,6 +67,7 @@ export function AppRoutes() {
         {/* Printable page: no menu around it */}
         <Route path="cost-sheet/:unitId" element={<CostSheetPage />} />
         <Route path="statement/:caseId" element={<StatementPage />} />
+        <Route path="inspection-report/:caseId/:inspectionId" element={<InspectionReportPage />} />
         <Route path="agreement-draft/:caseId" element={<AgreementDraftPage />} />
         <Route path="demand-letter/:caseId/:demandId" element={<DemandLetterPage />} />
         <Route element={<AppLayout />}>

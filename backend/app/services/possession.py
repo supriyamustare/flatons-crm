@@ -9,7 +9,7 @@ from app.models.case_document import Approval, CaseDocument, DocCategory
 from app.models.ledger import Ledger, LedgerStatus
 from app.models.milestone import MilestoneStatus, ProjectMilestone
 from app.models.payment import Receipt, ReceiptStatus
-from app.models.possession import PossessionFile, Snag
+from app.models.possession import Inspection, PossessionFile, Snag
 from app.models.postsales import PostSalesCase
 from app.models.project import Project
 from app.models.ticket import Ticket, TicketCategory, TicketStatus
@@ -53,6 +53,7 @@ CONDITIONS = {
     "readiness": "Unit readiness approved",
     "internal": "Internal approval (CRM manager)",
     "communication": "Customer informed (possession letter released)",
+    "inspection": "Customer inspection done; no open major or critical snags",
 }
 
 
@@ -163,6 +164,22 @@ async def gate(
             CaseDocument.approval == Approval.released,
         )
     )
+    inspected = bool(f) and bool(
+        await db.scalar(
+            select(Inspection.id).where(
+                Inspection.file_id == f.id, Inspection.conducted_on.is_not(None)
+            )
+        )
+    )
+    serious_open = bool(f) and bool(
+        await db.scalar(
+            select(Snag.id).where(
+                Snag.file_id == f.id,
+                Snag.status != "closed",
+                Snag.severity.in_(["major", "critical"]),
+            )
+        )
+    )
     met = {
         "legal": bool(readiness.ready and agreement_done),
         "documents": docs_ok,
@@ -170,6 +187,7 @@ async def gate(
         "readiness": bool(f and f.readiness_approved_at),
         "internal": bool(f and f.internal_approved_at),
         "communication": letter is not None,
+        "inspection": inspected and not serious_open,
     }
     scope = set((f.exception or {}).get("scope", [])) if f else set()
     items = [
@@ -203,7 +221,7 @@ async def open_snags(db, f: PossessionFile) -> int:
         await db.scalar(
             select(func.count())
             .select_from(Snag)
-            .where(Snag.file_id == f.id, Snag.status != "verified")
+            .where(Snag.file_id == f.id, Snag.status != "closed")
         )
         or 0
     )
@@ -222,3 +240,154 @@ async def evidence_count(db, case: PostSalesCase) -> int:
         )
         or 0
     )
+
+
+STATUS_ORDER = [
+    "not_ready",
+    "readiness_in_progress",
+    "financial_clearance_pending",
+    "legal_clearance_pending",
+    "inspection_pending",
+    "snag_rectification",
+    "ready_for_possession",
+    "appointment_scheduled",
+    "handover_completed",
+]
+STATUS_LABELS = {
+    "not_ready": "Not ready",
+    "readiness_in_progress": "Readiness in progress",
+    "financial_clearance_pending": "Financial clearance pending",
+    "legal_clearance_pending": "Legal clearance pending",
+    "inspection_pending": "Inspection pending",
+    "snag_rectification": "Snag rectification",
+    "ready_for_possession": "Ready for possession",
+    "appointment_scheduled": "Appointment scheduled",
+    "handover_completed": "Handover completed",
+}
+
+
+async def possession_status(
+    db, case: PostSalesCase, f: PossessionFile | None, g: dict | None
+) -> dict:
+    """The headline status plus everything still pending (steps run in parallel, so several can be pending at once)."""
+    from app.models.appointment import Appointment, AppointmentKind, AppointmentStatus
+
+    if f is None:
+        return {"status": "not_ready", "label": STATUS_LABELS["not_ready"], "pending": []}
+    if f.handover_completed_at:
+        return {
+            "status": "handover_completed",
+            "label": STATUS_LABELS["handover_completed"],
+            "pending": [],
+        }
+    met = {c["key"]: c["met"] or c["excepted"] for c in g["conditions"]}
+    pending = []
+    if not met["finance"]:
+        pending.append("financial_clearance_pending")
+    if not met["legal"]:
+        pending.append("legal_clearance_pending")
+    open_snags = (
+        await db.scalar(
+            select(func.count())
+            .select_from(Snag)
+            .where(Snag.file_id == f.id, Snag.status != "closed")
+        )
+        or 0
+    )
+    inspected = bool(
+        await db.scalar(
+            select(Inspection.id).where(
+                Inspection.file_id == f.id, Inspection.conducted_on.is_not(None)
+            )
+        )
+    )
+    if not inspected:
+        pending.append("inspection_pending")
+    if open_snags:
+        pending.append("snag_rectification")
+    if not g["open"]:
+        return {
+            "status": "readiness_in_progress",
+            "label": STATUS_LABELS["readiness_in_progress"],
+            "pending": [{"key": k, "label": STATUS_LABELS[k]} for k in pending],
+        }
+    appt = await db.scalar(
+        select(Appointment.id).where(
+            Appointment.case_id == case.id,
+            Appointment.kind == AppointmentKind.possession,
+            Appointment.status.in_([AppointmentStatus.scheduled, AppointmentStatus.attended]),
+        )
+    )
+    key = "appointment_scheduled" if appt else "ready_for_possession"
+    return {
+        "status": key,
+        "label": STATUS_LABELS[key],
+        "pending": [{"key": k, "label": STATUS_LABELS[k]} for k in pending],
+    }
+
+
+async def key_dates(db, case: PostSalesCase, f: PossessionFile | None, project: Project) -> dict:
+    """The final rule: construction completion, possession offer, legal eligibility and actual possession are kept apart."""
+    trigger, _ = await trigger_reached(db, project)
+    m = (
+        await db.scalar(
+            select(ProjectMilestone).where(
+                ProjectMilestone.project_id == project.id,
+                func.lower(ProjectMilestone.name) == (trigger or "").lower(),
+            )
+        )
+        if trigger
+        else None
+    )
+    letter = await db.scalar(
+        select(CaseDocument)
+        .where(
+            CaseDocument.case_id == case.id,
+            CaseDocument.category == DocCategory.possession,
+            CaseDocument.approval == Approval.released,
+        )
+        .order_by(CaseDocument.released_at)
+    )
+    return {
+        "construction_completed": m.completed_on
+        if m and m.status == MilestoneStatus.verified
+        else None,
+        "possession_offered": letter.released_at.astimezone(IST).date()
+        if letter and letter.released_at
+        else None,
+        "legally_eligible": f.gate_opened_at.astimezone(IST).date()
+        if f and f.gate_opened_at
+        else None,
+        "actual_possession": f.actual_possession_on if f else None,
+    }
+
+
+async def run_snag_reminders(db, today_: date, send) -> dict:
+    """Daily: overdue snags to their owner; critical ones to CRM managers too (once a day each)."""
+    from app.models.user import Role, User
+
+    crm = list(
+        await db.scalars(
+            select(User.id).where(User.is_active.is_(True), User.role == Role.crm_manager)
+        )
+    )
+    n = 0
+    for s in await db.scalars(
+        select(Snag).where(
+            Snag.status.in_(["open", "fixed"]),
+            Snag.due_on < today_,
+            (Snag.escalated_on.is_(None)) | (Snag.escalated_on < today_),
+        )
+    ):
+        f = await db.get(PossessionFile, s.file_id)
+        case = await db.get(PostSalesCase, f.case_id)
+        who = [s.owner_id] + (crm if s.severity == "critical" else [])
+        n += await send(
+            who,
+            type="snag_overdue",
+            title=f"Overdue {s.severity} snag: {case.booking.lead.name}",
+            body=f"{s.description[:120]} (due {s.due_on.isoformat()})",
+            link=f"/post-sales/{case.id}?tab=possession",
+        )
+        s.escalated_on = today_
+    return {"snags_overdue": n}

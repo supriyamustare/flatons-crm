@@ -317,6 +317,26 @@ with the official logo at the same sizes. Offline support arrives in Sprint 16.
   or one unit type. A unit's panel shows the plans for its floor and its type, or the project-wide plans if there
   are none more specific.
 
+## Post-sales (Phase 1, sprint 10): customer inspection, snag register, registration and handover (Stages 13 and 14)
+
+- **Customer inspections** (`possession_inspections`): date, attendees, notes, report shared (date, how); printable
+  inspection report `/inspection-report/{case}/{inspection}`.
+- **Snag register** (`possession_snags` + `possession_snag_evidence`): SNG id, location, category, severity (minor /
+  major / critical), source (internal / customer), owner, target date, issue and completion photos, rectification,
+  verification, customer acceptance or dispute, reopen reason and count, closure date. Fixed needs rectification
+  details; major/critical need a completion photo; verified by someone other than the fixer; internal snags close on
+  verification, customer snags close only on the customer's acceptance (a dispute reopens). New snags withdraw readiness
+  approval. Overdue snags are reminded daily (critical ones to CRM managers too).
+- **Gate condition 7**: customer inspection done and no open major/critical snag (minor ones may stay open).
+- **Possession status** (not ready ... handover completed) with parallel pending items; the four dates kept apart:
+  construction completed (milestone verified), possession offered (letter released), legally eligible (gate first
+  open), actual possession (handover).
+- **Handover checklist** (identity and authorisation, keys, access cards, remotes, parking, meters, utilities, FM and
+  emergency contacts, manuals, house rules, acknowledgement, signed checklist from folder 09, photos note); completing it
+  needs the open gate, a possession appointment and the required items; locked afterwards.
+- **Registration details** on the agreement: signatories, documents produced, receipt reference, original deed custody,
+  delivery and the customer's acknowledgement.
+
 ## Post-sales (Phase 1, sprint 9): pre-possession and the possession gate (Stage 12)
 
 - **Trigger**: a possession file (`possession_files`) opens once the project's possession milestone is verified

@@ -97,6 +97,7 @@ class AgreementOut(BaseModel):
     final_document: dict | None
     cancel_reason: str | None
     drafted_by_id: int | None
+    registration: dict | None = None
 
 
 class StateOut(BaseModel):
@@ -173,6 +174,7 @@ async def _out(db: DbSession, a: Agreement) -> AgreementOut:
                 "registered_on",
                 "cancel_reason",
                 "drafted_by_id",
+                "registration",
             )
         },
         agreement_no=code(a),
@@ -614,4 +616,66 @@ async def cancel(
         )
     a.status, a.cancel_reason = S.cancelled, body.reason
     _log(db, case, user, "agreement_cancelled", a, request, {"reason": body.reason})
+    return await _done(db, case, user)
+
+
+class RegistrationIn(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+    signatories: Annotated[PlainText, StringConstraints(max_length=1000)] | None = (
+        None  # parties and authorised signatories present
+    )
+    documents: dict[
+        Annotated[PlainText, StringConstraints(max_length=120)], bool
+    ] = {}  # registration document checklist
+    receipt_ref: Annotated[PlainText, StringConstraints(max_length=80)] | None = (
+        None  # sub-registrar receipt / reference
+    )
+    original_custody: Literal["customer", "developer", "lender"] | None = (
+        None  # who holds the original registered deed
+    )
+    custody_note: Annotated[PlainText, StringConstraints(max_length=500)] | None = None
+    delivered_on: date | None = None  # deed or copy delivered to / collected by the customer
+    delivered_via: Literal["hand", "courier", "collected", "lender"] | None = None
+    customer_acknowledged: bool = False
+
+
+@router.put("/registration", response_model=StateOut)
+async def registration_details(
+    case_id: int, body: RegistrationIn, request: Request, user: Drafter, db: DbSession
+) -> StateOut:
+    """Stage 14: the rest of the registration record once the agreement is registered."""
+    case = await _case(db, case_id)
+    a = _need(await _live(db, case_id), S.registered, S.final_uploaded)
+    if body.delivered_on and body.delivered_on > today():
+        raise HTTPException(
+            status.HTTP_422_UNPROCESSABLE_CONTENT, "The delivery date can't be in the future"
+        )
+    if body.delivered_on and not body.delivered_via:
+        raise HTTPException(status.HTTP_422_UNPROCESSABLE_CONTENT, "Say how the deed was delivered")
+    if body.customer_acknowledged and not body.delivered_on:
+        raise HTTPException(
+            status.HTTP_422_UNPROCESSABLE_CONTENT,
+            "Record the delivery before the customer's acknowledgement",
+        )
+    if body.original_custody in ("developer", "lender") and not (body.custody_note or "").strip():
+        raise HTTPException(
+            status.HTTP_422_UNPROCESSABLE_CONTENT, "Note why the original is held and where"
+        )
+    a.registration = {
+        **body.model_dump(mode="json"),
+        "by": user.full_name,
+        "at": datetime.now(UTC).isoformat(),
+    }
+    _log(
+        db,
+        case,
+        user,
+        "agreement_registration_details",
+        a,
+        request,
+        {
+            "custody": body.original_custody,
+            "delivered_on": body.delivered_on.isoformat() if body.delivered_on else None,
+        },
+    )
     return await _done(db, case, user)

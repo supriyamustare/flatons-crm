@@ -3,6 +3,7 @@ import type { FormEvent } from "react";
 import { Check, FileText, X } from "lucide-react";
 import { Alert, Badge, Button, Modal, SelectInput, TextArea, TextInput, cx } from "../../components/ui";
 import { useToast } from "../../components/Toast";
+import { useCurrentUser } from "../../hooks/useAuth";
 import { STEPS, useAgreement, useAgreementAction } from "../../hooks/useAgreement";
 import type { Agreement } from "../../hooks/useAgreement";
 import { inr } from "../../hooks/useLedger";
@@ -60,8 +61,35 @@ function Execution({ a, caseId, canEdit }: { a: Agreement; caseId: number; canEd
   );
 }
 
+function RegistrationDetails({ a, caseId, canEdit }: { a: Agreement; caseId: number; canEdit: boolean }) {
+  const act = useAgreementAction(caseId); const toast = useToast(); const r = a.registration ?? {};
+  const [f, setF] = useState({ signatories: r.signatories ?? "", receipt_ref: r.receipt_ref ?? "", original_custody: r.original_custody ?? "", custody_note: r.custody_note ?? "",
+    delivered_on: r.delivered_on ?? "", delivered_via: r.delivered_via ?? "", customer_acknowledged: !!r.customer_acknowledged, docs: Object.keys(r.documents ?? {}).filter((k) => r.documents[k]).join("\n") });
+  const set = (k: keyof typeof f) => (e: { target: { value: string } }) => setF({ ...f, [k]: e.target.value });
+  return (
+    <form aria-label="Registration details" className="space-y-3 rounded-xl bg-white p-4 ring-1 ring-line" onSubmit={(e: FormEvent) => { e.preventDefault();
+      act.mutate({ method: "put", path: "/registration", body: { signatories: f.signatories.trim() || null, receipt_ref: f.receipt_ref.trim() || null, original_custody: f.original_custody || null,
+        custody_note: f.custody_note.trim() || null, delivered_on: f.delivered_on || null, delivered_via: f.delivered_via || null, customer_acknowledged: f.customer_acknowledged,
+        documents: Object.fromEntries(f.docs.split("\n").map((x) => x.trim()).filter(Boolean).map((x) => [x, true])) } }, { onSuccess: () => toast("Registration details saved") }); }}>
+      <h3 className="font-semibold">Registration details</h3>
+      {act.isError && <Alert>{errorMessage(act.error)}</Alert>}
+      <fieldset disabled={!canEdit} className="grid gap-3 sm:grid-cols-2">
+        <TextArea label="Parties and authorised signatories" value={f.signatories} onChange={set("signatories")} rows={2} maxLength={1000} />
+        <TextArea label="Documents produced at registration (one per line)" value={f.docs} onChange={set("docs")} rows={2} />
+        <TextInput label="Registration receipt / reference" value={f.receipt_ref} onChange={set("receipt_ref")} maxLength={80} />
+        <SelectInput label="Original registered deed held by" value={f.original_custody} onChange={set("original_custody")}><option value="">—</option><option value="customer">The customer</option><option value="developer">The developer</option><option value="lender">The lender</option></SelectInput>
+        <TextInput label="Custody note" value={f.custody_note} onChange={set("custody_note")} maxLength={500} placeholder="Where it's held, and until when" />
+        <TextInput label="Delivered to the customer on" type="date" value={f.delivered_on} onChange={set("delivered_on")} />
+        <SelectInput label="Delivered by" value={f.delivered_via} onChange={set("delivered_via")}><option value="">—</option><option value="hand">By hand</option><option value="courier">Courier</option><option value="collected">Collected by the customer</option><option value="lender">Sent to the lender</option></SelectInput>
+        <label className="flex min-h-11 items-center gap-2 text-sm"><input type="checkbox" className="size-4 accent-forest-900" checked={f.customer_acknowledged} onChange={(e) => setF({ ...f, customer_acknowledged: e.target.checked })} />Customer acknowledged receipt</label>
+      </fieldset>
+      {canEdit && <div className="flex justify-end"><Button type="submit" loading={act.isPending}>Save registration details</Button></div>}
+    </form>
+  );
+}
+
 export function AgreementTab({ caseId }: { caseId: number }) {
-  const q = useAgreement(caseId); const act = useAgreementAction(caseId); const toast = useToast();
+  const q = useAgreement(caseId); const act = useAgreementAction(caseId); const toast = useToast(); const me = useCurrentUser();
   const [dlg, setDlg] = useState<null | "changes" | "share" | "register" | "cancel" | "final">(null);
   const [reason, setReason] = useState(""); const [method, setMethod] = useState("email"); const [file, setFile] = useState<File | null>(null);
   const [reg, setReg] = useState({ executed_on: today(), registration_no: "", registered_on: today(), sro_office: "" });
@@ -124,6 +152,7 @@ export function AgreementTab({ caseId }: { caseId: number }) {
         {["execution_prep", "registered", "final_uploaded", "completed"].includes(a.status) && <Execution key={a.status} a={a} caseId={caseId} canEdit={!!can.prepare} />}
         {can.register && <Button onClick={() => setDlg("register")}>Record signing and registration</Button>}
         {a.registration_no && <p className="rounded-xl bg-white p-4 text-sm ring-1 ring-line">Executed {a.executed_on} · registered {a.registered_on} as <b>{a.registration_no}</b>{a.sro_office ? ` at ${a.sro_office}` : ""}.</p>}
+        {a.registration_no && <RegistrationDetails a={a} caseId={caseId} canEdit={["admin", "crm_manager", "legal"].includes(me.role)} />}
         {can.upload_final && <Button onClick={() => setDlg("final")}>Upload signed agreement</Button>}
         {a.final_document && <p className="text-sm">Signed agreement: <a href={a.final_document.url} target="_blank" rel="noopener" className="text-forest-800 underline">{a.final_document.doc_no}</a> in 03 Agreements &amp; Legal · {a.final_document.approval === "released" ? "released to the customer" : a.final_document.approval === "under_approval" ? "waiting for review in Documents, then release" : a.final_document.approval}</p>}
       </>)}

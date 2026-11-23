@@ -16,6 +16,7 @@ export interface Agreement {
   registration_fee_amount: number | null; registration_fee_paid_on: string | null; registration_fee_ref: string | null; appointment_at: string | null;
   sro_office: string | null; id_docs_ready: boolean; signing_note: string | null; executed_on: string | null; registration_no: string | null; registered_on: string | null;
   final_document: { id: number; doc_no: string; approval: string; url: string } | null; cancel_reason: string | null; drafted_by_id: number | null;
+  registration?: Record<string, any> | null; // eslint-disable-line @typescript-eslint/no-explicit-any
 }
 export interface AgreementState {
   agreement: Agreement | null; history: Agreement[]; conditions: { item: string; ok: boolean; detail?: string | null }[];

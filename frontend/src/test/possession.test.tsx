@@ -25,7 +25,9 @@ const file = (over: Record<string, unknown> = {}) => ({
   internal_approved_by: null, internal_approved_at: null, exception: null,
   gate: { conditions: conds({ legal: true }), open: false, detail: { legal: null } },
   can: { finance: false, request_clearance: false, clear: false, documents: true, inspect: true, approve_readiness: true, internal: false, exception: false },
-  owners: [{ id: 7, full_name: "Sam Site", role: "site" }], ...over });
+  owners: [{ id: 7, full_name: "Sam Site", role: "site" }], inspections: [], handover: {}, handover_completed_at: null, actual_possession_on: null, possession_documents: [],
+  possession_status: { status: "readiness_in_progress", label: "Readiness in progress", pending: [] },
+  dates: { construction_completed: null, possession_offered: null, legally_eligible: null, actual_possession: null }, ...over });
 
 async function openTab() {
   return screen.findByRole("tabpanel", { name: "Possession" });
@@ -80,7 +82,7 @@ describe("possession", () => {
     const ready = within(await openTab()).getByRole("region", { name: "Unit readiness" });
     expect(within(ready).getByRole("button", { name: "Approve readiness" })).toBeDisabled();
     expect(ready).toHaveTextContent("No inspection evidence");
-    await userEvent.click(within(ready).getByRole("button", { name: "Add snag" }));
+    await userEvent.click(within(screen.getByRole("region", { name: "Snag register" })).getByRole("button", { name: "Add snag" }));  // snags have their own register
     const d = await screen.findByRole("dialog", { name: "Add a snag" });
     await userEvent.type(within(d).getByLabelText("What needs fixing"), "Hairline crack near window");
     await userEvent.selectOptions(within(d).getByLabelText("Rectification owner"), "7");
