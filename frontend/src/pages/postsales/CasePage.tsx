@@ -23,9 +23,10 @@ import { ServiceTab } from "./ServiceTab";
 import { PossessionTab } from "./PossessionTab";
 import { CancellationTab } from "./CancellationTab";
 import { AfterSalesTab } from "./AfterSalesTab";
+import { CommunicationsTab } from "./CommunicationsTab";
 
-type Tab = "handover" | "customer" | "kyc" | "ledger" | "receipts" | "demands" | "followups" | "documents" | "agreement" | "loan" | "appointments" | "service" | "possession" | "aftersales" | "cancellation" | "history";
-const ALL_TABS: Tab[] = ["handover", "customer", "kyc", "ledger", "receipts", "demands", "followups", "documents", "agreement", "loan", "appointments", "service", "possession", "aftersales", "cancellation", "history"];
+type Tab = "handover" | "customer" | "kyc" | "ledger" | "receipts" | "demands" | "followups" | "documents" | "agreement" | "loan" | "appointments" | "service" | "possession" | "aftersales" | "cancellation" | "communications" | "history";
+const ALL_TABS: Tab[] = ["handover", "customer", "kyc", "ledger", "receipts", "demands", "followups", "documents", "agreement", "loan", "appointments", "service", "possession", "aftersales", "cancellation", "communications", "history"];
 const MONEY_TABS: Tab[] = ["ledger", "receipts", "demands", "followups", "loan"];
 const ENTITY: OwnershipType[] = ["company", "partnership", "huf", "trust", "other"];
 const HISTORY: Record<string, string> = {
@@ -362,7 +363,7 @@ export function CasePage() {
         {c.kyc_total > 0 && <span className="text-muted">KYC {c.kyc_done}/{c.kyc_total} verified</span>}
       </div>
       <div role="tablist" aria-label="Case" className="mb-4 flex gap-1 overflow-x-auto rounded-xl bg-white p-1 ring-1 ring-line">
-        {([["handover", "Handover"], ["customer", "Customer"], ["kyc", "KYC"], ["ledger", "Ledger"], ["receipts", "Receipts"], ["demands", "Demands"], ["followups", "Follow-ups"], ["documents", "Documents"], ["agreement", "Agreement"], ["loan", "Loan"], ["appointments", "Appointments"], ["service", "Service"], ["possession", "Possession"], ["aftersales", "After-sales"], ["cancellation", "Cancellation"], ["history", "History"]] as const)
+        {([["handover", "Handover"], ["customer", "Customer"], ["kyc", "KYC"], ["ledger", "Ledger"], ["receipts", "Receipts"], ["demands", "Demands"], ["followups", "Follow-ups"], ["documents", "Documents"], ["agreement", "Agreement"], ["loan", "Loan"], ["appointments", "Appointments"], ["service", "Service"], ["possession", "Possession"], ["aftersales", "After-sales"], ["cancellation", "Cancellation"], ["communications", "Communications"], ["history", "History"]] as const)
           .filter(([k]) => allowedTab(k)).map(([k, l]) => (
           <button key={k} role="tab" aria-selected={tab === k} onClick={() => setTab(k)}
             className={cx("min-h-11 flex-1 rounded-lg px-3 text-sm whitespace-nowrap", tab === k ? "bg-forest-900 text-white" : "hover:bg-forest-50")}>{l}</button>
@@ -383,6 +384,7 @@ export function CasePage() {
       {tab === "possession" && <PossessionTab caseId={c.id} />}
       {tab === "aftersales" && <AfterSalesTab caseId={c.id} />}
       {tab === "cancellation" && <CancellationTab caseId={c.id} />}
+      {tab === "communications" && <CommunicationsTab caseId={c.id} />}
       {tab === "history" && (
         <section role="tabpanel" aria-label="History" className="rounded-xl bg-white p-5 ring-1 ring-line">
           <ol className="space-y-2 text-sm">{c.history.map((h, i) => (

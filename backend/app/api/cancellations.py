@@ -704,6 +704,19 @@ async def refund_payment(
         request,
         {"amount": body.amount, "utr": body.utr},
     )
+    from app.services import comms
+
+    await comms.emit(
+        db,
+        "refund_processed",
+        case,
+        {
+            "amount": body.amount,
+            "paid_on": body.paid_on.strftime("%d %b %Y"),
+            "utr": body.utr.strip().upper(),
+        },
+        c.id,
+    )
     return await _done(db, case, user)
 
 

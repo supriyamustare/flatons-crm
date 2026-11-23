@@ -432,6 +432,19 @@ async def confirm(
         datetime.now(UTC),
     )
     _log(db, case, user, "receipt_confirmed", request, {"receipt": rno(r), "amount": r.amount})
+    from app.services import comms
+
+    await comms.emit(
+        db,
+        "payment_received",
+        case,
+        {
+            "amount": r.amount,
+            "receipt_no": f"RCT-{r.id:05d}",
+            "received_on": r.received_on.strftime("%d %b %Y"),
+        },
+        r.id,
+    )
     await db.commit()
     return await summary(db, case, user)
 

@@ -10,6 +10,7 @@ from app.models.call import CONNECTED_OUTCOMES, CallDirection, CallLog, CallOutc
 from app.models.cancellation import Cancellation
 from app.models.case_document import Approval, CaseDocument, DocCategory, Verification, Visibility
 from app.models.channel_partner import ChannelPartner
+from app.models.comms import CommMessage, CommTemplate
 from app.models.demand import Demand, DemandStatus, IssueMethod
 from app.models.floor_plan import FloorPlan
 from app.models.followup import FollowUpChannel, FollowUpOutcome, PaymentFollowUp
@@ -89,6 +90,8 @@ from app.models.user import Role, User
 from app.models.visit import InterestLevel, SiteVisit, VisitSource, VisitStatus
 
 __all__ = [
+    "CommMessage",
+    "CommTemplate",
     "MisSnapshot",
     "Defect",
     "DefectFile",

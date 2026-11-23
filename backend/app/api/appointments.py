@@ -321,6 +321,19 @@ async def confirm(
         )
     a.confirmed_on, a.confirmed_via = datetime.now(IST).date(), body.via
     _log(db, case, user, "appointment_confirmed", a, request, {"via": body.via})
+    from app.services import comms
+
+    if a.kind == AppointmentKind.possession:
+        await comms.emit(
+            db,
+            "possession_appointment",
+            case,
+            {
+                "when": a.starts_at.astimezone(IST).strftime("%d %b %Y, %I:%M %p"),
+                "location": a.location or "the site office",
+            },
+            f"{a.id}:{a.starts_at.isoformat()}",
+        )
     await db.commit()
     return await list_for(db, case, user)
 

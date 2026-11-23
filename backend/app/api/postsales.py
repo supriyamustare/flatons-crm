@@ -270,6 +270,9 @@ async def accept(case_id: int, request: Request, user: Editor, db: DbSession) ->
         actor=user,
         request=request,
     )
+    from app.services import comms
+
+    await comms.emit(db, "onboarding_pending", case, {}, case.id)
     await db.commit()
     return await _detail(db, case, user)
 
@@ -659,6 +662,18 @@ async def reject_kyc(
         actor=user,
         details={"reason": body.reason},
         request=request,
+    )
+    from app.services import comms
+
+    await comms.emit(
+        db,
+        "kyc_clarification",
+        case,
+        {
+            "document": str(getattr(doc.doc_type, "value", doc.doc_type)).replace("_", " "),
+            "reason": doc.review_note or "",
+        },
+        doc.id,
     )
     await db.commit()
     return await _detail(db, case, user)
