@@ -1,5 +1,6 @@
 """Import every model here so Alembic autogenerate can see it."""
 
+from app.models.aftersales import Defect, DefectFile, FacilityHandover, WarrantyItem
 from app.models.agreement import Agreement, AgreementStatus
 from app.models.appointment import Appointment, AppointmentKind, AppointmentStatus
 from app.models.audit import AuditLog
@@ -87,6 +88,10 @@ from app.models.user import Role, User
 from app.models.visit import InterestLevel, SiteVisit, VisitSource, VisitStatus
 
 __all__ = [
+    "Defect",
+    "DefectFile",
+    "FacilityHandover",
+    "WarrantyItem",
     "Cancellation",
     "Inspection",
     "SnagEvidence",

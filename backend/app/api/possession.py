@@ -1033,6 +1033,20 @@ async def complete_handover(
         user.id,
         body.actual_possession_on,
     )
+    f.after_sales_since = (
+        now()
+    )  # Stage 15: the customer moves to the after-sales service team, with all history kept
+    for uid in await db.scalars(
+        select(User.id).where(User.is_active.is_(True), User.role == Role.after_sales)
+    ):
+        notify(
+            db,
+            user_id=uid,
+            type="after_sales_transfer",
+            title=f"New after-sales customer: {case.booking.lead.name}",
+            body=f"Possession handed over on {body.actual_possession_on:%d %b %Y}",
+            link=f"/post-sales/{case.id}?tab=aftersales",
+        )
     _log(
         db,
         case,

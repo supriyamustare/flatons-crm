@@ -317,6 +317,23 @@ with the official logo at the same sizes. Offline support arrives in Sprint 16.
   or one unit type. A unit's panel shows the plans for its floor and its type, or the project-wide plans if there
   are none more specific.
 
+## Post-sales (Phase 1, sprint 12): defect liability and after-sales (Stage 15)
+
+- **Transfer**: completing the possession handover moves the customer to the after-sales team
+  (`possession_files.after_sales_since`, after-sales staff notified); all history stays on the case.
+- **Warranty terms per project** (`warranty_items`): name, category, provider, months, runs from possession /
+  completion / purchase, basis (clause, warranty card, law). No single default. Terms used by a defect are deactivated,
+  never deleted. Each customer's coverage is worked out from their actual possession date.
+- **Defect register** (`defects`, `defect_files`; DEF-00001; per unit or common area): the specification's fields and
+  workflow (raised, acknowledged, inspection scheduled with the customer's availability, diagnosis after the actual
+  visit, responsibility, rectification with contractor and target, work done with materials, quality check by someone
+  else, customer accepted -> closed / disputed -> reopened). Not covered: reason, estimate and supporting evidence
+  required, and work starts only after the customer approves (declined -> closed with that reason). Overdue defects are
+  reminded daily.
+- **Facility-management handover** per project (`facility_handovers`): maintenance start, contacts, facilities,
+  manuals, utilities, records handed to the society / FM and when, customer guidance (shown on each customer's
+  After-sales tab), pending common-area defects. Kept apart from society accounting.
+
 ## Post-sales (Phase 1, sprint 11): cancellation, termination and refund (Stage 16)
 
 - **Cancellation** (`cancellations`, CXL-00001; one live per case; withdrawn/rejected ones kept as history): who

@@ -1,5 +1,6 @@
 import { ProjectMilestones } from "../../components/inventory/Milestones";
 import { ProjectUpdates } from "../../components/inventory/ProjectUpdates";
+import { ProjectAfterSales } from "../../components/aftersales/ProjectAfterSales";
 import { POSTSALES_ROLES } from "../../lib/types";
 import { LegalBankDialog, ReadinessBanner } from "../../components/inventory/LegalBankDialog";
 import { ProjectFloorPlans } from "../../components/inventory/FloorPlans";
@@ -154,6 +155,7 @@ export function ProjectDetailPage() {
       <ProjectFloorPlans projectId={p.id} floors={(p.project_type === "developer" ? (inv.data?.buildings ?? []).flatMap((bl) => bl.floors.map((f) => ({ id: f.id, label: `${bl.name}: ${floorLabel(f.number)}` }))) : [])} />
       {[...POSTSALES_ROLES, "manager"].includes(me.role) && p.project_type === "developer" && <ProjectMilestones projectId={p.id} />}
       {[...POSTSALES_ROLES, "manager"].includes(me.role) && p.project_type === "developer" && <ProjectUpdates projectId={p.id} />}
+      {POSTSALES_ROLES.includes(me.role) && p.project_type === "developer" && <ProjectAfterSales projectId={p.id} />}
       {legalOpen && <LegalBankDialog projectId={p.id} onClose={() => setLegalOpen(false)} />}
       {costSettings && <ProjectCostSheetDialog projectId={p.id} onClose={() => setCostSettings(false)} />}
     </div>

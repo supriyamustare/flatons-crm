@@ -78,6 +78,9 @@ class PossessionFile(TimestampMixin, Base):
         BigInteger, ForeignKey("users.id", ondelete="SET NULL")
     )
     actual_possession_on: Mapped[date | None] = mapped_column(Date)
+    after_sales_since: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True)
+    )  # transferred to the service team
 
 
 class Inspection(Base):
