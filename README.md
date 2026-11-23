@@ -317,6 +317,22 @@ with the official logo at the same sizes. Offline support arrives in Sprint 16.
   or one unit type. A unit's panel shows the plans for its floor and its type, or the project-wide plans if there
   are none more specific.
 
+## Post-sales (Phase 1, sprint 11): cancellation, termination and refund (Stage 16)
+
+- **Cancellation** (`cancellations`, CXL-00001; one live per case; withdrawn/rejected ones kept as history): who
+  initiated it (customer / developer), reason, request and effective dates, supporting documents from the folder.
+- **Reviews**: legal (cites the contract clause) and commercial (CRM manager), both required.
+- **Settlement** (finance): checked against confirmed receipts (unconfirmed receipts block it), outstanding demands and
+  open tickets; deductions each with their basis; refund = received - deductions (or the balance the customer owes).
+- **Approvals**: a finance approver's check and management's approval, from two different people, neither the
+  preparer (admins included). Either can reject with a reason.
+- **After approval**: cancellation letter (`/cancellation-letter/{case}`, DRAFT until approved) recorded as sent;
+  refund account stored encrypted and verified by a second person; refund paid (must equal the approved amount) and
+  reconciled by someone else; **unit release** (CRM manager/admin) runs the booking cancellation (unit available, case
+  cancelled); close once the letter is sent, the unit released and any refund reconciled.
+- Nothing is erased: demands, receipts, agreements, documents and history stay traceable. The sales-side booking
+  cancel is refused once post-sales has accepted the case.
+
 ## Post-sales (Phase 1, sprint 10): customer inspection, snag register, registration and handover (Stages 13 and 14)
 
 - **Customer inspections** (`possession_inspections`): date, attendees, notes, report shared (date, how); printable
