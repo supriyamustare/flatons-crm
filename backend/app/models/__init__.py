@@ -14,6 +14,7 @@ from app.models.comms import CommMessage, CommTemplate
 from app.models.demand import Demand, DemandStatus, IssueMethod
 from app.models.floor_plan import FloorPlan
 from app.models.followup import FollowUpChannel, FollowUpOutcome, PaymentFollowUp
+from app.models.funding import FundingPlan
 from app.models.integration import InboundEvent, InboundStatus, Integration, IntegrationKind
 from app.models.inventory import Building, Floor, Unit, UnitStatus, UnitType
 from app.models.lead import (
@@ -52,6 +53,7 @@ from app.models.mis import MisSnapshot
 from app.models.notification import Notification
 from app.models.payment import Allocation, FundSource, Receipt, ReceiptMode, ReceiptStatus
 from app.models.pipeline import DEFAULT_PROBABILITIES, PipelineStage
+from app.models.portal import CustomerAccount, PortalCode, PortalSession
 from app.models.possession import Inspection, PossessionFile, Snag, SnagEvidence
 from app.models.postsales import (
     CaseEvent,
@@ -90,6 +92,10 @@ from app.models.user import Role, User
 from app.models.visit import InterestLevel, SiteVisit, VisitSource, VisitStatus
 
 __all__ = [
+    "FundingPlan",
+    "CustomerAccount",
+    "PortalCode",
+    "PortalSession",
     "CommMessage",
     "CommTemplate",
     "MisSnapshot",

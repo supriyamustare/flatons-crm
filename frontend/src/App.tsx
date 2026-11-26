@@ -25,6 +25,7 @@ const ServiceSettingsPage = lazy(() => import("./pages/service/ServiceSettingsPa
 const ServiceReportsPage = lazy(() => import("./pages/service/ServiceReportsPage").then((m) => ({ default: m.ServiceReportsPage })));
 const TicketPage = lazy(() => import("./pages/service/TicketPage").then((m) => ({ default: m.TicketPage })));
 const CommunicationsPage = lazy(() => import("./pages/comms/CommunicationsPage").then((m) => ({ default: m.CommunicationsPage })));
+const PortalApp = lazy(() => import("./portal/PortalApp").then((m) => ({ default: m.PortalApp })));
 const MisPage = lazy(() => import("./pages/mis/MisPage").then((m) => ({ default: m.MisPage })));
 const CalendarPage = lazy(() => import("./pages/calendar/CalendarPage").then((m) => ({ default: m.CalendarPage })));
 const InspectionReportPage = lazy(() => import("./pages/postsales/InspectionReportPage").then((m) => ({ default: m.InspectionReportPage })));
@@ -128,6 +129,8 @@ export function AppRoutes() {
 const queryClient = createQueryClient();
 
 export default function App() {
+  // The customer portal is a separate app: no staff sign-in, menus or data
+  if (window.location.pathname.startsWith("/portal")) return <Suspense fallback={<p style={{ padding: 32 }}>Loading…</p>}><PortalApp /></Suspense>;
   return (
     <QueryClientProvider client={queryClient}>
       <AuthProvider>

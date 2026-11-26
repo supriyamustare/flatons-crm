@@ -6,7 +6,8 @@ import { useToast } from "../../components/Toast";
 import { inr } from "../../hooks/useLedger";
 import { VSTATES, useLoan, useLoanAction } from "../../hooks/useLoan";
 import type { Disb, LoanRow, LoanState, VState } from "../../hooks/useLoan";
-import { errorMessage } from "../../lib/api";
+import { api, errorMessage } from "../../lib/api";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 
 const today = () => new Date().toLocaleDateString("en-CA", { timeZone: "Asia/Kolkata" });
 const num = (v: string) => Math.round(Number(v.replace(/[,₹\s]/g, "")) || 0);
@@ -99,6 +100,34 @@ function DisbRow({ d, caseId, s }: { d: Disb; caseId: number; s: LoanState }) {
   );
 }
 
+function SanctionLetter({ caseId, sl, canEdit }: { caseId: number; sl: NonNullable<LoanState["sanction_letter"]> | null; canEdit: boolean }) {
+  const qc = useQueryClient(); const toast = useToast();
+  const [open, setOpen] = useState(false); const [file, setFile] = useState<File | null>(null);
+  const [f, setF] = useState({ amount: "", date: "", until: "" });
+  const up = useMutation({ mutationFn: async () => { const fd = new FormData(); fd.append("file", file!); fd.append("sanctioned_amount", f.amount); fd.append("sanction_date", f.date); if (f.until) fd.append("valid_until", f.until);
+    return (await api.post(`/post-sales/cases/${caseId}/loan/sanction-letter`, fd)).data; },
+    onSuccess: (d) => { qc.setQueryData(["loan", caseId], d); setOpen(false); toast("Sanction letter attached"); } });
+  return (
+    <section aria-label="Sanction letter" className="rounded-xl bg-white p-4 text-sm ring-1 ring-line">
+      <div className="flex flex-wrap items-center justify-between gap-2"><h3 className="font-semibold">Loan sanction letter</h3>
+        {canEdit && <Button variant="secondary" onClick={() => { up.reset(); setF({ amount: sl?.sanctioned_amount ? String(sl.sanctioned_amount) : "", date: sl?.sanction_date ?? "", until: sl?.valid_until ?? "" }); setFile(null); setOpen(!open); }}>{sl ? "Replace letter" : "Attach sanction letter"}</Button>}</div>
+      {sl ? <p className="mt-1">Loan approved: <b>{inr(sl.sanctioned_amount ?? 0)}</b>{sl.sanction_date ? ` on ${sl.sanction_date}` : ""}{sl.valid_until ? `, valid until ${sl.valid_until}` : ""} ·{" "}
+        <a href={sl.url} target="_blank" rel="noopener" className="text-forest-800 underline">{sl.title} ({sl.doc_no})</a> <span className="text-xs text-muted">{sl.approval.replace("_", " ")}</span></p>
+        : <p className="mt-1 text-muted">Attach the bank’s sanction letter with the loan amount approved. It’s filed in the customer folder (06 Home Loan &amp; Bank).</p>}
+      {open && <form className="mt-3 grid gap-3 sm:grid-cols-2" onSubmit={(e: FormEvent) => { e.preventDefault(); up.mutate(); }}>
+        {up.isError && <div className="sm:col-span-2"><Alert>{errorMessage(up.error)}</Alert></div>}
+        <TextInput label="Loan amount approved (₹)" type="number" min={1} value={f.amount} onChange={(e) => setF({ ...f, amount: e.target.value })} />
+        <TextInput label="Sanction date" type="date" value={f.date} onChange={(e) => setF({ ...f, date: e.target.value })} />
+        <TextInput label="Valid until (optional)" type="date" value={f.until} onChange={(e) => setF({ ...f, until: e.target.value })} />
+        <div className="space-y-1.5"><label htmlFor="sanction-file" className="block text-sm font-medium">Sanction letter (PDF or image)</label>
+          <input id="sanction-file" type="file" accept=".pdf,.jpg,.jpeg,.png" onChange={(e) => setFile(e.target.files?.[0] ?? null)} className="block w-full text-sm file:mr-3 file:min-h-10 file:rounded-lg file:border-0 file:bg-forest-50 file:px-3" /></div>
+        <div className="flex justify-end gap-2 sm:col-span-2"><Button type="button" variant="secondary" onClick={() => setOpen(false)}>Cancel</Button>
+          <Button type="submit" loading={up.isPending} disabled={!file || !(Number(f.amount) > 0) || !f.date}>Attach</Button></div>
+      </form>}
+    </section>
+  );
+}
+
 export function LoanTab({ caseId }: { caseId: number }) {
   const q = useLoan(caseId); const act = useLoanAction(caseId); const toast = useToast();
   const [doc, setDoc] = useState(""); const [req, setReq] = useState<null | { amount: string; no: string; stage: string; date: string }>(null);
@@ -126,6 +155,7 @@ export function LoanTab({ caseId }: { caseId: number }) {
       {s.warnings.map((w) => <Alert key={w}>{w}</Alert>)}
       {act.isError && <Alert>{errorMessage(act.error)}</Alert>}
       <DetailsForm key={JSON.stringify(l)} s={s} caseId={caseId} loan={l} />
+      <SanctionLetter caseId={caseId} sl={q.data.sanction_letter ?? null} canEdit={q.data.can_edit} />
       <section aria-label="Documents requested by the bank" className="rounded-xl bg-white p-4 ring-1 ring-line">
         <h3 className="mb-2 font-semibold">Documents requested by the bank</h3>
         <ul className="divide-y divide-line text-sm">{s.doc_requests.map((r) => (

@@ -73,6 +73,9 @@ class Loan(TimestampMixin, Base):
     sanctioned_amount: Mapped[int | None] = mapped_column(BigInteger)
     sanction_date: Mapped[date | None] = mapped_column(Date)
     sanction_valid_until: Mapped[date | None] = mapped_column(Date)
+    sanction_letter_document_id: Mapped[int | None] = mapped_column(
+        BigInteger, ForeignKey("case_documents.id", ondelete="SET NULL")
+    )  # the bank's sanction letter
     rm_name: Mapped[str | None] = mapped_column(String(150))  # bank relationship manager
     rm_phone: Mapped[str | None] = mapped_column(String(20))
     rm_email: Mapped[str | None] = mapped_column(String(254))

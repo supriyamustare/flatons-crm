@@ -1,7 +1,7 @@
 from datetime import UTC, date, datetime, timedelta, timezone
 from typing import Annotated, Literal
 
-from fastapi import APIRouter, Depends, HTTPException, Request, status
+from fastapi import APIRouter, Depends, File, Form, HTTPException, Request, UploadFile, status
 from pydantic import BaseModel, ConfigDict, Field, StringConstraints, model_validator
 from sqlalchemy import func, select
 
@@ -147,6 +147,7 @@ class LoanState(BaseModel):
     owners: list[UserBrief]
     can_edit: bool
     can_record_funds: bool
+    sanction_letter: dict | None = None
 
 
 async def _case(db: DbSession, case_id: int) -> PostSalesCase:
@@ -185,6 +186,29 @@ def _row(loan: Loan) -> dict:
 
 
 async def state(db: DbSession, case: PostSalesCase, user: User) -> LoanState:
+    """The loan state plus the bank's sanction letter (the approved loan amount), if attached."""
+    out = await _state(db, case, user)
+    loan = await _live(db, case.id)
+    if loan is not None and loan.sanction_letter_document_id:
+        from app.models.case_document import CaseDocument
+
+        d = await db.get(CaseDocument, loan.sanction_letter_document_id)
+        if d is not None:
+            out.sanction_letter = {
+                "id": d.id,
+                "doc_no": f"DOC-{d.id:05d}",
+                "title": d.title,
+                "approval": d.approval.value,
+                "visibility": d.visibility.value,
+                "url": f"/api/post-sales/documents/{d.id}/file",
+                "sanctioned_amount": loan.sanctioned_amount,
+                "sanction_date": loan.sanction_date,
+                "valid_until": loan.sanction_valid_until,
+            }
+    return out
+
+
+async def _state(db: DbSession, case: PostSalesCase, user: User) -> LoanState:
     loan = await _live(db, case.id)
     closed = list(
         await db.scalars(
@@ -613,5 +637,86 @@ async def close(
         raise HTTPException(status.HTTP_404_NOT_FOUND, "No open loan on this case")
     loan.closed_at, loan.close_reason = datetime.now(UTC), body.reason
     _log(db, case, user, "loan_closed", request, {"reason": body.reason})
+    await db.commit()
+    return await state(db, case, user)
+
+
+@router.post("/sanction-letter", response_model=LoanState)
+async def sanction_letter(
+    case_id: int,
+    request: Request,
+    user: Viewer,
+    db: DbSession,
+    file: Annotated[UploadFile, File()],
+    sanctioned_amount: Annotated[int, Form(gt=0)],
+    sanction_date: Annotated[date, Form()],
+    valid_until: Annotated[date | None, Form()] = None,
+) -> LoanState:
+    """Attach the bank's sanction letter with the loan amount approved. It's filed in folder 06 (and reviewed like any document);
+    a new letter replaces the earlier one as a new version."""
+    from app.api import case_documents as docs_api
+    from app.models.case_document import CaseDocument, DocCategory
+
+    case = await _case(db, case_id)
+    loan = await _live(db, case_id)
+    if loan is None:
+        raise HTTPException(status.HTTP_422_UNPROCESSABLE_CONTENT, "Record the loan first")
+    if sanction_date > date.today() + timedelta(days=1):
+        raise HTTPException(
+            status.HTTP_422_UNPROCESSABLE_CONTENT, "The sanction date can't be in the future"
+        )
+    if valid_until is not None and valid_until <= sanction_date:
+        raise HTTPException(
+            status.HTTP_422_UNPROCESSABLE_CONTENT, "The sanction must be valid until after its date"
+        )
+    if loan.applied_amount and sanctioned_amount > loan.applied_amount * 2:
+        raise HTTPException(
+            status.HTTP_422_UNPROCESSABLE_CONTENT,
+            "Check the sanctioned amount against the amount applied for",
+        )
+    before = loan.sanction_letter_document_id
+    await docs_api.upload(
+        case_id=case_id,
+        request=request,
+        user=user,
+        db=db,
+        category=DocCategory.loan,
+        doc_type="Bank sanction letter",
+        title=f"Loan sanction letter: {loan.lender}",
+        file=file,
+        doc_number=loan.application_no,
+        doc_date=sanction_date,
+        expiry_date=valid_until,
+        linked_ref=f"Loan {loan.lender}",
+        replaces_id=before,
+        version_reason="New sanction letter from the bank" if before else None,
+    )
+    d = await db.scalar(
+        select(CaseDocument)
+        .where(CaseDocument.case_id == case.id, CaseDocument.doc_type == "Bank sanction letter")
+        .order_by(CaseDocument.id.desc())
+    )
+    loan.sanction_letter_document_id = d.id
+    loan.sanctioned_amount, loan.sanction_date, loan.sanction_valid_until = (
+        sanctioned_amount,
+        sanction_date,
+        valid_until or loan.sanction_valid_until,
+    )
+    cases.event(
+        db,
+        case,
+        "loan_sanction_letter",
+        user,
+        {"lender": loan.lender, "amount": sanctioned_amount, "document": f"DOC-{d.id:05d}"},
+    )
+    log_audit(
+        db,
+        action="loan.sanction_letter",
+        entity_type="postsales_case",
+        entity_id=case.id,
+        actor=user,
+        details={"amount": sanctioned_amount, "document": d.id},
+        request=request,
+    )
     await db.commit()
     return await state(db, case, user)
