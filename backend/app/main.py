@@ -34,8 +34,10 @@ from app.api import (
     milestones,
     mis,
     notifications,
+    ocr,
     payments,
     pipeline,
+    portal,
     possession,
     postsales,
     project_legal,
@@ -108,6 +110,7 @@ app.include_router(demands.router, prefix="/api")
 app.include_router(followups.router, prefix="/api")
 app.include_router(case_documents.router, prefix="/api")
 app.include_router(agreements.router, prefix="/api")
+app.include_router(ocr.router, prefix="/api")
 app.include_router(loans.router, prefix="/api")
 app.include_router(appointments.router, prefix="/api")
 app.include_router(project_updates.router, prefix="/api")
@@ -118,4 +121,5 @@ app.include_router(cancellations.router, prefix="/api")
 app.include_router(aftersales.router, prefix="/api")
 app.include_router(mis.router, prefix="/api")
 app.include_router(comms.router, prefix="/api")
+app.include_router(portal.router, prefix="/api")
 app.include_router(leads.router, prefix="/api")

@@ -38,6 +38,9 @@ class Settings(BaseSettings):
     )
     smtp_tls: bool = True
 
+    # Customer portal: off until switched on; in production it also needs secure (HTTPS) cookies
+    portal_enabled: bool = False
+
     @property
     def is_production(self) -> bool:
         return self.environment == "production"

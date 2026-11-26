@@ -18,6 +18,7 @@ export interface LoanState {
   loan: LoanRow | null; history: LoanRow[]; stage: string | null; stages: { key: string; label: string; done: boolean; current: boolean }[];
   doc_requests: { id: number; name: string; requested_on: string; note: string | null; submitted_on: string | null }[]; disbursements: Disb[];
   ledger_loan: number; warnings: string[]; owners: UserBrief[]; can_edit: boolean; can_record_funds: boolean;
+  sanction_letter?: { id: number; doc_no: string; title: string; approval: string; visibility: string; url: string; sanctioned_amount: number | null; sanction_date: string | null; valid_until: string | null } | null;
 }
 export const VSTATES: Record<VState, string> = { not_started: "Not started", in_progress: "In progress", query: "Query raised", cleared: "Cleared", rejected: "Rejected" };
 

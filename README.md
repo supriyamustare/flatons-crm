@@ -317,6 +317,30 @@ with the official logo at the same sizes. Offline support arrives in Sprint 16.
   or one unit type. A unit's panel shows the plans for its floor and its type, or the project-wide plans if there
   are none more specific.
 
+## OCR (own contribution required) and the loan sanction letter
+
+- **OCR tab** (before Loan; `funding_plans`): the customer's own contribution as a fixed amount, entered by post-sales,
+  CRM or finance and approved by a finance approver who didn't enter it; changing an approved amount needs a reason
+  and keeps the earlier amount in its history. Loan needed = agreement value + GST - own contribution. Stamp duty,
+  registration and other charges are shown separately as the customer's own (not funded by the loan). If the bank
+  sanctions less than the loan needed, the shortfall is added to the own contribution required, with a warning. Own
+  receipts (confirmed / awaiting confirmation), own share due now and overdue, and a stage-by-stage own/loan split
+  (own share first, from the earliest stages).
+- **Loan sanction letter** (Loan tab; `loans.sanction_letter_document_id`): the bank's letter with the approved loan
+  amount, date and validity, filed in folder 06 through the normal document upload (review, versioning: a new letter
+  becomes version 2).
+
+## Customer portal, part 1 (Stage 8)
+
+- Separate customer app at `/portal` (own sign-in, no staff menus): emailed 6-digit code (hashed; 10 minutes, 5 tries,
+  3 requests per 15 minutes; the same reply for any email), sessions (`portal_sessions`; 60 minutes idle, 8 hours,
+  HttpOnly, SameSite=Strict, path /api/portal; sign out everywhere else). Access only to accepted cases whose profile
+  has the customer's email and portal consent; anything else is "not found".
+- Home, My Payments (the specification's customer-facing statuses; "overdue" only after the due date), My Documents
+  (released, customer-visible; signed-in downloads, logged), My Agreement, My Property, Project Updates, Notifications,
+  My Profile (changes become a request for staff), Help Centre, Security.
+- Off by default: set `PORTAL_ENABLED=true`; in production it also needs HTTPS (secure cookies).
+
 ## Customer notification engine (Stage 17)
 
 - **Templates** (`comm_templates`; Communications menu: admins and CRM managers edit, management and auditors view):
