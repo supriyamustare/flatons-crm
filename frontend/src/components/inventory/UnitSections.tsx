@@ -10,6 +10,7 @@ import { BookFlatDialog } from "../bookings/BookFlatDialog";
 import { CustomerFields, PREFERENCE_LABELS, customerPayload, emptyCustomer } from "../bookings/CustomerFields";
 import type { CustomerForm } from "../bookings/CustomerFields";
 import { useCurrentUser } from "../../hooks/useAuth";
+import { inr } from "../../hooks/useLedger";
 import { useBooking, useUpdateCustomer } from "../../hooks/useBookings";
 import { api, errorMessage } from "../../lib/api";
 import type { Unit } from "../../lib/inventory";
@@ -24,6 +25,7 @@ export interface CostSheet {
   fees_total: number; grand_total: number; notes: string[]; signatory: string; overrides: Record<string, number | string>;
   customer: { name: string; applicant_name: string | null; mobile: string | null; email: string | null; address: string | null;
     booking_code: string; booking_date: string; payment_preference: "self" | "bank" | null; bank_name: string | null } | null;
+  parking_no?: string | null; parking_charges?: number; base_cost?: number;
 }
 
 export function useCostSheet(unitId: number, enabled = true) {
@@ -204,6 +206,8 @@ export function CostSheetEditDialog({ unit, onClose }: { unit: Unit; onClose: ()
     const body: Record<string, unknown> = { rate_psf: rate ? num(rate) : null };
     for (const f of OVERRIDE_FIELDS) if (values?.[f.key]) body[f.key] = num(values[f.key]);
     if (label.trim()) body.other_charges_label = label.trim();
+    // keep the flat's parking (set in Booking costs), which this dialog doesn't show
+    for (const k of ["parking_no", "parking_charges"]) if (sheet.data?.overrides[k] != null) body[k] = sheet.data.overrides[k];
     save.mutate(body);
   };
   return (
@@ -248,6 +252,73 @@ export function CostSheetButtons({ unit }: { unit: Unit }) {
       </a>
       {canEdit && <Button variant="secondary" onClick={() => setEditing(true)}><FileSpreadsheet className="size-4" aria-hidden />Edit cost sheet</Button>}
       {editing && <CostSheetEditDialog unit={unit} onClose={() => setEditing(false)} />}
+    </section>
+  );
+}
+
+
+/** Below "Price and area": the flat's parking and its booking costs (from its cost sheet), plus files attached to the flat. */
+export function BookingCosts({ unit }: { unit: Unit }) {
+  const me = useCurrentUser();
+  const canEdit = me.role === "admin" || me.role === "manager";
+  const sheet = useCostSheet(unit.id);
+  const qc = useQueryClient(); const toast = useToast();
+  const files = useQuery({ queryKey: ["unit-files", unit.id], queryFn: async () => (await api.get<{ id: number; title: string; file_name: string; uploaded_by: string | null; uploaded_at: string; url: string }[]>(`/units/${unit.id}/files`)).data });
+  const [editing, setEditing] = useState(false);
+  const [pno, setPno] = useState(""); const [pprice, setPprice] = useState("");
+  const [title, setTitle] = useState(""); const [file, setFile] = useState<File | null>(null);
+  const save = useMutation({
+    mutationFn: async () => {
+      const keep = { ...(sheet.data?.overrides ?? {}) } as Record<string, unknown>;
+      delete keep.parking_no; delete keep.parking_charges;
+      return (await api.put<CostSheet>(`/units/${unit.id}/cost-sheet`, { ...keep, ...(pno.trim() ? { parking_no: pno.trim() } : {}), ...(Number(pprice) > 0 ? { parking_charges: Number(pprice) } : {}) })).data;
+    },
+    onSuccess: (d) => { qc.setQueryData(["cost-sheet", unit.id], d); setEditing(false); toast("Parking saved"); },
+  });
+  const upload = useMutation({
+    mutationFn: async () => { const fd = new FormData(); fd.append("file", file!); if (title.trim()) fd.append("title", title.trim()); return (await api.post(`/units/${unit.id}/files`, fd)).data; },
+    onSuccess: (d) => { qc.setQueryData(["unit-files", unit.id], d); setFile(null); setTitle(""); toast("File uploaded"); },
+  });
+  const remove = useMutation({ mutationFn: async (id: number) => (await api.delete(`/units/files/${id}`)).data, onSuccess: (d) => { qc.setQueryData(["unit-files", unit.id], d); toast("File removed"); } });
+  const c = sheet.data;
+  const rows: [string, number | null | undefined][] = c ? [["Agreement cost", c.cost], ["GST", c.gst], ["Stamp duty", c.stamp_duty], ["Registration", c.registration],
+    ["Legal charges", c.legal_charges], ["Furnishing", c.furnishing], ...(c.other_charges ? [[c.other_charges_label || "Other charges", c.other_charges] as [string, number]] : [])] : [];
+  return (
+    <section aria-labelledby="bc-h" className="mt-3 rounded-lg bg-paper p-3">
+      <div className="flex items-center justify-between"><h3 id="bc-h" className="text-sm font-semibold">Parking and booking costs</h3>
+        {canEdit && !editing && c && <Button variant="ghost" onClick={() => { setPno(c.parking_no ?? ""); setPprice(c.parking_charges ? String(c.parking_charges) : ""); save.reset(); setEditing(true); }}><Pencil className="size-4" aria-hidden />Edit parking</Button>}</div>
+      {sheet.isPending ? <div className="mt-2 h-24 animate-pulse rounded bg-white" /> : sheet.isError ? <p className="mt-1 text-xs text-muted">Couldn’t load the cost sheet.</p> : !c?.ready ? <p className="mt-1 text-xs text-muted">Set the price and area first to see the booking costs.</p> : <>
+        {editing ? (
+          <form className="mt-2 grid grid-cols-2 gap-2" onSubmit={(e: FormEvent) => { e.preventDefault(); save.mutate(); }}>
+            {save.isError && <div className="col-span-2"><Alert>{errorMessage(save.error)}</Alert></div>}
+            <TextInput label="Parking no." value={pno} onChange={(e) => setPno(e.target.value)} maxLength={30} placeholder="e.g. P-12" />
+            <TextInput label="Parking price (₹)" type="number" min={0} value={pprice} onChange={(e) => setPprice(e.target.value)} />
+            <p className="col-span-2 text-xs text-muted">The parking price is part of the agreement value, so GST, stamp duty and registration include it.</p>
+            <div className="col-span-2 flex justify-end gap-2"><Button type="button" variant="secondary" onClick={() => setEditing(false)}>Cancel</Button><Button type="submit" loading={save.isPending}>Save</Button></div>
+          </form>
+        ) : (
+          <dl className="mt-1 grid grid-cols-2 gap-2 text-sm">
+            <div><dt className="text-xs text-muted">Parking no.</dt><dd>{c.parking_no ?? "—"}</dd></div>
+            <div><dt className="text-xs text-muted">Parking price</dt><dd>{c.parking_charges ? inr(c.parking_charges) : "—"}</dd></div>
+            {rows.map(([l, v]) => <div key={l}><dt className="text-xs text-muted">{l}</dt><dd>{v ? inr(v) : "—"}</dd></div>)}
+            <div className="col-span-2 border-t border-line pt-2"><dt className="text-xs text-muted">Total payable</dt><dd className="font-semibold">{inr(c.grand_total)}</dd></div>
+          </dl>
+        )}</>}
+      <div className="mt-3 border-t border-line pt-3">
+        <h4 className="text-xs font-semibold text-muted">Files for this flat</h4>
+        {(files.data ?? []).length === 0 ? <p className="mt-1 text-xs text-muted">No files yet.</p> : <ul className="mt-1 space-y-1 text-sm">{files.data!.map((f) => <li key={f.id} className="flex items-center justify-between gap-2">
+          <a href={f.url} target="_blank" rel="noopener" className="truncate text-forest-800 underline">{f.title}</a>
+          {canEdit && <button type="button" className="text-xs text-muted hover:text-danger" aria-label={`Remove ${f.title}`} onClick={() => { if (window.confirm(`Remove “${f.title}”?`)) remove.mutate(f.id); }}>Remove</button>}</li>)}</ul>}
+        {canEdit && <form className="mt-2 space-y-2" onSubmit={(e: FormEvent) => { e.preventDefault(); upload.mutate(); }}>
+          {upload.isError && <Alert>{errorMessage(upload.error)}</Alert>}
+          <TextInput label="File title (optional)" value={title} onChange={(e) => setTitle(e.target.value)} maxLength={150} />
+          <div className="flex items-center gap-2">
+            <label className="flex-1"><span className="sr-only">Choose a file</span>
+              <input type="file" accept=".pdf,.jpg,.jpeg,.png" onChange={(e) => setFile(e.target.files?.[0] ?? null)} className="block w-full text-xs file:mr-2 file:min-h-9 file:rounded-lg file:border-0 file:bg-white file:px-3" /></label>
+            <Button type="submit" loading={upload.isPending} disabled={!file}>Upload file</Button>
+          </div>
+        </form>}
+      </div>
     </section>
   );
 }
