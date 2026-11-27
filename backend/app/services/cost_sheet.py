@@ -45,6 +45,8 @@ UNIT_OVERRIDES = (
     "chargeable_sqft",
     "other_charges",
     "other_charges_label",
+    "parking_no",
+    "parking_charges",
 )
 
 
@@ -85,6 +87,9 @@ class CostSheet(BaseModel):
     legal_charges: int
     other_charges_label: str
     other_charges: int
+    parking_no: str | None = None
+    parking_charges: int = 0
+    base_cost: int = 0  # the agreement value without parking
     fees_total: int  # stamp duty + registration + legal
     grand_total: int
     notes: list[str]
@@ -123,6 +128,11 @@ def compute(
     else:
         cost = int(asking_price or 0)
         rate_psf = round(cost / area, 2) if cost and area else None
+    parking = int(
+        t.get("parking_charges") or 0
+    )  # part of the agreement value: GST, stamp duty and registration include it
+    base_cost = cost
+    cost = cost + parking if cost else cost
     if not area:
         missing.append("area")
     if not cost:
@@ -183,6 +193,9 @@ def compute(
         legal_charges=legal,
         other_charges_label=t.get("other_charges_label") or "Other charges",
         other_charges=other,
+        parking_no=(str(t.get("parking_no")).strip() or None) if t.get("parking_no") else None,
+        parking_charges=parking if cost else 0,
+        base_cost=base_cost,
         fees_total=fees,
         grand_total=cost + gst + furnishing + fees + other,
         notes=list(t["notes"]),

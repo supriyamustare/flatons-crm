@@ -317,6 +317,16 @@ with the official logo at the same sizes. Offline support arrives in Sprint 16.
   or one unit type. A unit's panel shows the plans for its floor and its type, or the project-wide plans if there
   are none more specific.
 
+## Parking and booking costs on a flat
+
+- Projects -> click a flat -> side panel, below "Price and area": **Parking and booking costs**. Parking number and
+  price are per-flat cost-sheet values (`parking_no`, `parking_charges`, edited by admins and sales managers). The
+  parking price is part of the agreement value: the payment stages, GST, stamp duty and registration include it, and the
+  ledger shows it as its own "Parking" charge beside the base price. The section also shows agreement cost, GST, stamp
+  duty, registration, legal charges, furnishing and the total payable, with exact amounts.
+- **Files for this flat** (`unit_files`): upload (PDF or image, up to 15 MB; admins and sales managers), list, download,
+  remove (logged). Visible to everyone who can see the flat.
+
 ## OCR (own contribution required) and the loan sanction letter
 
 - **OCR tab** (before Loan; `funding_plans`): the customer's own contribution as a fixed amount, entered by post-sales,

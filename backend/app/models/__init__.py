@@ -88,10 +88,12 @@ from app.models.ticket import (
     TicketEvent,
     TicketStatus,
 )
+from app.models.unit_file import UnitFile
 from app.models.user import Role, User
 from app.models.visit import InterestLevel, SiteVisit, VisitSource, VisitStatus
 
 __all__ = [
+    "UnitFile",
     "FundingPlan",
     "CustomerAccount",
     "PortalCode",

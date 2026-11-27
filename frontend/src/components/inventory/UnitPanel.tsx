@@ -1,5 +1,5 @@
 import { UnitFloorPlans } from "./FloorPlans";
-import { CostSheetButtons, PriceAndArea, UnitCustomer } from "./UnitSections";
+import { BookingCosts, CostSheetButtons, PriceAndArea, UnitCustomer } from "./UnitSections";
 import { useEffect, useState } from "react";
 import { Link } from "react-router";
 import { Lock, LockOpen, Pencil, X } from "lucide-react";
@@ -104,6 +104,7 @@ export function UnitPanel({ unit, onClose, onEdit }: { unit: Unit; onClose: () =
         {unit.address_note && <Row label="Where">{unit.address_note}</Row>}
       </dl>
       <PriceAndArea unit={unit} />
+      <BookingCosts unit={unit} />
       <UnitCustomer unit={unit} />
       <UnitFloorPlans unitId={unit.id} />
       <CostSheetButtons unit={unit} />

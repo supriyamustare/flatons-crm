@@ -335,7 +335,8 @@ async def generate(case_id: int, request: Request, user: Maker, db: DbSession) -
         LedgerCharge(head=h, label=svc.HEAD_LABELS[h], amount=a, sort_order=i)
         for i, (h, a) in enumerate(
             [
-                (ChargeHead.base_price, sheet.cost),
+                (ChargeHead.base_price, sheet.cost - sheet.parking_charges),
+                (ChargeHead.parking, sheet.parking_charges),
                 (ChargeHead.gst, sheet.gst),
                 (ChargeHead.stamp_duty, sheet.stamp_duty),
                 (ChargeHead.registration, sheet.registration),

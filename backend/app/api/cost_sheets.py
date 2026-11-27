@@ -1,7 +1,8 @@
 from decimal import Decimal
 from typing import Annotated
 
-from fastapi import APIRouter, Depends, HTTPException, Request, status
+from fastapi import APIRouter, Depends, File, Form, HTTPException, Request, UploadFile, status
+from fastapi.responses import FileResponse
 from pydantic import (
     BaseModel,
     ConfigDict,
@@ -103,6 +104,8 @@ class UnitCostIn(BaseModel):
     furnishing_per_sqft: Annotated[float, Field(ge=0, le=100_000)] | None = None
     other_charges: Money | None = None
     other_charges_label: Annotated[PlainText, StringConstraints(max_length=80)] | None = None
+    parking_no: Annotated[PlainText, StringConstraints(max_length=30)] | None = None
+    parking_charges: Money | None = None
 
 
 async def _unit(db: DbSession, unit_id: int) -> Unit:
@@ -237,3 +240,132 @@ async def edit_project_template(
     )
     await db.commit()
     return body
+
+
+# ------------------------------------------------------------------ files attached to a flat
+FILES_FOLDER = "unit_files"
+
+
+async def _files(db: DbSession, unit_id: int) -> list[dict]:
+    from app.models.unit_file import UnitFile
+    from app.models.user import User
+
+    rows = list(
+        await db.scalars(
+            select(UnitFile).where(UnitFile.unit_id == unit_id).order_by(UnitFile.id.desc())
+        )
+    )
+    names = (
+        {
+            u.id: u.full_name
+            for u in await db.scalars(
+                select(User).where(
+                    User.id.in_([r.uploaded_by_id for r in rows if r.uploaded_by_id])
+                )
+            )
+        }
+        if rows
+        else {}
+    )
+    return [
+        {
+            "id": r.id,
+            "title": r.title,
+            "file_name": r.file_name,
+            "uploaded_by": names.get(r.uploaded_by_id),
+            "uploaded_at": r.uploaded_at,
+            "url": f"/api/units/files/{r.id}",
+        }
+        for r in rows
+    ]
+
+
+@router.get("/units/{unit_id}/files")
+async def unit_files(unit_id: int, _: Viewer, db: DbSession) -> list[dict]:
+    await _unit(db, unit_id)
+    return await _files(db, unit_id)
+
+
+@router.post("/units/{unit_id}/files", status_code=status.HTTP_201_CREATED)
+async def upload_unit_file(
+    unit_id: int,
+    request: Request,
+    user: Manager,
+    db: DbSession,
+    file: Annotated[UploadFile, File()],
+    title: Annotated[str | None, Form(max_length=150)] = None,
+) -> list[dict]:
+    """Attach a file to this flat (PDF or image, up to 15 MB)."""
+    from app.models.unit_file import UnitFile
+    from app.services import receipts as files
+
+    unit = await _unit(db, unit_id)
+    if title and ("<" in title or ">" in title):
+        raise HTTPException(status.HTTP_422_UNPROCESSABLE_CONTENT, "The title can't contain < or >")
+    try:
+        path, name, mime = await files.save_receipt(
+            file, folder=FILES_FOLDER, max_mb=15, what="Files"
+        )
+    except files.ReceiptError as exc:
+        raise HTTPException(status.HTTP_422_UNPROCESSABLE_CONTENT, str(exc)) from None
+    f = UnitFile(
+        unit_id=unit.id,
+        title=(title or "").strip() or name,
+        file_path=path,
+        file_name=name,
+        file_type=mime,
+        uploaded_by_id=user.id,
+    )
+    db.add(f)
+    await db.flush()
+    log_audit(
+        db,
+        action="unit.file_uploaded",
+        entity_type="unit",
+        entity_id=unit.id,
+        actor=user,
+        details={"file": name, "title": f.title},
+        request=request,
+    )
+    await db.commit()
+    return await _files(db, unit.id)
+
+
+@router.get("/units/files/{fid}")
+async def unit_file(fid: int, _: Viewer, db: DbSession) -> FileResponse:
+    from app.models.unit_file import UnitFile
+    from app.services import receipts as files
+
+    f = await db.get(UnitFile, fid)
+    if f is None:
+        raise HTTPException(status.HTTP_404_NOT_FOUND, "File not found")
+    path = files.receipt_file(f.file_path, FILES_FOLDER)
+    if not path.exists():
+        raise HTTPException(status.HTTP_404_NOT_FOUND, "The file is missing")
+    return FileResponse(
+        path,
+        media_type=f.file_type,
+        headers={"Content-Disposition": f'inline; filename="{f.file_name}"'},
+    )
+
+
+@router.delete("/units/files/{fid}")
+async def delete_unit_file(fid: int, request: Request, user: Manager, db: DbSession) -> list[dict]:
+    from app.models.unit_file import UnitFile
+
+    f = await db.get(UnitFile, fid)
+    if f is None:
+        raise HTTPException(status.HTTP_404_NOT_FOUND, "File not found")
+    unit_id = f.unit_id
+    log_audit(
+        db,
+        action="unit.file_removed",
+        entity_type="unit",
+        entity_id=unit_id,
+        actor=user,
+        details={"file": f.file_name, "title": f.title},
+        request=request,
+    )
+    await db.delete(f)
+    await db.commit()
+    return await _files(db, unit_id)
