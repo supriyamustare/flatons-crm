@@ -13,14 +13,17 @@ const sheet = (over: Record<string, unknown> = {}) => ({ ready: true, cost: 3_52
 const files = [{ id: 3, title: "Signed cost sheet", file_name: "cs.pdf", uploaded_by: "Ravi", uploaded_at: "2026-11-27T05:00:00Z", url: "/api/units/files/3" }];
 
 describe("parking and booking costs on a flat", () => {
-  it("shows parking, the booking costs and the total", async () => {
+  it("parking on top, then the costs in order, and no files block", async () => {
     mockApi(makeUser("executive"), { get: { "/units/7/cost-sheet": sheet(), "/units/7/files": files } });
     renderWithProviders(<BookingCosts unit={unit} />);
     const sec = await screen.findByRole("region", { name: "Parking and booking costs" });
-    await within(sec).findByText("P-12");  // wait for the cost sheet to load
-    await within(sec).findByRole("link", { name: "Signed cost sheet" });
-    for (const t of ["P-12", "₹ 3,00,000", "Agreement cost", "₹ 35,25,000", "Stamp duty", "Registration", "Legal charges", "Total payable", "₹ 38,47,050"]) expect(sec).toHaveTextContent(t);
-    expect(within(sec).getByRole("link", { name: "Signed cost sheet" })).toHaveAttribute("href", "/api/units/files/3");
+    await within(sec).findByText("P-12");
+    expect(sec).toHaveTextContent("Parking price₹ 3,00,000");
+    const costs = within(sec).getByLabelText("Booking costs");
+    const labels = within(costs).getAllByRole("term").map((t) => t.textContent);
+    expect(labels).toEqual(["Agreement cost", "Registration", "Stamp duty", "GST", "Legal charges", "Furnishing", "Total payable"]);
+    expect(costs).toHaveTextContent("Stamp duty₹ 2,46,800"); expect(costs).toHaveTextContent("Total payable₹ 38,47,050");
+    expect(sec).not.toHaveTextContent("Files for this flat"); expect(sec).not.toHaveTextContent("No files yet");
     expect(within(sec).queryByRole("button", { name: /Edit parking/ })).not.toBeInTheDocument();
   });
 
@@ -33,20 +36,29 @@ describe("parking and booking costs on a flat", () => {
     await waitFor(() => expect(put).toHaveBeenCalledWith("/units/7/cost-sheet", { legal_charges: 10_000, parking_no: "P-14", parking_charges: 300_000 }));
   });
 
-  it("the Upload file button at the bottom attaches a file straight away", async () => {
-    const { post } = mockApi(makeUser("manager"), { get: { "/units/7/cost-sheet": sheet(), "/units/7/files": [] }, post: { "/units/7/files": files } });
-    renderWithProviders(<><BookingCosts unit={unit} /><UploadUnitFile unit={unit} /></>);
-    const sec = await screen.findByRole("region", { name: "Parking and booking costs" });
-    expect(within(sec).queryByLabelText(/File title/)).not.toBeInTheDocument();  // no title row any more
-    await userEvent.upload(screen.getByLabelText("Upload file"), new File(["%PDF"], "cs.pdf", { type: "application/pdf" }));
+  it("Upload file at the bottom attaches a file straight away and lists it under the button", async () => {
+    let list: unknown[] = [];
+    const { post } = mockApi(makeUser("manager"), { get: { "/units/7/files": [] } });
+    post.mockImplementation(async () => { list = files; return { data: files } as never; });
+    renderWithProviders(<UploadUnitFile unit={unit} />);
+    expect(screen.queryByRole("list", { name: "Files for this flat" })).not.toBeInTheDocument();  // nothing shown when there are no files
+    await userEvent.upload(await screen.findByLabelText("Upload file"), new File(["%PDF"], "cs.pdf", { type: "application/pdf" }));
     await waitFor(() => expect(post).toHaveBeenCalled());
     expect(((post.mock.calls[0][1] as FormData).get("file") as File).name).toBe("cs.pdf");
-    expect(await within(sec).findByRole("link", { name: "Signed cost sheet" })).toBeInTheDocument();
+    expect(await screen.findByRole("link", { name: "Signed cost sheet" })).toHaveAttribute("href", "/api/units/files/3");
+    void list;
   });
 
-  it("sales executives don't get the Upload file button", async () => {
-    mockApi(makeUser("executive"), { get: { "/units/7/cost-sheet": sheet(), "/units/7/files": [] } });
-    renderWithProviders(<UploadUnitFile unit={unit} />);
+  it("executives see a flat's files but no upload button; with no files, nothing", async () => {
+    mockApi(makeUser("executive"), { get: { "/units/7/files": files } });
+    const { unmount } = renderWithProviders(<UploadUnitFile unit={unit} />);
+    expect(await screen.findByRole("link", { name: "Signed cost sheet" })).toBeInTheDocument();
     expect(screen.queryByLabelText("Upload file")).not.toBeInTheDocument();
+    unmount(); vi.restoreAllMocks();
+    mockApi(makeUser("executive"), { get: { "/units/7/files": [] } });
+    renderWithProviders(<UploadUnitFile unit={unit} />);
+    await new Promise((r) => setTimeout(r, 50));
+    expect(screen.queryByRole("list", { name: "Files for this flat" })).not.toBeInTheDocument();
+    expect(screen.queryByRole("link")).not.toBeInTheDocument(); expect(screen.queryByLabelText("Upload file")).not.toBeInTheDocument();
   });
 });
