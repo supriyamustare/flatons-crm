@@ -3,7 +3,7 @@ import { useEffect, useState } from "react";
 import type { FormEvent } from "react";
 import { Link } from "react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { FileSpreadsheet, Pencil, Printer, UserPlus } from "lucide-react";
+import { FileSpreadsheet, Pencil, Printer, Upload, UserPlus } from "lucide-react";
 import { Alert, Button, Modal, TextInput } from "../ui";
 import { AgreementSection } from "../bookings/AgreementSection";
 import { BookFlatDialog } from "../bookings/BookFlatDialog";
@@ -266,7 +266,6 @@ export function BookingCosts({ unit }: { unit: Unit }) {
   const files = useQuery({ queryKey: ["unit-files", unit.id], queryFn: async () => (await api.get<{ id: number; title: string; file_name: string; uploaded_by: string | null; uploaded_at: string; url: string }[]>(`/units/${unit.id}/files`)).data });
   const [editing, setEditing] = useState(false);
   const [pno, setPno] = useState(""); const [pprice, setPprice] = useState("");
-  const [title, setTitle] = useState(""); const [file, setFile] = useState<File | null>(null);
   const save = useMutation({
     mutationFn: async () => {
       const keep = { ...(sheet.data?.overrides ?? {}) } as Record<string, unknown>;
@@ -274,10 +273,6 @@ export function BookingCosts({ unit }: { unit: Unit }) {
       return (await api.put<CostSheet>(`/units/${unit.id}/cost-sheet`, { ...keep, ...(pno.trim() ? { parking_no: pno.trim() } : {}), ...(Number(pprice) > 0 ? { parking_charges: Number(pprice) } : {}) })).data;
     },
     onSuccess: (d) => { qc.setQueryData(["cost-sheet", unit.id], d); setEditing(false); toast("Parking saved"); },
-  });
-  const upload = useMutation({
-    mutationFn: async () => { const fd = new FormData(); fd.append("file", file!); if (title.trim()) fd.append("title", title.trim()); return (await api.post(`/units/${unit.id}/files`, fd)).data; },
-    onSuccess: (d) => { qc.setQueryData(["unit-files", unit.id], d); setFile(null); setTitle(""); toast("File uploaded"); },
   });
   const remove = useMutation({ mutationFn: async (id: number) => (await api.delete(`/units/files/${id}`)).data, onSuccess: (d) => { qc.setQueryData(["unit-files", unit.id], d); toast("File removed"); } });
   const c = sheet.data;
@@ -309,16 +304,28 @@ export function BookingCosts({ unit }: { unit: Unit }) {
         {(files.data ?? []).length === 0 ? <p className="mt-1 text-xs text-muted">No files yet.</p> : <ul className="mt-1 space-y-1 text-sm">{files.data!.map((f) => <li key={f.id} className="flex items-center justify-between gap-2">
           <a href={f.url} target="_blank" rel="noopener" className="truncate text-forest-800 underline">{f.title}</a>
           {canEdit && <button type="button" className="text-xs text-muted hover:text-danger" aria-label={`Remove ${f.title}`} onClick={() => { if (window.confirm(`Remove “${f.title}”?`)) remove.mutate(f.id); }}>Remove</button>}</li>)}</ul>}
-        {canEdit && <form className="mt-2 space-y-2" onSubmit={(e: FormEvent) => { e.preventDefault(); upload.mutate(); }}>
-          {upload.isError && <Alert>{errorMessage(upload.error)}</Alert>}
-          <TextInput label="File title (optional)" value={title} onChange={(e) => setTitle(e.target.value)} maxLength={150} />
-          <div className="flex items-center gap-2">
-            <label className="flex-1"><span className="sr-only">Choose a file</span>
-              <input type="file" accept=".pdf,.jpg,.jpeg,.png" onChange={(e) => setFile(e.target.files?.[0] ?? null)} className="block w-full text-xs file:mr-2 file:min-h-9 file:rounded-lg file:border-0 file:bg-white file:px-3" /></label>
-            <Button type="submit" loading={upload.isPending} disabled={!file}>Upload file</Button>
-          </div>
-        </form>}
       </div>
     </section>
+  );
+}
+
+
+/** The panel's bottom button: pick a file and it's attached to this flat straight away (named after the file). */
+export function UploadUnitFile({ unit }: { unit: Unit }) {
+  const me = useCurrentUser();
+  const qc = useQueryClient(); const toast = useToast();
+  const upload = useMutation({
+    mutationFn: async (file: File) => { const fd = new FormData(); fd.append("file", file); return (await api.post(`/units/${unit.id}/files`, fd)).data; },
+    onSuccess: (d) => { qc.setQueryData(["unit-files", unit.id], d); toast("File uploaded"); },
+  });
+  if (me.role !== "admin" && me.role !== "manager") return null;
+  return (
+    <>
+      {upload.isError && <Alert>{errorMessage(upload.error)}</Alert>}
+      <label className={`inline-flex min-h-11 w-full cursor-pointer items-center justify-center gap-2 rounded-lg px-4 text-sm font-medium ring-1 ring-line hover:bg-forest-50 focus-within:ring-2 focus-within:ring-forest-700 ${upload.isPending ? "pointer-events-none opacity-60" : ""}`}>
+        <Upload className="size-4" aria-hidden />{upload.isPending ? "Uploading…" : "Upload file"}
+        <input type="file" accept=".pdf,.jpg,.jpeg,.png" className="sr-only" onChange={(e) => { const f = e.target.files?.[0]; if (f) upload.mutate(f); e.target.value = ""; }} />
+      </label>
+    </>
   );
 }
