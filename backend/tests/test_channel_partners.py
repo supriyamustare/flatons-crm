@@ -113,6 +113,7 @@ async def test_lead_partner_rules(login_as, db):
         json={
             "name": "Anita",
             "mobile": "9876543210",
+            "email": "m9876543210@example.com",
             "source": "channel_partner",
             "channel_partner_id": p["id"],
         },
@@ -127,6 +128,7 @@ async def test_lead_partner_rules(login_as, db):
         json={
             "name": "B",
             "mobile": "9123456780",
+            "email": "m9123456780@example.com",
             "source": "99acres",
             "channel_partner_id": p["id"],
         },
@@ -139,6 +141,7 @@ async def test_lead_partner_rules(login_as, db):
         json={
             "name": "C",
             "mobile": "9123456781",
+            "email": "m9123456781@example.com",
             "source": "channel_partner",
             "channel_partner_id": 9999,
         },
@@ -167,13 +170,33 @@ async def test_customers_tab_with_bookings_and_visibility(login_as, db):
     unit_id = await db.scalar(select(Unit.id))
     body = {"source": "channel_partner", "channel_partner_id": p["id"]}
     a = (
-        await ravi.post("/api/leads", json={**body, "name": "Anita", "mobile": "9876543210"})
+        await ravi.post(
+            "/api/leads",
+            json={
+                **body,
+                "name": "Anita",
+                "mobile": "9876543210",
+                "email": "m9876543210@example.com",
+            },
+        )
     ).json()["lead"]
     await kiran.post(
-        "/api/leads", json={**body, "name": "Kiran's customer", "mobile": "9123456780"}
+        "/api/leads",
+        json={
+            **body,
+            "name": "Kiran's customer",
+            "mobile": "9123456780",
+            "email": "m9123456780@example.com",
+        },
     )
     await ravi.post(
-        "/api/leads", json={"name": "Not via partner", "mobile": "9000000009", "source": "walk_in"}
+        "/api/leads",
+        json={
+            "name": "Not via partner",
+            "mobile": "9000000009",
+            "email": "m9000000009@example.com",
+            "source": "walk_in",
+        },
     )
     booking = (
         await ravi.post(

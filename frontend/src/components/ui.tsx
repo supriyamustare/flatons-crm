@@ -48,15 +48,18 @@ export function Field({
   hint,
   children,
   htmlFor,
+  required,
 }: {
   label: string;
   hint?: ReactNode;
   children: ReactNode;
   htmlFor: string;
+  required?: boolean;
 }) {
   return (
     <div className="space-y-1.5">
-      <label htmlFor={htmlFor} className="block text-sm font-medium text-ink">
+      {/* the star is drawn by CSS, so the field's spoken name stays the same; screen readers announce "required" from the field */}
+      <label htmlFor={htmlFor} className={cx("block text-sm font-medium text-ink", required && "after:ml-0.5 after:text-danger after:content-['*']")}>
         {label}
       </label>
       {children}
@@ -75,7 +78,7 @@ export function TextInput({
 }: InputHTMLAttributes<HTMLInputElement> & { label: string; hint?: ReactNode }) {
   const id = useId();
   return (
-    <Field label={label} hint={hint} htmlFor={props.id ?? id}>
+    <Field label={label} hint={hint} htmlFor={props.id ?? id} required={props.required}>
       <input id={props.id ?? id} className={inputClass} {...props} />
     </Field>
   );
@@ -88,7 +91,7 @@ export function TextArea({
 }: TextareaHTMLAttributes<HTMLTextAreaElement> & { label: string; hint?: ReactNode }) {
   const id = useId();
   return (
-    <Field label={label} hint={hint} htmlFor={props.id ?? id}>
+    <Field label={label} hint={hint} htmlFor={props.id ?? id} required={props.required}>
       <textarea id={props.id ?? id} rows={3} className={`${inputClass} py-2.5`} {...props} />
     </Field>
   );
@@ -102,7 +105,7 @@ export function SelectInput({
 }: SelectHTMLAttributes<HTMLSelectElement> & { label: string; hint?: ReactNode }) {
   const id = useId();
   return (
-    <Field label={label} hint={hint} htmlFor={props.id ?? id}>
+    <Field label={label} hint={hint} htmlFor={props.id ?? id} required={props.required}>
       <select id={props.id ?? id} className={inputClass} {...props}>
         {children}
       </select>

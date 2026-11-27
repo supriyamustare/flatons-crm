@@ -121,7 +121,13 @@ async def test_repeat_enquiry_is_added_to_existing_lead_and_owner_alerted(login_
     ravi, ravi_user = await login_as(Role.executive)
     lead = (
         await ravi.post(
-            "/api/leads", json={"name": "Anita", "mobile": "9876543210", "source": "walk_in"}
+            "/api/leads",
+            json={
+                "name": "Anita",
+                "mobile": "9876543210",
+                "email": "m9876543210@example.com",
+                "source": "walk_in",
+            },
         )
     ).json()["lead"]
     conn, secret = await connect(admin, kind="magicbricks")

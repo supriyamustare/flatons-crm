@@ -450,6 +450,7 @@ async def test_campaign_rules(login_as, db):
             json={
                 "name": "A",
                 "mobile": "9876543210",
+                "email": "m9876543210@example.com",
                 "source": "google_ads",
                 "campaign_id": camp["id"],
             },
@@ -459,7 +460,13 @@ async def test_campaign_rules(login_as, db):
     assert (
         await mgr.post(
             "/api/leads",
-            json={"name": "B", "mobile": "9123456780", "source": "99acres", "campaign_id": 999},
+            json={
+                "name": "B",
+                "mobile": "9123456780",
+                "email": "m9123456780@example.com",
+                "source": "99acres",
+                "campaign_id": 999,
+            },
         )
     ).status_code == 422
     assert (

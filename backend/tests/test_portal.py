@@ -56,7 +56,13 @@ async def second_case(db, login_as) -> int:
     unit_id = await db.scalar(select(Unit.id).order_by(Unit.id.desc()))
     lead = (
         await admin.post(
-            "/api/leads", json={"name": "Rohan Mehta", "mobile": "9000000002", "source": "99acres"}
+            "/api/leads",
+            json={
+                "name": "Rohan Mehta",
+                "mobile": "9000000002",
+                "email": "m9000000002@example.com",
+                "source": "99acres",
+            },
         )
     ).json()["lead"]
     bk = (

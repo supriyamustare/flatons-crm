@@ -37,7 +37,15 @@ async def site(db, login_as):
 
 async def book(c, db, unit_id, name="Anita", mobile="9876543210"):
     lead = (
-        await c.post("/api/leads", json={"name": name, "mobile": mobile, "source": "99acres"})
+        await c.post(
+            "/api/leads",
+            json={
+                "name": name,
+                "mobile": mobile,
+                "email": f"m{mobile.replace(' ', '')}@example.com",
+                "source": "99acres",
+            },
+        )
     ).json()["lead"]
     r = await c.post(
         "/api/bookings",

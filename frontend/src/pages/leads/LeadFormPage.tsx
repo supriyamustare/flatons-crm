@@ -9,7 +9,7 @@ import { checkDuplicates, useAssignableUsers, useCreateLead, useLead, useProject
 import { useCampaigns } from "../../hooks/useMarketing";
 import { useChannelPartners } from "../../hooks/useChannelPartners";
 import type { LeadPayload } from "../../hooks/useLeads";
-import { errorMessage } from "../../lib/api";
+import { api, errorMessage } from "../../lib/api";
 import {
   ACTIVE_SOURCES, CONFIG_LABELS, PURPOSE_LABELS, SOURCE_LABELS, TIMELINE_LABELS, lakhToRupees, rupeesToLakh,
 } from "../../lib/leads";
@@ -27,6 +27,9 @@ const EMPTY: FormState = {
   campaign_id: "", channel_partner_id: "", project_id: "", configuration: "", budget_min: "", budget_max: "", purpose: "", timeline: "",
   estimated_value: "", remarks: "", assigned_to_id: "",
 };
+
+/** What we fill from an existing lead for a returning customer (not the enquiry's own source details, remarks or assignee). */
+const CUSTOMER_FIELDS: (keyof FormState)[] = ["name", "mobile", "alt_mobile", "email", "city", "source", "project_id", "configuration", "budget_min", "budget_max", "purpose", "timeline"];
 
 function fromLead(l: LeadDetail): FormState {
   return {
@@ -77,6 +80,8 @@ function LeadForm({ initial, existing }: { initial: FormState; existing?: LeadDe
 
   const [f, setF] = useState<FormState>(initial);
   const [duplicates, setDuplicates] = useState<Duplicate[]>([]);
+  const [filled, setFilled] = useState<{ from: Duplicate; before: FormState } | null>(null);
+  const [missing, setMissing] = useState<string[]>([]);
   const set = (k: keyof FormState) => (e: { target: { value: string } }) => setF({ ...f, [k]: e.target.value });
 
   async function runDuplicateCheck() {
@@ -88,7 +93,16 @@ function LeadForm({ initial, existing }: { initial: FormState; existing?: LeadDe
     };
     if (!body.mobile && !body.alt_mobile && !body.email) return setDuplicates([]);
     try {
-      setDuplicates(await checkDuplicates(body));
+      const found = await checkDuplicates(body);
+      setDuplicates(found);
+      const match = found.find((d) => d.can_view);  // only from a lead this person may see: never reveal someone else's customer
+      if (!existing && match && !filled) {
+        const detail = fromLead((await api.get<LeadDetail>(`/leads/${match.id}`)).data);
+        const next = { ...f };
+        for (const k of CUSTOMER_FIELDS) if (!String(f[k] ?? "").trim() && detail[k]) next[k] = detail[k];
+        setFilled({ from: match, before: f });
+        setF(next);
+      }
     } catch {
       /* invalid number etc. — the form's own validation will explain on save */
     }
@@ -96,6 +110,9 @@ function LeadForm({ initial, existing }: { initial: FormState; existing?: LeadDe
 
   function onSubmit(e: FormEvent) {
     e.preventDefault();
+    const need = ([["name", "Full name"], ["mobile", "Mobile"], ["email", "Email"], ["source", "Source"]] as const).filter(([k]) => !f[k].trim()).map(([, l]) => l);
+    setMissing(need);
+    if (!existing && need.length) return;
     const payload = toPayload(f);
     if (existing) {
       // Send only what changed.
@@ -117,6 +134,8 @@ function LeadForm({ initial, existing }: { initial: FormState; existing?: LeadDe
 
   return (
     <form onSubmit={onSubmit} className="space-y-5" noValidate>
+      {!existing && <p className="text-xs text-muted"><span className="text-danger">*</span> Required</p>}
+      {missing.length > 0 && <Alert>Fill in the required fields: {missing.join(", ")}.</Alert>}
       {mutation.isError && <Alert>{errorMessage(mutation.error)}</Alert>}
 
       <Section title="Customer">
@@ -124,10 +143,16 @@ function LeadForm({ initial, existing }: { initial: FormState; existing?: LeadDe
         <TextInput label="Mobile" type="tel" inputMode="tel" value={f.mobile} onChange={set("mobile")}
           onBlur={runDuplicateCheck} placeholder="98765 43210" required />
         <TextInput label="Alternate mobile" type="tel" inputMode="tel" value={f.alt_mobile} onChange={set("alt_mobile")} onBlur={runDuplicateCheck} />
-        <TextInput label="Email" type="email" inputMode="email" value={f.email} onChange={set("email")} onBlur={runDuplicateCheck} />
+        <TextInput label="Email" type="email" inputMode="email" value={f.email} onChange={set("email")} onBlur={runDuplicateCheck} required={!existing} />
         <TextInput label="City or locality" value={f.city} onChange={set("city")} maxLength={100} />
       </Section>
 
+      {filled && (
+        <div role="status" className="flex flex-wrap items-center justify-between gap-2 rounded-xl bg-forest-50 p-3 text-sm ring-1 ring-forest-100">
+          <span>Details filled from the existing lead <Link to={`/leads/${filled.from.id}`} className="font-medium text-forest-800 underline">{filled.from.lead_code}</Link> ({filled.from.name}). Check them and change anything that’s different.</span>
+          <Button type="button" variant="ghost" onClick={() => { setF(filled.before); setFilled(null); }}>Undo</Button>
+        </div>
+      )}
       {duplicates.length > 0 && <DuplicateBanner duplicates={duplicates} />}
 
       <Section title="Source">
@@ -192,7 +217,7 @@ function LeadForm({ initial, existing }: { initial: FormState; existing?: LeadDe
           className="inline-flex min-h-11 items-center justify-center rounded-lg px-4 text-sm font-medium ring-1 ring-line hover:bg-forest-50">
           Cancel
         </Link>
-        <Button type="submit" loading={mutation.isPending} disabled={!f.name.trim() || !f.mobile.trim() || !f.source}>
+        <Button type="submit" loading={mutation.isPending} disabled={!f.name.trim() || !f.mobile.trim() || !f.source || (!existing && !f.email.trim())}>
           {existing ? "Save changes" : "Create lead"}
         </Button>
       </div>

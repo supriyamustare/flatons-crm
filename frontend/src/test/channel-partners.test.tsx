@@ -63,6 +63,7 @@ describe("channel partners", () => {
     await userEvent.selectOptions(pick, "3");
     await userEvent.type(screen.getByLabelText("Full name"), "Anita Desai");
     await userEvent.type(screen.getByLabelText("Mobile", { exact: true }), "9876543210");
+    await userEvent.type(screen.getByLabelText("Email", { exact: true }), "lead@example.com");
     await userEvent.click(screen.getByRole("button", { name: "Create lead" }));
     await waitFor(() => expect(post).toHaveBeenCalledWith("/leads", expect.objectContaining({ source: "channel_partner", channel_partner_id: 3 })));
   });
