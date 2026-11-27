@@ -263,7 +263,6 @@ export function BookingCosts({ unit }: { unit: Unit }) {
   const canEdit = me.role === "admin" || me.role === "manager";
   const sheet = useCostSheet(unit.id);
   const qc = useQueryClient(); const toast = useToast();
-  const files = useQuery({ queryKey: ["unit-files", unit.id], queryFn: async () => (await api.get<{ id: number; title: string; file_name: string; uploaded_by: string | null; uploaded_at: string; url: string }[]>(`/units/${unit.id}/files`)).data });
   const [editing, setEditing] = useState(false);
   const [pno, setPno] = useState(""); const [pprice, setPprice] = useState("");
   const save = useMutation({
@@ -274,9 +273,8 @@ export function BookingCosts({ unit }: { unit: Unit }) {
     },
     onSuccess: (d) => { qc.setQueryData(["cost-sheet", unit.id], d); setEditing(false); toast("Parking saved"); },
   });
-  const remove = useMutation({ mutationFn: async (id: number) => (await api.delete(`/units/files/${id}`)).data, onSuccess: (d) => { qc.setQueryData(["unit-files", unit.id], d); toast("File removed"); } });
   const c = sheet.data;
-  const rows: [string, number | null | undefined][] = c ? [["Agreement cost", c.cost], ["GST", c.gst], ["Stamp duty", c.stamp_duty], ["Registration", c.registration],
+  const rows: [string, number | null | undefined][] = c ? [["Agreement cost", c.cost], ["Registration", c.registration], ["Stamp duty", c.stamp_duty], ["GST", c.gst],
     ["Legal charges", c.legal_charges], ["Furnishing", c.furnishing], ...(c.other_charges ? [[c.other_charges_label || "Other charges", c.other_charges] as [string, number]] : [])] : [];
   return (
     <section aria-labelledby="bc-h" className="mt-3 rounded-lg bg-paper p-3">
@@ -292,19 +290,17 @@ export function BookingCosts({ unit }: { unit: Unit }) {
             <div className="col-span-2 flex justify-end gap-2"><Button type="button" variant="secondary" onClick={() => setEditing(false)}>Cancel</Button><Button type="submit" loading={save.isPending}>Save</Button></div>
           </form>
         ) : (
-          <dl className="mt-1 grid grid-cols-2 gap-2 text-sm">
-            <div><dt className="text-xs text-muted">Parking no.</dt><dd>{c.parking_no ?? "—"}</dd></div>
-            <div><dt className="text-xs text-muted">Parking price</dt><dd>{c.parking_charges ? inr(c.parking_charges) : "—"}</dd></div>
-            {rows.map(([l, v]) => <div key={l}><dt className="text-xs text-muted">{l}</dt><dd>{v ? inr(v) : "—"}</dd></div>)}
-            <div className="col-span-2 border-t border-line pt-2"><dt className="text-xs text-muted">Total payable</dt><dd className="font-semibold">{inr(c.grand_total)}</dd></div>
-          </dl>
+          <>
+            <dl className="mt-1 grid grid-cols-2 gap-2 text-sm">
+              <div><dt className="text-xs text-muted">Parking no.</dt><dd>{c.parking_no ?? "—"}</dd></div>
+              <div><dt className="text-xs text-muted">Parking price</dt><dd>{c.parking_charges ? inr(c.parking_charges) : "—"}</dd></div>
+            </dl>
+            <dl aria-label="Booking costs" className="mt-3 divide-y divide-line border-t border-line text-sm">
+              {rows.map(([l, v]) => <div key={l} className="flex justify-between gap-3 py-1.5"><dt className="text-muted">{l}</dt><dd className="tabular-nums">{v ? inr(v) : "—"}</dd></div>)}
+              <div className="flex justify-between gap-3 py-1.5 font-semibold"><dt>Total payable</dt><dd className="tabular-nums">{inr(c.grand_total)}</dd></div>
+            </dl>
+          </>
         )}</>}
-      <div className="mt-3 border-t border-line pt-3">
-        <h4 className="text-xs font-semibold text-muted">Files for this flat</h4>
-        {(files.data ?? []).length === 0 ? <p className="mt-1 text-xs text-muted">No files yet.</p> : <ul className="mt-1 space-y-1 text-sm">{files.data!.map((f) => <li key={f.id} className="flex items-center justify-between gap-2">
-          <a href={f.url} target="_blank" rel="noopener" className="truncate text-forest-800 underline">{f.title}</a>
-          {canEdit && <button type="button" className="text-xs text-muted hover:text-danger" aria-label={`Remove ${f.title}`} onClick={() => { if (window.confirm(`Remove “${f.title}”?`)) remove.mutate(f.id); }}>Remove</button>}</li>)}</ul>}
-      </div>
     </section>
   );
 }
@@ -318,7 +314,14 @@ export function UploadUnitFile({ unit }: { unit: Unit }) {
     mutationFn: async (file: File) => { const fd = new FormData(); fd.append("file", file); return (await api.post(`/units/${unit.id}/files`, fd)).data; },
     onSuccess: (d) => { qc.setQueryData(["unit-files", unit.id], d); toast("File uploaded"); },
   });
-  if (me.role !== "admin" && me.role !== "manager") return null;
+  const files = useQuery({ queryKey: ["unit-files", unit.id], queryFn: async () => (await api.get<{ id: number; title: string; url: string }[]>(`/units/${unit.id}/files`)).data });
+  const remove = useMutation({ mutationFn: async (id: number) => (await api.delete(`/units/files/${id}`)).data, onSuccess: (d) => { qc.setQueryData(["unit-files", unit.id], d); toast("File removed"); } });
+  const canEdit = me.role === "admin" || me.role === "manager";
+  const list = (files.data ?? []).length > 0 && (
+    <ul aria-label="Files for this flat" className="space-y-1 text-sm">{files.data!.map((f) => <li key={f.id} className="flex items-center justify-between gap-2">
+      <a href={f.url} target="_blank" rel="noopener" className="truncate text-forest-800 underline">{f.title}</a>
+      {canEdit && <button type="button" className="text-xs text-muted hover:text-danger" aria-label={`Remove ${f.title}`} onClick={() => { if (window.confirm(`Remove “${f.title}”?`)) remove.mutate(f.id); }}>Remove</button>}</li>)}</ul>);
+  if (!canEdit) return list || null;
   return (
     <>
       {upload.isError && <Alert>{errorMessage(upload.error)}</Alert>}
@@ -326,6 +329,7 @@ export function UploadUnitFile({ unit }: { unit: Unit }) {
         <Upload className="size-4" aria-hidden />{upload.isPending ? "Uploading…" : "Upload file"}
         <input type="file" accept=".pdf,.jpg,.jpeg,.png" className="sr-only" onChange={(e) => { const f = e.target.files?.[0]; if (f) upload.mutate(f); e.target.value = ""; }} />
       </label>
+      {list}
     </>
   );
 }
