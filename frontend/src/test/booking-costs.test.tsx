@@ -1,7 +1,7 @@
 import { screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { BookingCosts } from "../components/inventory/UnitSections";
+import { BookingCosts, UploadUnitFile } from "../components/inventory/UnitSections";
 import { makeUser, mockApi } from "./mockApi";
 import { renderWithProviders } from "./render";
 
@@ -22,7 +22,6 @@ describe("parking and booking costs on a flat", () => {
     for (const t of ["P-12", "₹ 3,00,000", "Agreement cost", "₹ 35,25,000", "Stamp duty", "Registration", "Legal charges", "Total payable", "₹ 38,47,050"]) expect(sec).toHaveTextContent(t);
     expect(within(sec).getByRole("link", { name: "Signed cost sheet" })).toHaveAttribute("href", "/api/units/files/3");
     expect(within(sec).queryByRole("button", { name: /Edit parking/ })).not.toBeInTheDocument();
-    expect(within(sec).queryByRole("button", { name: "Upload file" })).not.toBeInTheDocument();
   });
 
   it("saving parking keeps the flat's other numbers", async () => {
@@ -34,15 +33,20 @@ describe("parking and booking costs on a flat", () => {
     await waitFor(() => expect(put).toHaveBeenCalledWith("/units/7/cost-sheet", { legal_charges: 10_000, parking_no: "P-14", parking_charges: 300_000 }));
   });
 
-  it("uploads a file for the flat", async () => {
+  it("the Upload file button at the bottom attaches a file straight away", async () => {
     const { post } = mockApi(makeUser("manager"), { get: { "/units/7/cost-sheet": sheet(), "/units/7/files": [] }, post: { "/units/7/files": files } });
-    renderWithProviders(<BookingCosts unit={unit} />);
+    renderWithProviders(<><BookingCosts unit={unit} /><UploadUnitFile unit={unit} /></>);
     const sec = await screen.findByRole("region", { name: "Parking and booking costs" });
-    await userEvent.type(within(sec).getByLabelText("File title (optional)"), "Signed cost sheet");
-    await userEvent.upload(within(sec).getByLabelText("Choose a file"), new File(["%PDF"], "cs.pdf", { type: "application/pdf" }));
-    await userEvent.click(within(sec).getByRole("button", { name: "Upload file" }));
+    expect(within(sec).queryByLabelText(/File title/)).not.toBeInTheDocument();  // no title row any more
+    await userEvent.upload(screen.getByLabelText("Upload file"), new File(["%PDF"], "cs.pdf", { type: "application/pdf" }));
     await waitFor(() => expect(post).toHaveBeenCalled());
-    const fd = post.mock.calls[0][1] as FormData;
-    expect(fd.get("title")).toBe("Signed cost sheet"); expect((fd.get("file") as File).name).toBe("cs.pdf");
+    expect(((post.mock.calls[0][1] as FormData).get("file") as File).name).toBe("cs.pdf");
+    expect(await within(sec).findByRole("link", { name: "Signed cost sheet" })).toBeInTheDocument();
+  });
+
+  it("sales executives don't get the Upload file button", async () => {
+    mockApi(makeUser("executive"), { get: { "/units/7/cost-sheet": sheet(), "/units/7/files": [] } });
+    renderWithProviders(<UploadUnitFile unit={unit} />);
+    expect(screen.queryByLabelText("Upload file")).not.toBeInTheDocument();
   });
 });

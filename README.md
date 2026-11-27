@@ -324,7 +324,7 @@ with the official logo at the same sizes. Offline support arrives in Sprint 16.
   parking price is part of the agreement value: the payment stages, GST, stamp duty and registration include it, and the
   ledger shows it as its own "Parking" charge beside the base price. The section also shows agreement cost, GST, stamp
   duty, registration, legal charges, furnishing and the total payable, with exact amounts.
-- **Files for this flat** (`unit_files`): upload (PDF or image, up to 15 MB; admins and sales managers), list, download,
+- **Files for this flat** (`unit_files`): an "Upload file" button at the bottom of the panel, below "Edit unit" (PDF or image, up to 15 MB; admins and sales managers; named after the file); listed in the section with download and
   remove (logged). Visible to everyone who can see the flat.
 
 ## OCR (own contribution required) and the loan sanction letter

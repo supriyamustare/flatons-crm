@@ -1,5 +1,5 @@
 import { UnitFloorPlans } from "./FloorPlans";
-import { BookingCosts, CostSheetButtons, PriceAndArea, UnitCustomer } from "./UnitSections";
+import { BookingCosts, CostSheetButtons, PriceAndArea, UnitCustomer, UploadUnitFile } from "./UnitSections";
 import { useEffect, useState } from "react";
 import { Link } from "react-router";
 import { Lock, LockOpen, Pencil, X } from "lucide-react";
@@ -137,6 +137,7 @@ export function UnitPanel({ unit, onClose, onEdit }: { unit: Unit; onClose: () =
         {me.role === "admin" && (
           <Button className="w-full" variant="ghost" onClick={onEdit}><Pencil className="size-4" aria-hidden />Edit unit</Button>
         )}
+        <UploadUnitFile unit={unit} />
       </div>
     </aside>
   );
