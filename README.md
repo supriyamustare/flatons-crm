@@ -317,6 +317,16 @@ with the official logo at the same sizes. Offline support arrives in Sprint 16.
   or one unit type. A unit's panel shows the plans for its floor and its type, or the project-wide plans if there
   are none more specific.
 
+## New leads: required fields and returning customers
+
+- Required fields show a red star everywhere in the CRM (drawn by CSS on the label of any required field).
+- New leads need name, mobile, email and source (the server refuses a new lead without an email; older leads without
+  one can still be edited). Create lead stays disabled until all four are filled.
+- When the mobile or email matches an existing lead the person may see, the new-lead form fills the empty customer
+  fields from it (name, mobiles, email, city, source, project, configuration, budget, purpose, timeline; never remarks,
+  assignee or the old enquiry's sub-source), with a note linking to that lead and Undo. Leads the person may not see are
+  never used: only the existing duplicate warning appears.
+
 ## Parking and booking costs on a flat
 
 - Projects -> click a flat -> side panel, below "Price and area": **Parking and booking costs**. Parking number and

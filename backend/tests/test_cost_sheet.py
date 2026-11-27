@@ -204,7 +204,12 @@ async def test_booking_with_customer_details_and_bank_payment(login_as, unit, db
     lead = (
         await ravi.post(
             "/api/leads",
-            json={"name": "Anita Desai", "mobile": "9876543210", "source": "magicbricks"},
+            json={
+                "name": "Anita Desai",
+                "mobile": "9876543210",
+                "email": "m9876543210@example.com",
+                "source": "magicbricks",
+            },
         )
     ).json()["lead"]
     body = {
@@ -277,14 +282,30 @@ async def test_booking_with_customer_details_and_bank_payment(login_as, unit, db
 )
 async def test_only_the_sources_in_use_for_new_leads(login_as, source, ok):
     c, _ = await login_as(Role.executive)
-    r = await c.post("/api/leads", json={"name": "A", "mobile": "9876543210", "source": source})
+    r = await c.post(
+        "/api/leads",
+        json={
+            "name": "A",
+            "mobile": "9876543210",
+            "email": "m9876543210@example.com",
+            "source": source,
+        },
+    )
     assert (r.status_code == 201) is ok
 
 
 async def test_existing_leads_keep_a_retired_source_but_cant_switch_to_one(login_as, db):
     c, user = await login_as(Role.executive)
     lead = (
-        await c.post("/api/leads", json={"name": "A", "mobile": "9876543210", "source": "99acres"})
+        await c.post(
+            "/api/leads",
+            json={
+                "name": "A",
+                "mobile": "9876543210",
+                "email": "m9876543210@example.com",
+                "source": "99acres",
+            },
+        )
     ).json()["lead"]
     assert (
         await c.patch(f"/api/leads/{lead['id']}", json={"source": "website"})

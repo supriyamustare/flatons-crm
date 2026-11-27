@@ -32,7 +32,13 @@ async def case(db, login_as):
     unit_id = await db.scalar(select(Unit.id))
     lead = (
         await admin.post(
-            "/api/leads", json={"name": "Anita Desai", "mobile": "9000000001", "source": "99acres"}
+            "/api/leads",
+            json={
+                "name": "Anita Desai",
+                "mobile": "9000000001",
+                "email": "m9000000001@example.com",
+                "source": "99acres",
+            },
         )
     ).json()["lead"]
     bk = (

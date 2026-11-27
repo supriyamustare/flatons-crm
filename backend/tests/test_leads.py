@@ -7,11 +7,19 @@ from app.models import AuditLog, Lead, Role
 from app.schemas.common import normalize_mobile
 from tests.conftest import new_project
 
-BASE = {"name": "Anita Desai", "mobile": "98765 43210", "source": "99acres"}
+BASE = {
+    "name": "Anita Desai",
+    "mobile": "98765 43210",
+    "source": "99acres",
+    "email": "anita@example.com",
+}
 
 
 async def create(c, **overrides):
-    resp = await c.post("/api/leads", json={**BASE, **overrides})
+    body = {**BASE, **overrides}
+    if "email" not in overrides:  # different customers have different emails
+        body["email"] = f"m{''.join(ch for ch in str(body['mobile']) if ch.isdigit())}@example.com"
+    resp = await c.post("/api/leads", json=body)
     assert resp.status_code == 201, resp.text
     return resp.json()
 
@@ -428,3 +436,18 @@ async def test_projects_admin_manages_everyone_reads(login_as):
     await admin.patch(f"/api/projects/{pid}", json={"is_active": False})
     assert (await exec_c.get("/api/projects")).json() == []
     assert (await exec_c.post("/api/leads", json={**BASE, "project_id": pid})).status_code == 422
+
+
+async def test_new_leads_need_an_email_but_old_ones_can_still_be_edited(login_as, db):
+    from app.models.lead import Lead
+
+    c, _ = await login_as(Role.executive)
+    body = {k: v for k, v in BASE.items() if k != "email"}
+    r = await c.post("/api/leads", json=body)
+    assert r.status_code == 422 and "email" in r.text
+    resp = await create(c)
+    lead = resp.get("lead", resp) if isinstance(resp, dict) else resp.json()["lead"]
+    row = await db.get(Lead, lead["id"])
+    row.email = None  # an older lead from before email was required
+    await db.commit()
+    assert (await c.patch(f"/api/leads/{lead['id']}", json={"city": "Pune"})).status_code == 200

@@ -129,6 +129,7 @@ describe("lead form", () => {
     renderApp("/leads/new");
     await userEvent.type(await screen.findByLabelText("Full name"), "Test");
     await userEvent.type(screen.getByLabelText("Mobile"), "12345");
+    await userEvent.type(screen.getByLabelText("Email"), "test@example.com");
     await userEvent.selectOptions(screen.getByLabelText("Source"), "walk_in");
     await userEvent.click(screen.getByRole("button", { name: "Create lead" }));
     expect(await screen.findByText("Mobile: enter a valid 10-digit Indian mobile number")).toBeInTheDocument();

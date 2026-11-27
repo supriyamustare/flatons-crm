@@ -64,6 +64,7 @@ class _LeadFields(BaseModel):
 class LeadCreate(_LeadFields):
     name: Name
     mobile: Mobile
+    email: Email  # required for new leads (older leads without one can still be edited)
     source: LeadSource
 
     @field_validator("source")

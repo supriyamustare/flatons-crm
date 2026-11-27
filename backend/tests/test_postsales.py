@@ -31,7 +31,13 @@ async def booked(db, login_as):
     _, psx = await login_as(Role.postsales_exec)
     lead = (
         await ravi.post(
-            "/api/leads", json={"name": "Anita Desai", "mobile": "9876543210", "source": "99acres"}
+            "/api/leads",
+            json={
+                "name": "Anita Desai",
+                "mobile": "9876543210",
+                "email": "m9876543210@example.com",
+                "source": "99acres",
+            },
         )
     ).json()["lead"]
     bk = (

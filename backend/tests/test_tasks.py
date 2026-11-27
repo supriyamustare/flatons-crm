@@ -16,7 +16,15 @@ def later(**kw) -> str:
 
 
 async def new_lead(c, name="Anita Desai", mobile="98765 43210"):
-    resp = await c.post("/api/leads", json={"name": name, "mobile": mobile, "source": "99acres"})
+    resp = await c.post(
+        "/api/leads",
+        json={
+            "name": name,
+            "mobile": mobile,
+            "email": f"m{mobile.replace(' ', '')}@example.com",
+            "source": "99acres",
+        },
+    )
     assert resp.status_code == 201, resp.text
     return resp.json()["lead"]
 
@@ -114,6 +122,7 @@ async def test_manager_task_defaults_to_lead_owner(login_as):
         json={
             "name": "Owned Lead",
             "mobile": "9123456780",
+            "email": "m9123456780@example.com",
             "source": "walk_in",
             "assigned_to_id": exec_user.id,
         },
