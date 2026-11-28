@@ -145,3 +145,55 @@ describe("dashboard insights", () => {
     expect(get).toHaveBeenCalledWith("/dashboard/insights", { params: { person_id: undefined } });
   });
 });
+
+describe("booking form: no customer block, references required", () => {
+  async function openForm() {
+    const { post } = mockApi(makeUser("executive", { id: 7, full_name: "Ravi Kumar" }), {
+      get: { "/leads/5": leadDetail, "/leads/5/tasks": [], "/leads/5/visits": [], "/projects": [project], "/projects/1/inventory": inventory, "/bookings/9": booking },
+      post: { "/bookings": booking },
+    });
+    renderApp("/leads/5");
+    await userEvent.click(await screen.findByRole("button", { name: "Book a flat" }, { timeout: 4000 }));
+    const dialog = await screen.findByRole("dialog", { name: "Book a flat for Anita Desai" });
+    const flat = await within(dialog).findByLabelText("Flat");
+    await waitFor(() => expect(within(flat).getAllByRole("option").length).toBeGreaterThan(1));
+    await userEvent.selectOptions(flat, "201");
+    await userEvent.type(within(dialog).getByLabelText("Booking amount paid (₹)"), "200000");
+    return { dialog, post };
+  }
+
+  it("has no customer or payment-preference block", async () => {
+    const { dialog } = await openForm();
+    expect(within(dialog).queryByText("Customer", { selector: "legend" })).not.toBeInTheDocument();
+    expect(within(dialog).queryByLabelText("Payment preference")).not.toBeInTheDocument();
+    expect(within(dialog).queryByLabelText("Applicant name")).not.toBeInTheDocument();
+  });
+
+  it("cheque needs the cheque number, online needs the UTR, cash needs nothing", async () => {
+    const { dialog, post } = await openForm();
+    const record = () => within(dialog).getByRole("button", { name: "Record booking" });
+    const mode = within(dialog).getByLabelText("Payment mode");
+    await userEvent.selectOptions(mode, "cheque");
+    expect(within(dialog).getByLabelText("Cheque number")).toBeRequired();
+    expect(record()).toBeDisabled();
+    await userEvent.selectOptions(mode, "upi");
+    expect(within(dialog).getByLabelText("Payment reference (UTR / transaction ID)")).toBeInTheDocument();
+    expect(record()).toBeDisabled();
+    await userEvent.selectOptions(mode, "cash");
+    expect(within(dialog).queryByLabelText(/Cheque number|Payment reference/)).not.toBeInTheDocument();
+    expect(record()).toBeEnabled();
+    await userEvent.selectOptions(mode, "bank_transfer");
+    await userEvent.type(within(dialog).getByLabelText("Payment reference (UTR / transaction ID)"), "HDFCN52026112701");
+    expect(record()).toBeEnabled();
+    await userEvent.click(record());
+    await waitFor(() => expect(post).toHaveBeenCalledWith("/bookings", expect.objectContaining({ payment_mode: "bank_transfer", payment_reference: "HDFCN52026112701",
+      customer: expect.objectContaining({ customer_name: "Anita Desai" }) })));  // the customer's details still come from the lead
+  });
+
+  it("the booking page no longer shows Customer and payment", async () => {
+    mockApi(makeUser("manager"), { get: { "/bookings/9": booking } });
+    renderApp("/bookings/9");
+    expect(await screen.findByText("Deal and payment")).toBeInTheDocument();
+    expect(screen.queryByText("Customer and payment")).not.toBeInTheDocument();
+  });
+});

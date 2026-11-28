@@ -8,12 +8,12 @@ import { useCreateBooking } from "../../hooks/useBookings";
 import { useInventory } from "../../hooks/useInventory";
 import { useAssignableUsers, useProjects } from "../../hooks/useLeads";
 import { api, errorMessage } from "../../lib/api";
-import { PAYMENT_LABELS, PAYMENT_MODES } from "../../lib/bookings";
+import { PAYMENT_LABELS, PAYMENT_MODES, referenceLabel, referenceOk } from "../../lib/bookings";
 import type { PaymentMode } from "../../lib/bookings";
 import { UNIT_TYPE_LABELS } from "../../lib/inventory";
 import type { Unit } from "../../lib/inventory";
 import { formatMobile, formatRupees } from "../../lib/leads";
-import { CustomerFields, customerPayload, emptyCustomer } from "./CustomerFields";
+import { customerPayload, emptyCustomer } from "./CustomerFields";
 import type { CustomerForm } from "./CustomerFields";
 
 type BookableUnit = Unit & { building?: string };
@@ -158,7 +158,8 @@ export function BookFlatDialog({ lead: givenLead, unit: givenUnit, onClose }: {
               <option value="">Not recorded</option>{PAYMENT_MODES.map((m) => <option key={m} value={m}>{PAYMENT_LABELS[m]}</option>)}
             </SelectInput>
           </div>
-          <TextInput label="Payment reference (optional)" value={ref} onChange={(e) => setRef(e.target.value)} maxLength={100} placeholder="e.g. cheque no., UTR" />
+          {referenceLabel(mode) && <TextInput label={referenceLabel(mode)!} value={ref} onChange={(e) => setRef(e.target.value)} maxLength={100} required
+            placeholder={mode === "cheque" ? "e.g. 004512" : "e.g. HDFCN52026112701"} />}
           <TextInput label="Channel partner (optional)" value={partner} onChange={(e) => setPartner(e.target.value)} maxLength={150} />
           {isManager && (
             <SelectInput label="Handled by" value={handler} onChange={(e) => setHandler(e.target.value)}>
@@ -166,11 +167,10 @@ export function BookFlatDialog({ lead: givenLead, unit: givenUnit, onClose }: {
             </SelectInput>
           )}
           <TextArea label="Notes (optional)" value={notes} onChange={(e) => setNotes(e.target.value)} maxLength={5000} />
-          <CustomerFields f={cust} set={(patch) => setCust({ ...cust, ...patch })} />
         </>)}
         <div className="flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
           <Button type="button" variant="secondary" onClick={onClose}>Cancel</Button>
-          <Button type="submit" loading={create.isPending} disabled={!unit || !lead.id || !priceOk || !paidOk || !date}>Record booking</Button>
+          <Button type="submit" loading={create.isPending} disabled={!unit || !lead.id || !priceOk || !paidOk || !date || !referenceOk(mode, ref)}>Record booking</Button>
         </div>
       </form>
     </Modal>

@@ -317,6 +317,15 @@ with the official logo at the same sizes. Offline support arrives in Sprint 16.
   or one unit type. A unit's panel shows the plans for its floor and its type, or the project-wide plans if there
   are none more specific.
 
+## Bookings: payment references, no customer block
+
+- The "Book this flat" form no longer shows the Customer block (customer details and payment preference); the
+  customer's name, mobile and email are still taken from the lead and saved with the booking. The booking page no longer
+  shows the "Customer and payment" card. (The flat panel's "Customer and payment" dialog is unchanged.)
+- Any payment mode except cash needs its reference: "Cheque number" for cheques, "Payment reference (UTR / transaction
+  ID)" for bank transfer, UPI, card or other. Checked on the form, in Edit booking and on the server (for edits, on the
+  result: switching to a non-cash mode or blanking the reference is refused).
+
 ## New leads: required fields and returning customers
 
 - Required fields show a red star everywhere in the CRM (drawn by CSS on the label of any required field).

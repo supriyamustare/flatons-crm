@@ -1,6 +1,5 @@
 import { PostSalesStatus } from "../components/bookings/PostSalesStatus";
 import { AgreementSection } from "../components/bookings/AgreementSection";
-import { PREFERENCE_LABELS } from "../components/bookings/CustomerFields";
 import { useState } from "react";
 import type { FormEvent, ReactNode } from "react";
 import { Link, useParams } from "react-router";
@@ -9,7 +8,7 @@ import { Alert, Badge, Button, ErrorState, Modal, PageHeader, SelectInput, TextA
 import { useCurrentUser } from "../hooks/useAuth";
 import { useBooking, useCancelBooking, useUpdateBooking } from "../hooks/useBookings";
 import { errorMessage, formatDateTime } from "../lib/api";
-import { HISTORY_LABELS, PAYMENT_LABELS, PAYMENT_MODES } from "../lib/bookings";
+import { HISTORY_LABELS, PAYMENT_LABELS, PAYMENT_MODES, referenceLabel, referenceOk } from "../lib/bookings";
 import type { Booking, PaymentMode } from "../lib/bookings";
 import { UNIT_TYPE_LABELS } from "../lib/inventory";
 import { formatMobile, formatRupees } from "../lib/leads";
@@ -34,7 +33,7 @@ function EditDialog({ b, onClose }: { b: Booking; onClose: () => void }) {
   const [received, setReceived] = useState(String(b.commission_received));
   const [notes, setNotes] = useState(b.notes ?? "");
   const n = (v: string) => Math.round(Number(v.replace(/,/g, "")));
-  const ok = n(price) > 0 && n(paid) >= 0 && n(paid) <= n(price) && n(received) >= 0;
+  const ok = (n(price) > 0 && n(paid) >= 0 && n(paid) <= n(price) && n(received) >= 0) && referenceOk(mode, ref);
   return (
     <Modal title={`Edit ${b.booking_code}`} onClose={onClose}>
       <form className="space-y-4" noValidate onSubmit={(e: FormEvent) => {
@@ -54,7 +53,7 @@ function EditDialog({ b, onClose }: { b: Booking; onClose: () => void }) {
             <option value="">Not recorded</option>{PAYMENT_MODES.map((m) => <option key={m} value={m}>{PAYMENT_LABELS[m]}</option>)}
           </SelectInput>
         </div>
-        <TextInput label="Payment reference" value={ref} onChange={(e) => setRef(e.target.value)} maxLength={100} />
+        {referenceLabel(mode) && <TextInput label={referenceLabel(mode)!} value={ref} onChange={(e) => setRef(e.target.value)} maxLength={100} required />}
         <TextInput label="Channel partner" value={partner} onChange={(e) => setPartner(e.target.value)} maxLength={150} />
         <TextInput label="Commission received (₹)" inputMode="numeric" value={received} onChange={(e) => setReceived(e.target.value)}
           hint={b.commission_expected !== null ? `Expected ${formatRupees(b.commission_expected)} (recalculated if the price changes)` : undefined} />
@@ -131,18 +130,6 @@ export function BookingDetailPage() {
           <Row label="Booking date">{day(b.booking_date)}</Row>
           <Row label="Payment mode">{b.payment_mode ? PAYMENT_LABELS[b.payment_mode] : null}</Row>
           <Row label="Reference">{b.payment_reference}</Row>
-        </Card>
-        <Card title="Customer and payment">
-          <Row label="Name">{b.customer.customer_name}</Row>
-          <Row label="Applicant name">{b.customer.applicant_name}</Row>
-          <Row label="Mobile">{b.customer.customer_mobile ? formatMobile(b.customer.customer_mobile) : null}</Row>
-          <Row label="Email ID">{b.customer.customer_email}</Row>
-          <Row label="Address">{b.customer.customer_address}</Row>
-          <Row label="Payment preference">{b.customer.payment_preference ? PREFERENCE_LABELS[b.customer.payment_preference] : "Not decided"}</Row>
-          {b.customer.payment_preference === "bank" && (<>
-            <Row label="Bank">{b.customer.bank_name}</Row>
-            <Row label="Banker contact">{[b.customer.banker_name, b.customer.banker_phone].filter(Boolean).join(" · ") || null}</Row>
-          </>)}
         </Card>
         <Card title="People and commission">
           <Row label="Handled by">{b.sales_exec?.full_name}</Row>
