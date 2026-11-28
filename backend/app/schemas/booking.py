@@ -45,6 +45,20 @@ class CustomerDetails(BaseModel):
         return self
 
 
+def reference_problem(mode, reference: str | None) -> str | None:
+    """Any payment mode except cash needs its reference: the cheque number, or the UTR / transaction
+    reference."""
+    if mode is None or getattr(mode, "value", mode) == "cash":
+        return None
+    if reference and len(reference.strip()) >= 3:
+        return None
+    return (
+        "Enter the cheque number"
+        if getattr(mode, "value", mode) == "cheque"
+        else "Enter the payment reference (UTR or transaction ID)"
+    )
+
+
 class BookingCreate(BaseModel):
     model_config = ConfigDict(extra="forbid")
     lead_id: int
@@ -66,6 +80,9 @@ class BookingCreate(BaseModel):
     def _amounts(self) -> "BookingCreate":
         if self.booking_amount > self.agreed_price:
             raise ValueError("The booking amount can't be more than the agreed price")
+        problem = reference_problem(self.payment_mode, self.payment_reference)
+        if problem:
+            raise ValueError(problem)
         return self
 
 

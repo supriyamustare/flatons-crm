@@ -251,6 +251,14 @@ async def update_booking(
             status.HTTP_422_UNPROCESSABLE_CONTENT,
             "The booking amount can't be more than the agreed price",
         )
+    from app.schemas.booking import reference_problem
+
+    problem = reference_problem(
+        changes.get("payment_mode", b.payment_mode),
+        changes.get("payment_reference", b.payment_reference),
+    )
+    if problem:  # judged on the result: e.g. switching to cheque needs the cheque number
+        raise HTTPException(status.HTTP_422_UNPROCESSABLE_CONTENT, problem)
     if changes.get("sales_exec_id"):
         try:
             await lead_svc.get_assignable_user(db, changes["sales_exec_id"])

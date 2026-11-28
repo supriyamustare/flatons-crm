@@ -42,3 +42,12 @@ export const PAYMENT_LABELS: Record<PaymentMode, string> = {
 export const HISTORY_LABELS: Record<string, string> = {
   created: "Booking recorded", customer_updated: "Customer details updated", agreement_done: "Agreement done", agreement_undone: "Agreement undone", edited: "Details changed", commission_received: "Commission received updated", cancelled: "Booking cancelled",
 };
+
+/** Any payment mode except cash needs its reference (same rule as the server). */
+export function referenceLabel(mode: PaymentMode | ""): string | null {
+  if (!mode || mode === "cash") return null;
+  return mode === "cheque" ? "Cheque number" : "Payment reference (UTR / transaction ID)";
+}
+export function referenceOk(mode: PaymentMode | "", ref: string): boolean {
+  return referenceLabel(mode) === null || ref.trim().length >= 3;
+}
